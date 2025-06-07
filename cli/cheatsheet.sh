@@ -27,3 +27,6 @@ zip -r folder.zip folder -x "*node_modules*" "*/.next*" "*/.git"
 
 # add a git submodule
 git submodule add "$url" "$path"
+
+# update all git submodules
+git submodule update --init --recursive
