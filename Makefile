@@ -46,6 +46,10 @@ local-context:  ## Generate AI Context based on local repo
   docker cp context-container:/app/.cache/ai-context.txt .cache/ai-context.txt && \
   docker rm context-container
 
+.PHONY: bump_submodules
+bump_submodules:  ## Bump submodules to latest commit
+	./cli/bump_submodules.sh
+
 .PHONY: k6
 k6:  ## Run k6 tests (k8s)
 	./cli/k6.sh

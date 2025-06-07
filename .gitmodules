@@ -4,9 +4,18 @@
 [submodule "shared/typestack"]
 	path = shared/typestack
 	url = git@github.com:mend3/typestack.git
+[submodule "shared/react-trainee"]
+	path = shared/react-trainee
+	url = git@github.com:mend3/react-trainee.git
 [submodule "browser/use"]
 	path = browser/use
 	url = git@github.com:mend3/browser-use.git
+[submodule "extalia/java"]
+	path = extalia/java
+	url = git@github.com:mend3/extalia.git
+[submodule "extalia/web"]
+	path = extalia/web
+	url = git@github.com:mend3/l2-web.git
 [submodule "sws"]
 	path = sws
 	url = git@github.com:mendshell/sws.git
