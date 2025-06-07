@@ -1,0 +1,54 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
+{
+  "name": "SDK",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  // "image": "mcr.microsoft.com/devcontainers/typescript-node:22-bullseye",
+  "build": {
+    "dockerfile": "./Dockerfile",
+    "target": "vscode"
+  },
+  "runArgs": [
+    "--network=host"
+  ],
+  "features": {
+    // "ghcr.io/balazs23/devcontainers-features/nx:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      // "moby": true,
+      "installDockerBuildx": true,
+      "installDockerComposeSwitch": true
+    }
+  },
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode-remote.remote-containers",
+        "esbenp.prettier-vscode",
+        "YoavBls.pretty-ts-errors",
+        "ms-azuretools.vscode-docker",
+        "ZainChen.json",
+        "yzhang.markdown-all-in-one",
+        "christian-kohler.path-intellisense",
+        "mischah.relaxed-theme",
+        "wayou.vscode-todo-highlight",
+        "usernamehw.errorlens"
+      ]
+    }
+  },
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  // "features": {},
+  "containerEnv": {},
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  "forwardPorts": [
+    80,
+    9229
+  ],
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  "remoteUser": "node",
+  // Use 'postCreateCommand' to run commands after the container is created.
+  "postCreateCommand": "tools/_welcome.sh"
+}

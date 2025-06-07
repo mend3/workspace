@@ -1,0 +1,9 @@
+[submodule "mcp"]
+	path = mcp
+	url = git@github.com:mend3/mcp.git
+[submodule "shared/typestack"]
+	path = shared/typestack
+	url = git@github.com:mend3/typestack.git
+[submodule "browser/use"]
+	path = browser/use
+	url = git@github.com:mend3/browser-use.git

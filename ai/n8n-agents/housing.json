@@ -1,0 +1,574 @@
+{
+  "name": "housing",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "buscar-imoveis",
+        "options": {}
+      },
+      "id": "79ab2291-ab21-4e14-8196-027b746f5125",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        -260
+      ],
+      "webhookId": "f83791fc-013d-4635-970d-e6c33ab654f2"
+    },
+    {
+      "parameters": {
+        "url": "https://serpapi.com/search.json",
+        "jsonParameters": true,
+        "options": {},
+        "queryParametersJson": "={\n  \"engine\": \"google\",\n  \"q\": \"imóveis à venda site:viva-real.com.br OR site:quintoandar.com.br OR site:olx.com.br OR site:zapimoveis.com.br {{ $json.body.cidade }} {{$json[\"filtros\"] ? $json[\"filtros\"].join(' ') : ''}}\",\n  \"api_key\": \"3a5a2d7eff70b56cb2c7b6c7a77968a73c2652f87a65f7b61af1cdddfd50c7b1\"\n}"
+      },
+      "id": "85a6a895-e43c-4fd0-a34b-752b8fab4d8b",
+      "name": "Buscar imóveis (SerpAPI)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extrai os resultados orgânicos do Google\nconst results = $json.organic_results || [];\nconst imoveis = results.map(r => ({\n  titulo: r.title,\n  link: r.link,\n  descricao: r.snippet || '',\n  fonte: r.displayed_link || '',\n  cidade: $json.cidade || '',\n  filtros: $json.filtros || []\n}));\nreturn imoveis.map(imovel => ({ json: imovel }));"
+      },
+      "id": "cb24777f-6499-4c1d-ba15-94b59d299398",
+      "name": "Processar resultados",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        180,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "house_listing",
+        "fields": "={{$json}}",
+        "options": {}
+      },
+      "id": "b71b99e7-a26e-4afb-96f1-e3e576130fcc",
+      "name": "Salvar imóveis no MongoDB",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1,
+      "position": [
+        380,
+        -260
+      ],
+      "credentials": {
+        "mongoDb": {
+          "id": "TEUOavCxp693VBZF",
+          "name": "MongoDB account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook Trigger": [
+      {
+        "json": {
+          "headers": {
+            "host": "devshell.app.n8n.cloud",
+            "user-agent": "Thunder Client (https://www.thunderclient.com)",
+            "content-length": "92",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "201.75.183.130",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "BR",
+            "cf-ray": "93ee1b1704f4a44e-GRU",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "x-forwarded-for": "201.75.183.130, 172.69.114.131",
+            "x-forwarded-host": "devshell.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-34-f494454b5-zq5gl",
+            "x-is-trusted": "yes",
+            "x-real-ip": "201.75.183.130"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "cidade": "São Paulo",
+            "filtros": [
+              "apartamento",
+              "até R$ 1 milhão",
+              "2 quartos"
+            ]
+          },
+          "webhookUrl": "https://devshell.app.n8n.cloud/webhook-test/buscar-imoveis",
+          "executionMode": "test"
+        }
+      }
+    ],
+    "Buscar imóveis (SerpAPI)": [
+      {
+        "json": {
+          "search_metadata": {
+            "id": "6822957c28b27b379f4a34fe",
+            "status": "Success",
+            "json_endpoint": "https://serpapi.com/searches/c97e1f6fd82f06a7/6822957c28b27b379f4a34fe.json",
+            "created_at": "2025-05-13 00:42:36 UTC",
+            "processed_at": "2025-05-13 00:42:36 UTC",
+            "google_url": "https://www.google.com/search?q=im%C3%B3veis+%C3%A0+venda+site%3Aviva-real.com.br+OR+site%3Aquintoandar.com.br+OR+site%3Aolx.com.br+OR+site%3Azapimoveis.com.br+S%C3%A3o+Paulo+&oq=im%C3%B3veis+%C3%A0+venda+site%3Aviva-real.com.br+OR+site%3Aquintoandar.com.br+OR+site%3Aolx.com.br+OR+site%3Azapimoveis.com.br+S%C3%A3o+Paulo+&sourceid=chrome&ie=UTF-8",
+            "raw_html_file": "https://serpapi.com/searches/c97e1f6fd82f06a7/6822957c28b27b379f4a34fe.html",
+            "total_time_taken": 2.55
+          },
+          "search_parameters": {
+            "engine": "google",
+            "q": "imóveis à venda site:viva-real.com.br OR site:quintoandar.com.br OR site:olx.com.br OR site:zapimoveis.com.br São Paulo ",
+            "google_domain": "google.com",
+            "device": "desktop"
+          },
+          "search_information": {
+            "query_displayed": "imóveis à venda site:viva-real.com.br OR site:quintoandar.com.br OR site:olx.com.br OR site:zapimoveis.com.br São Paulo",
+            "total_results": 15800000,
+            "time_taken_displayed": 0.35,
+            "organic_results_state": "Results for exact spelling"
+          },
+          "organic_results": [
+            {
+              "position": 1,
+              "title": "Imóveis à venda em São Paulo, SP",
+              "link": "https://www.quintoandar.com.br/comprar/imovel/sao-paulo-sp-brasil",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.quintoandar.com.br/comprar/imovel/sao-paulo-sp-brasil&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8QFnoECBwQAQ",
+              "displayed_link": "https://www.quintoandar.com.br › ...",
+              "favicon": "https://serpapi.com/searches/6822957c28b27b379f4a34fe/images/38397663f8d9658a7d07cb44e5dfcff4d1b398b9ea5da1d7dccec574d0615bb5.png",
+              "snippet": "Mais de 123.939 imóveis à venda em São Paulo, SP. Imóveis prontos para morar ou em construção com preços imperdíveis.",
+              "snippet_highlighted_words": [
+                "Mais de 123.939 imóveis à venda em São Paulo, SP"
+              ],
+              "sitelinks": {
+                "inline": [
+                  {
+                    "title": "Casa",
+                    "link": "https://www.quintoandar.com.br/comprar/imovel/sao-paulo-sp-brasil/casa"
+                  },
+                  {
+                    "title": "Apartamento",
+                    "link": "https://www.quintoandar.com.br/comprar/imovel/sao-paulo-sp-brasil/apartamento"
+                  },
+                  {
+                    "title": "Imóveis à venda em Jardim...",
+                    "link": "https://www.quintoandar.com.br/comprar/imovel/jardim-sao-paulo-sao-paulo-sp-brasil"
+                  },
+                  {
+                    "title": "Studios e kitnets à venda",
+                    "link": "https://www.quintoandar.com.br/comprar/imovel/sao-paulo-sp-brasil/kitnet"
+                  }
+                ]
+              },
+              "rich_snippet": {
+                "bottom": {
+                  "detected_extensions": {
+                    "price_from": 150000,
+                    "price_to": 12000000,
+                    "currency": "R$"
+                  },
+                  "extensions": [
+                    "R$150,000.00 to R$12,000,000.00"
+                  ]
+                }
+              },
+              "source": "QuintoAndar"
+            },
+            {
+              "position": 2,
+              "title": "731.699 Imóveis à venda em São Paulo - SP",
+              "link": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo/",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.zapimoveis.com.br/venda/imoveis/sp%2Bsao-paulo/&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8QFnoECCcQAQ",
+              "displayed_link": "https://www.zapimoveis.com.br › ...",
+              "favicon": "https://serpapi.com/searches/6822957c28b27b379f4a34fe/images/38397663f8d9658a7d07cb44e5dfcff4e759341782c6e25ea114ae283d4b3945.png",
+              "snippet": "732.933 anúncios de Imóveis à venda em São Paulo, SP. Descubra milhares de ofertas com preços imperdíveis. Confira já!",
+              "snippet_highlighted_words": [
+                "732.933 anúncios de Imóveis à venda em São Paulo, SP"
+              ],
+              "sitelinks": {
+                "inline": [
+                  {
+                    "title": "R$ 599.000",
+                    "link": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-sul/"
+                  },
+                  {
+                    "title": "Zona Leste",
+                    "link": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-leste/"
+                  },
+                  {
+                    "title": "Imóveis à venda em Tucuruvi",
+                    "link": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo+zona-norte+tucuruvi/"
+                  },
+                  {
+                    "title": "Studios à venda",
+                    "link": "https://www.zapimoveis.com.br/venda/studio/sp+sao-paulo/"
+                  }
+                ]
+              },
+              "source": "ZAP Imóveis"
+            },
+            {
+              "position": 3,
+              "title": "Imóveis à venda - São Paulo",
+              "link": "https://www.olx.com.br/imoveis/venda/estado-sp",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.olx.com.br/imoveis/venda/estado-sp&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8QFnoECBcQAQ",
+              "displayed_link": "https://www.olx.com.br › estado-sp",
+              "favicon": "https://serpapi.com/searches/6822957c28b27b379f4a34fe/images/38397663f8d9658a7d07cb44e5dfcff4d86a57866917bae3f4e75f31de88144e.png",
+              "snippet": "Os imóveis à venda em São Paulo que são a sua cara estão na OLX. Descubra milhares de ofertas com preços imperdíveis. Confira já!",
+              "snippet_highlighted_words": [
+                "Os imóveis à venda em São Paulo que são a sua cara estão na OLX"
+              ],
+              "rich_snippet": {
+                "bottom": {
+                  "detected_extensions": {
+                    "price_from": 52000,
+                    "price_to": 3790000,
+                    "currency": "R$"
+                  },
+                  "extensions": [
+                    "R$52,000.00 to R$3,790,000.00"
+                  ]
+                }
+              },
+              "source": "OLX"
+            },
+            {
+              "position": 4,
+              "title": "727.679 Imóveis à venda em São Paulo - SP",
+              "link": "https://www.zapimoveis.com.br/venda//imoveis/sp+sao-paulo/",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.zapimoveis.com.br/venda//imoveis/sp%2Bsao-paulo/&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8QFnoECBkQAQ",
+              "displayed_link": "https://www.zapimoveis.com.br › ...",
+              "favicon": "https://serpapi.com/searches/6822957c28b27b379f4a34fe/images/38397663f8d9658a7d07cb44e5dfcff45af1fe8d9b61a507025cb7487853a4e1.png",
+              "snippet": "728.950 anúncios de Imóveis à venda em São Paulo, SP. Descubra milhares de ofertas com preços imperdíveis. Confira já!",
+              "snippet_highlighted_words": [
+                "728.950 anúncios de Imóveis à venda em São Paulo, SP"
+              ],
+              "source": "ZAP Imóveis"
+            },
+            {
+              "position": 5,
+              "title": "Casas à venda em São Paulo, SP",
+              "link": "https://www.quintoandar.com.br/comprar/imovel/sao-paulo-sp-brasil/casa",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.quintoandar.com.br/comprar/imovel/sao-paulo-sp-brasil/casa&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8QFnoECBYQAQ",
+              "displayed_link": "https://www.quintoandar.com.br › ...",
+              "favicon": "https://serpapi.com/searches/6822957c28b27b379f4a34fe/images/38397663f8d9658a7d07cb44e5dfcff42bad91984d499865faffcfc7d3ba7640.png",
+              "snippet": "Mais de 38.065 casas à venda em São Paulo, SP. Casa pronta para morar ou em construção com preços imperdíveis.",
+              "snippet_highlighted_words": [
+                "Mais de 38.065 casas à venda em São Paulo, SP"
+              ],
+              "source": "QuintoAndar"
+            },
+            {
+              "position": 6,
+              "title": "ZAP Imóveis | Apartamentos, Casas e Imóveis à Venda e para ...",
+              "link": "https://www.zapimoveis.com.br/",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.zapimoveis.com.br/&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8QFnoECBQQAQ",
+              "displayed_link": "https://www.zapimoveis.com.br",
+              "favicon": "https://serpapi.com/searches/6822957c28b27b379f4a34fe/images/38397663f8d9658a7d07cb44e5dfcff45030f97d26b996ef7521ea429be445cb.png",
+              "snippet": "Encontre casas, apartamentos, terrenos e imóveis para compra, venda e aluguel. Acesse já!",
+              "snippet_highlighted_words": [
+                "imóveis",
+                "venda"
+              ],
+              "sitelinks": {
+                "inline": [
+                  {
+                    "title": "Imóveis à venda em São Paulo",
+                    "link": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo/"
+                  },
+                  {
+                    "title": "Imóveis à venda - São...",
+                    "link": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-bernardo-do-campo/"
+                  },
+                  {
+                    "title": "Anunciar imóveis",
+                    "link": "https://anuncie.zapimoveis.com.br/"
+                  }
+                ]
+              },
+              "source": "ZAP Imóveis"
+            },
+            {
+              "position": 7,
+              "title": "Imóveis à venda - São Paulo e região, SP",
+              "link": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8QFnoECDwQAQ",
+              "displayed_link": "https://www.olx.com.br › estado-sp",
+              "favicon": "https://serpapi.com/searches/6822957c28b27b379f4a34fe/images/38397663f8d9658a7d07cb44e5dfcff42d34e23bea032f375f679ae2ceb0428a.png",
+              "snippet": "Os imóveis à venda em São Paulo e região, SP que são a sua cara estão na OLX. Descubra milhares de ofertas com preços imperdíveis. Confira já!",
+              "snippet_highlighted_words": [
+                "Os imóveis à venda em São Paulo e região, SP que são a sua cara estão na OLX"
+              ],
+              "rich_snippet": {
+                "bottom": {
+                  "detected_extensions": {
+                    "price_from": 228930,
+                    "price_to": 4999240,
+                    "currency": "R$"
+                  },
+                  "extensions": [
+                    "R$228,930.00 to R$4,999,240.00"
+                  ]
+                }
+              },
+              "source": "OLX"
+            },
+            {
+              "position": 8,
+              "title": "Imóveis à venda - São Paulo",
+              "link": "https://www.zapimoveis.com.br/venda/imoveis/sp/",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.zapimoveis.com.br/venda/imoveis/sp/&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8QFnoECDEQAQ",
+              "displayed_link": "https://www.zapimoveis.com.br › i...",
+              "favicon": "https://serpapi.com/searches/6822957c28b27b379f4a34fe/images/38397663f8d9658a7d07cb44e5dfcff4a8a1c96750805156922bcf54f8d2918d.png",
+              "snippet": "Mais de 2.174.397 anúncios de Imóveis à venda em São Paulo. Descubra milhares de ofertas com preços imperdíveis. Confira já!",
+              "snippet_highlighted_words": [
+                "Imóveis à venda em São Paulo"
+              ],
+              "sitelinks": {
+                "inline": [
+                  {
+                    "title": "Apartamentos à venda",
+                    "link": "https://www.zapimoveis.com.br/venda/apartamentos/sp/"
+                  },
+                  {
+                    "title": "São Bernardo do Campo, SP",
+                    "link": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-bernardo-do-campo/"
+                  },
+                  {
+                    "title": "São José dos Campos, SP",
+                    "link": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-jose-dos-campos/"
+                  }
+                ]
+              },
+              "source": "ZAP Imóveis"
+            },
+            {
+              "position": 9,
+              "title": "174.396 Casas à venda em São Paulo - SP",
+              "link": "https://www.zapimoveis.com.br/venda//casas/sp+sao-paulo/",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.zapimoveis.com.br/venda//casas/sp%2Bsao-paulo/&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8QFnoECDMQAQ",
+              "displayed_link": "https://www.zapimoveis.com.br › ...",
+              "favicon": "https://serpapi.com/searches/6822957c28b27b379f4a34fe/images/38397663f8d9658a7d07cb44e5dfcff4bbec81a4a87faa631086ad5a2491671c.png",
+              "snippet": "174.402 anúncios de Casas à venda em São Paulo, SP. Descubra milhares de ofertas com preços imperdíveis. Confira já!",
+              "snippet_highlighted_words": [
+                "174.402 anúncios de Casas à venda em São Paulo, SP"
+              ],
+              "source": "ZAP Imóveis"
+            },
+            {
+              "position": 10,
+              "title": "Imóveis à venda - São Paulo e região, SP",
+              "link": "https://www.olx.com.br/imoveis/venda/casas/estado-sp/sao-paulo-e-regiao",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.olx.com.br/imoveis/venda/casas/estado-sp/sao-paulo-e-regiao&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8QFnoECDgQAQ",
+              "displayed_link": "https://www.olx.com.br › estado-sp",
+              "favicon": "https://serpapi.com/searches/6822957c28b27b379f4a34fe/images/38397663f8d9658a7d07cb44e5dfcff4bf7b09d5b57f6955121a38c5ea68fb77.png",
+              "snippet": "Os imóveis à venda em São Paulo e região, SP que são a sua cara estão na OLX. Descubra milhares de ofertas com preços imperdíveis. Confira já!",
+              "snippet_highlighted_words": [
+                "Os imóveis à venda em São Paulo e região, SP que são a sua cara estão na OLX"
+              ],
+              "rich_snippet": {
+                "bottom": {
+                  "detected_extensions": {
+                    "price_from": 185000,
+                    "price_to": 36000000,
+                    "currency": "R$"
+                  },
+                  "extensions": [
+                    "R$185,000.00 to R$36,000,000.00"
+                  ]
+                }
+              },
+              "source": "OLX"
+            }
+          ],
+          "pagination": {
+            "current": 1,
+            "next": "https://www.google.com/search?q=im%C3%B3veis+%C3%A0+venda+site:viva-real.com.br+OR+site:quintoandar.com.br+OR+site:olx.com.br+OR+site:zapimoveis.com.br+S%C3%A3o+Paulo&sca_esv=27056c0349cec439&ei=fpUiaJKUCeHh0-kP6aPe-QE&start=10&sa=N&sstk=Af40H4XfQBXHOLIdzyYyOq9ddUhsB8DkZCNSNF1Jptv0GkO16ZRaGp3S1MM6wXr2oZK8JDHTS_Q6uMZLPwBwutgkRqfsa1E92XQBcA&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8Q8NMDegQICRAW",
+            "other_pages": {
+              "2": "https://www.google.com/search?q=im%C3%B3veis+%C3%A0+venda+site:viva-real.com.br+OR+site:quintoandar.com.br+OR+site:olx.com.br+OR+site:zapimoveis.com.br+S%C3%A3o+Paulo&sca_esv=27056c0349cec439&ei=fpUiaJKUCeHh0-kP6aPe-QE&start=10&sa=N&sstk=Af40H4XfQBXHOLIdzyYyOq9ddUhsB8DkZCNSNF1Jptv0GkO16ZRaGp3S1MM6wXr2oZK8JDHTS_Q6uMZLPwBwutgkRqfsa1E92XQBcA&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8Q8tMDegQICRAE",
+              "3": "https://www.google.com/search?q=im%C3%B3veis+%C3%A0+venda+site:viva-real.com.br+OR+site:quintoandar.com.br+OR+site:olx.com.br+OR+site:zapimoveis.com.br+S%C3%A3o+Paulo&sca_esv=27056c0349cec439&ei=fpUiaJKUCeHh0-kP6aPe-QE&start=20&sa=N&sstk=Af40H4XfQBXHOLIdzyYyOq9ddUhsB8DkZCNSNF1Jptv0GkO16ZRaGp3S1MM6wXr2oZK8JDHTS_Q6uMZLPwBwutgkRqfsa1E92XQBcA&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8Q8tMDegQICRAG",
+              "4": "https://www.google.com/search?q=im%C3%B3veis+%C3%A0+venda+site:viva-real.com.br+OR+site:quintoandar.com.br+OR+site:olx.com.br+OR+site:zapimoveis.com.br+S%C3%A3o+Paulo&sca_esv=27056c0349cec439&ei=fpUiaJKUCeHh0-kP6aPe-QE&start=30&sa=N&sstk=Af40H4XfQBXHOLIdzyYyOq9ddUhsB8DkZCNSNF1Jptv0GkO16ZRaGp3S1MM6wXr2oZK8JDHTS_Q6uMZLPwBwutgkRqfsa1E92XQBcA&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8Q8tMDegQICRAI",
+              "5": "https://www.google.com/search?q=im%C3%B3veis+%C3%A0+venda+site:viva-real.com.br+OR+site:quintoandar.com.br+OR+site:olx.com.br+OR+site:zapimoveis.com.br+S%C3%A3o+Paulo&sca_esv=27056c0349cec439&ei=fpUiaJKUCeHh0-kP6aPe-QE&start=40&sa=N&sstk=Af40H4XfQBXHOLIdzyYyOq9ddUhsB8DkZCNSNF1Jptv0GkO16ZRaGp3S1MM6wXr2oZK8JDHTS_Q6uMZLPwBwutgkRqfsa1E92XQBcA&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8Q8tMDegQICRAK",
+              "6": "https://www.google.com/search?q=im%C3%B3veis+%C3%A0+venda+site:viva-real.com.br+OR+site:quintoandar.com.br+OR+site:olx.com.br+OR+site:zapimoveis.com.br+S%C3%A3o+Paulo&sca_esv=27056c0349cec439&ei=fpUiaJKUCeHh0-kP6aPe-QE&start=50&sa=N&sstk=Af40H4XfQBXHOLIdzyYyOq9ddUhsB8DkZCNSNF1Jptv0GkO16ZRaGp3S1MM6wXr2oZK8JDHTS_Q6uMZLPwBwutgkRqfsa1E92XQBcA&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8Q8tMDegQICRAM",
+              "7": "https://www.google.com/search?q=im%C3%B3veis+%C3%A0+venda+site:viva-real.com.br+OR+site:quintoandar.com.br+OR+site:olx.com.br+OR+site:zapimoveis.com.br+S%C3%A3o+Paulo&sca_esv=27056c0349cec439&ei=fpUiaJKUCeHh0-kP6aPe-QE&start=60&sa=N&sstk=Af40H4XfQBXHOLIdzyYyOq9ddUhsB8DkZCNSNF1Jptv0GkO16ZRaGp3S1MM6wXr2oZK8JDHTS_Q6uMZLPwBwutgkRqfsa1E92XQBcA&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8Q8tMDegQICRAO",
+              "8": "https://www.google.com/search?q=im%C3%B3veis+%C3%A0+venda+site:viva-real.com.br+OR+site:quintoandar.com.br+OR+site:olx.com.br+OR+site:zapimoveis.com.br+S%C3%A3o+Paulo&sca_esv=27056c0349cec439&ei=fpUiaJKUCeHh0-kP6aPe-QE&start=70&sa=N&sstk=Af40H4XfQBXHOLIdzyYyOq9ddUhsB8DkZCNSNF1Jptv0GkO16ZRaGp3S1MM6wXr2oZK8JDHTS_Q6uMZLPwBwutgkRqfsa1E92XQBcA&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8Q8tMDegQICRAQ",
+              "9": "https://www.google.com/search?q=im%C3%B3veis+%C3%A0+venda+site:viva-real.com.br+OR+site:quintoandar.com.br+OR+site:olx.com.br+OR+site:zapimoveis.com.br+S%C3%A3o+Paulo&sca_esv=27056c0349cec439&ei=fpUiaJKUCeHh0-kP6aPe-QE&start=80&sa=N&sstk=Af40H4XfQBXHOLIdzyYyOq9ddUhsB8DkZCNSNF1Jptv0GkO16ZRaGp3S1MM6wXr2oZK8JDHTS_Q6uMZLPwBwutgkRqfsa1E92XQBcA&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8Q8tMDegQICRAS",
+              "10": "https://www.google.com/search?q=im%C3%B3veis+%C3%A0+venda+site:viva-real.com.br+OR+site:quintoandar.com.br+OR+site:olx.com.br+OR+site:zapimoveis.com.br+S%C3%A3o+Paulo&sca_esv=27056c0349cec439&ei=fpUiaJKUCeHh0-kP6aPe-QE&start=90&sa=N&sstk=Af40H4XfQBXHOLIdzyYyOq9ddUhsB8DkZCNSNF1Jptv0GkO16ZRaGp3S1MM6wXr2oZK8JDHTS_Q6uMZLPwBwutgkRqfsa1E92XQBcA&ved=2ahUKEwiSy9Csm5-NAxXh8DQHHemRNx8Q8tMDegQICRAU"
+            }
+          },
+          "serpapi_pagination": {
+            "current": 1,
+            "next_link": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&q=im%C3%B3veis+%C3%A0+venda+site%3Aviva-real.com.br+OR+site%3Aquintoandar.com.br+OR+site%3Aolx.com.br+OR+site%3Azapimoveis.com.br+S%C3%A3o+Paulo&start=10",
+            "next": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&q=im%C3%B3veis+%C3%A0+venda+site%3Aviva-real.com.br+OR+site%3Aquintoandar.com.br+OR+site%3Aolx.com.br+OR+site%3Azapimoveis.com.br+S%C3%A3o+Paulo&start=10",
+            "other_pages": {
+              "2": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&q=im%C3%B3veis+%C3%A0+venda+site%3Aviva-real.com.br+OR+site%3Aquintoandar.com.br+OR+site%3Aolx.com.br+OR+site%3Azapimoveis.com.br+S%C3%A3o+Paulo&start=10",
+              "3": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&q=im%C3%B3veis+%C3%A0+venda+site%3Aviva-real.com.br+OR+site%3Aquintoandar.com.br+OR+site%3Aolx.com.br+OR+site%3Azapimoveis.com.br+S%C3%A3o+Paulo&start=20",
+              "4": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&q=im%C3%B3veis+%C3%A0+venda+site%3Aviva-real.com.br+OR+site%3Aquintoandar.com.br+OR+site%3Aolx.com.br+OR+site%3Azapimoveis.com.br+S%C3%A3o+Paulo&start=30",
+              "5": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&q=im%C3%B3veis+%C3%A0+venda+site%3Aviva-real.com.br+OR+site%3Aquintoandar.com.br+OR+site%3Aolx.com.br+OR+site%3Azapimoveis.com.br+S%C3%A3o+Paulo&start=40",
+              "6": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&q=im%C3%B3veis+%C3%A0+venda+site%3Aviva-real.com.br+OR+site%3Aquintoandar.com.br+OR+site%3Aolx.com.br+OR+site%3Azapimoveis.com.br+S%C3%A3o+Paulo&start=50",
+              "7": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&q=im%C3%B3veis+%C3%A0+venda+site%3Aviva-real.com.br+OR+site%3Aquintoandar.com.br+OR+site%3Aolx.com.br+OR+site%3Azapimoveis.com.br+S%C3%A3o+Paulo&start=60",
+              "8": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&q=im%C3%B3veis+%C3%A0+venda+site%3Aviva-real.com.br+OR+site%3Aquintoandar.com.br+OR+site%3Aolx.com.br+OR+site%3Azapimoveis.com.br+S%C3%A3o+Paulo&start=70",
+              "9": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&q=im%C3%B3veis+%C3%A0+venda+site%3Aviva-real.com.br+OR+site%3Aquintoandar.com.br+OR+site%3Aolx.com.br+OR+site%3Azapimoveis.com.br+S%C3%A3o+Paulo&start=80",
+              "10": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&q=im%C3%B3veis+%C3%A0+venda+site%3Aviva-real.com.br+OR+site%3Aquintoandar.com.br+OR+site%3Aolx.com.br+OR+site%3Azapimoveis.com.br+S%C3%A3o+Paulo&start=90"
+            }
+          }
+        }
+      }
+    ],
+    "Processar resultados": [
+      {
+        "json": {
+          "titulo": "Imóveis à venda em São Paulo, SP",
+          "link": "https://www.quintoandar.com.br/comprar/imovel/sao-paulo-sp-brasil",
+          "descricao": "Mais de 123.939 imóveis à venda em São Paulo, SP. Imóveis prontos para morar ou em construção com preços imperdíveis.",
+          "fonte": "https://www.quintoandar.com.br › ...",
+          "cidade": "",
+          "filtros": []
+        }
+      },
+      {
+        "json": {
+          "titulo": "731.699 Imóveis à venda em São Paulo - SP",
+          "link": "https://www.zapimoveis.com.br/venda/imoveis/sp+sao-paulo/",
+          "descricao": "732.933 anúncios de Imóveis à venda em São Paulo, SP. Descubra milhares de ofertas com preços imperdíveis. Confira já!",
+          "fonte": "https://www.zapimoveis.com.br › ...",
+          "cidade": "",
+          "filtros": []
+        }
+      },
+      {
+        "json": {
+          "titulo": "Imóveis à venda - São Paulo",
+          "link": "https://www.olx.com.br/imoveis/venda/estado-sp",
+          "descricao": "Os imóveis à venda em São Paulo que são a sua cara estão na OLX. Descubra milhares de ofertas com preços imperdíveis. Confira já!",
+          "fonte": "https://www.olx.com.br › estado-sp",
+          "cidade": "",
+          "filtros": []
+        }
+      },
+      {
+        "json": {
+          "titulo": "727.679 Imóveis à venda em São Paulo - SP",
+          "link": "https://www.zapimoveis.com.br/venda//imoveis/sp+sao-paulo/",
+          "descricao": "728.950 anúncios de Imóveis à venda em São Paulo, SP. Descubra milhares de ofertas com preços imperdíveis. Confira já!",
+          "fonte": "https://www.zapimoveis.com.br › ...",
+          "cidade": "",
+          "filtros": []
+        }
+      },
+      {
+        "json": {
+          "titulo": "Casas à venda em São Paulo, SP",
+          "link": "https://www.quintoandar.com.br/comprar/imovel/sao-paulo-sp-brasil/casa",
+          "descricao": "Mais de 38.065 casas à venda em São Paulo, SP. Casa pronta para morar ou em construção com preços imperdíveis.",
+          "fonte": "https://www.quintoandar.com.br › ...",
+          "cidade": "",
+          "filtros": []
+        }
+      },
+      {
+        "json": {
+          "titulo": "ZAP Imóveis | Apartamentos, Casas e Imóveis à Venda e para ...",
+          "link": "https://www.zapimoveis.com.br/",
+          "descricao": "Encontre casas, apartamentos, terrenos e imóveis para compra, venda e aluguel. Acesse já!",
+          "fonte": "https://www.zapimoveis.com.br",
+          "cidade": "",
+          "filtros": []
+        }
+      },
+      {
+        "json": {
+          "titulo": "Imóveis à venda - São Paulo e região, SP",
+          "link": "https://www.olx.com.br/imoveis/venda/estado-sp/sao-paulo-e-regiao",
+          "descricao": "Os imóveis à venda em São Paulo e região, SP que são a sua cara estão na OLX. Descubra milhares de ofertas com preços imperdíveis. Confira já!",
+          "fonte": "https://www.olx.com.br › estado-sp",
+          "cidade": "",
+          "filtros": []
+        }
+      },
+      {
+        "json": {
+          "titulo": "Imóveis à venda - São Paulo",
+          "link": "https://www.zapimoveis.com.br/venda/imoveis/sp/",
+          "descricao": "Mais de 2.174.397 anúncios de Imóveis à venda em São Paulo. Descubra milhares de ofertas com preços imperdíveis. Confira já!",
+          "fonte": "https://www.zapimoveis.com.br › i...",
+          "cidade": "",
+          "filtros": []
+        }
+      },
+      {
+        "json": {
+          "titulo": "174.396 Casas à venda em São Paulo - SP",
+          "link": "https://www.zapimoveis.com.br/venda//casas/sp+sao-paulo/",
+          "descricao": "174.402 anúncios de Casas à venda em São Paulo, SP. Descubra milhares de ofertas com preços imperdíveis. Confira já!",
+          "fonte": "https://www.zapimoveis.com.br › ...",
+          "cidade": "",
+          "filtros": []
+        }
+      },
+      {
+        "json": {
+          "titulo": "Imóveis à venda - São Paulo e região, SP",
+          "link": "https://www.olx.com.br/imoveis/venda/casas/estado-sp/sao-paulo-e-regiao",
+          "descricao": "Os imóveis à venda em São Paulo e região, SP que são a sua cara estão na OLX. Descubra milhares de ofertas com preços imperdíveis. Confira já!",
+          "fonte": "https://www.olx.com.br › estado-sp",
+          "cidade": "",
+          "filtros": []
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Buscar imóveis (SerpAPI)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar imóveis (SerpAPI)": {
+      "main": [
+        [
+          {
+            "node": "Processar resultados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Processar resultados": {
+      "main": [
+        [
+          {
+            "node": "Salvar imóveis no MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9864c630-b34c-41b9-afb7-a4eb195206b7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b957fbc64f7918356e4eff7fe259d0c2aeba33c1b1894edbe69a1b3158c296d1"
+  },
+  "id": "vY4a9exZi3NmVvIt",
+  "tags": []
+}

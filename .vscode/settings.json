@@ -1,0 +1,156 @@
+{
+  "search.exclude": {
+    "**/.husky": true,
+    "**/.nx": true,
+    "**/.yarn": true,
+    "**/node_modules": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/.next": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/*/**": true,
+    "**/node_modules/": true
+  },
+  "files.exclude": {
+    "**/.husky": true,
+    "**/.nx": true,
+    "**/.yarn": true,
+    "**/.next": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/*/**": true,
+    "**/node_modules/": true
+  },
+  "files.watcherExclude": {
+    "**/.husky": true,
+    "**/.nx": true,
+    "**/.yarn": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/*/**": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/lib": true,
+    "**/env": true,
+    "**/__tests__": true,
+    "**/node_modules/": true
+  },
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    "index.ts": "${dirname}.ts"
+  },
+  "prettier.configPath": ".prettierrc",
+  "prettier.singleQuote": true,
+  "prettier.withNodeModules": true,
+  "prettier.arrowParens": "avoid",
+  "prettier.jsxSingleQuote": true,
+  "prettier.prettierPath": "./node_modules/prettier",
+  "prettier.printWidth": 140,
+  "prettier.requireConfig": true,
+  "npm.runSilent": true,
+  "npm.autoDetect": "on",
+  "npm.enableRunFromFolder": true,
+  "npm.packageManager": "pnpm",
+  "editor.minimap.maxColumn": 100,
+  "editor.matchBrackets": "always",
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.formatOnSave": false,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.fontFamily": "'JetBrains Mono','VictorMono NF', 'Fira Code', Consolas, 'Courier New', monospace",
+  "editor.fontSize": 12,
+  "editor.codeLens": true,
+  "editor.mouseWheelZoom": true,
+  "editor.fontLigatures": true,
+  "editor.letterSpacing": 0.2,
+  "editor.smoothScrolling": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "typescript.autoClosingTags": true,
+  "typescript.check.npmIsInstalled": true,
+  "typescript.referencesCodeLens.enabled": false,
+  "typescript.implementationsCodeLens.enabled": true,
+  "typescript.format.semicolons": "ignore",
+  "typescript.inlayHints.parameterNames.enabled": "none",
+  "typescript.inlayHints.parameterTypes.enabled": false,
+  "typescript.inlayHints.enumMemberValues.enabled": false,
+  "typescript.inlayHints.functionLikeReturnTypes.enabled": false,
+  "typescript.inlayHints.propertyDeclarationTypes.enabled": false,
+  "typescript.inlayHints.variableTypes.enabled": true,
+  "typescript.locale": "en",
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.preferences.quoteStyle": "single",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.tsc.autoDetect": "on",
+  "typescript.suggestionActions.enabled": true,
+  "typescript.suggest.completeJSDocs": true,
+  "typescript.suggest.paths": true,
+  "typescript.tsdk": "./node_modules/typescript/lib",
+  "debug.allowBreakpointsEverywhere": true,
+  "debug.showInStatusBar": "always",
+  "debug.javascript.autoAttachFilter": "onlyWithFlag",
+  "debug.javascript.codelens.npmScripts": "never",
+  "task.autoDetect": "on",
+  "material-icon-theme.activeIconPack": "angular_ngrx",
+  "js/ts.implicitProjectConfig.strictNullChecks": true,
+  "css.validate": false,
+  "scss.validate": false,
+  "rest-client.environmentVariables": {
+    "$shared": { "version": "v1", "protocol": "http" },
+    "production": { "host": "devshell.tech", "protocol": "https" },
+    "sandbox": { "host": "localhost:3000" }
+  },
+  "rest-client.defaultHeaders": {
+    "User-Agent": "vscode-restclient",
+    "Origin": "https://devshell.tech/",
+    "content-type": "application/json"
+  },
+  "rest-client.requestNameAsResponseTabTitle": true,
+  "rest-client.followredirect": true,
+  "rest-client.logLevel": "verbose",
+  "rest-client.previewResponsePanelTakeFocus": true,
+  "rest-client.showResponseInDifferentTab": true,
+  "css.customData": [".vscode/css_custom_data.json"],
+  "files.associations": {
+    "*.env": "env",
+    "*.env.*": "env",
+    "*.env.development": "env",
+    "*.env.production": "env"
+  },
+  "exportall.config.folderListener": [],
+  "[nginx]": {
+    "editor.defaultFormatter": "ahmadalli.vscode-nginx-conf"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.autopep8",
+    "python.formatting.provider": "autopep8",
+    "editor.formatOnSave": true,
+  },
+  "[dockerfile]": {
+    "editor.defaultFormatter": "ms-azuretools.vscode-containers"
+  },
+  "[sql]": {
+    "editor.defaultFormatter": "inferrinizzard.prettier-sql-vscode"
+  },
+  "[shellscript]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "[terraform]": {
+    "editor.defaultFormatter": "hashicorp.terraform"
+  },
+  "prettier.tabWidth": 2,
+  "prettier.useTabs": false,
+  "prettier.semi": true,
+  "prettier.trailingComma": "es5",
+  "prettier.bracketSpacing": true,
+  "prettier.bracketSameLine": false,
+  "prettier.proseWrap": "preserve",
+  "prettier.endOfLine": "lf",
+  "git.ignoreLimitWarning": true
+}

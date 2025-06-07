@@ -1,0 +1,146 @@
+name: global
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - '5678:5678'
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=admin
+      - N8N_PORT=5678
+      - WEBHOOK_URL=http://localhost:5678
+      - TZ=America/Sao_Paulo
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - n8n-data:/home/node/.n8n
+    links:
+      - postgres
+      - redis
+      - ollama
+    networks:
+      - global
+  ollama:
+    # docker compose exec ollama ollama pull nomic-embed-text
+    image: ollama/ollama:latest
+    ports:
+      - '11434:11434'
+    pull_policy: always
+    tty: true
+    restart: always
+    expose:
+      - 11434
+    environment:
+      - VECTOR_STORE_PATH=/app/vector_store
+    networks:
+      - global
+    volumes:
+      - ollama_data:/root/.ollama
+      # - ./.tmp/vector_store:/app/vector_store
+      - ./.tmp/.ollama:/root/.ollama
+      - ./.docker/ollama:/code
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:cuda
+    container_name: open-webui
+    ports:
+      - "3000:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      restart_policy:
+        condition: always
+    links:
+      - ollama
+    volumes:
+      - openwebui_data:/app/backend/data
+    networks:
+      - global
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    runtime: nvidia
+  postgres:
+    image: postgres
+    restart: always
+    user: postgres
+    environment:
+      - PGUSER=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=n8n
+    networks:
+      - global
+    expose:
+      - 5432
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready' ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  redis:
+    platform: linux/amd64
+    image: redislabs/rejson:2.0.6
+    command: redis-server --loadmodule /usr/lib/redis/modules/rejson.so --loadmodule /usr/lib/redis/modules/redisearch.so --appendonly yes --maxclients 10000 --timeout 0 --tcp-keepalive 300 --save
+    environment:
+      - TZ=America/Sao_Paulo
+      - REDISTIMESERIES_ARGS="RETENTION_POLICY=20"
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    volumes:
+      - redis_data:/data
+    ports:
+      - '6379:6379'
+    networks:
+      - global
+    extra_hosts:
+      - host.docker.internal:host-gateway
+  mysql:
+    restart: always
+    image: mysql/mysql-server:${MYSQL_VERSION}
+    command: [ '--default-authentication-plugin', 'mysql_native_password' ]
+    pid: host
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+    volumes:
+      - ./.docker/mysql/mysqld.cnf:/etc/mysql/conf.d/mysqld.cnf
+      - ./.docker/mysql/data:/var/lib/mysql
+      - ./.docker/mysql/init:/docker-entrypoint-initdb.d/
+    networks:
+      - global
+
+networks:
+  global:
+    driver: bridge
+
+volumes:
+  pgdata:
+  ollama_data:
+  openwebui_data:
+  n8n-data:
+  redis_data:

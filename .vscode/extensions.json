@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "ms-vscode.makefile-tools",
+    "ms-python.autopep8"
+  ]
+}

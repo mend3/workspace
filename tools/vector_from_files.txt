@@ -1,0 +1,12 @@
+langchain
+langchain-community
+langchain-huggingface
+langchain-core
+fastembed-gpu
+onnxruntime-gpu
+sentence-transformers
+psycopg2-binary
+pgvector[sqlalchemy]
+pinecone
+qdrant-client
+langchain-qdrant

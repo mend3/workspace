@@ -1,0 +1,174 @@
+name: global
+
+services:
+  browserless:
+    platform: linux/amd64
+    restart: always
+    image: browserless/chrome
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - '-f'
+        - http://localhost:3000/
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    ports:
+      - '9000:3000'
+    environment:
+      # - TOKEN=${BROWSER_TOKEN}
+      - ALLOW_FILE_PROTOCOL=true
+      - TZ=America/Sao_Paulo
+      - PREBOOT_CHROME=true
+      # - PROXY_URL=http://proxy:8080
+      - KEEP_ALIVE=true
+      # - PREBOOT_QUANTITY=1
+      # - SINGLE_RUN=true
+      - MAX_CONCURRENT_SESSIONS=1
+      - QUEUE_LENGTH=4
+      - DEFAULT_BLOCK_ADS=true
+      - CHROME_REFRESH_TIME=60000
+      - WORKSPACE_DELETE_EXPIRED=true
+      - WORKSPACE_EXPIRE_DAYS=1
+      - ENABLE_DEBUGGER=false
+      - DEFAULT_BLOCK_ADS=false
+      - DEFAULT_IGNORE_HTTPS_ERRORS=true
+      - ENABLE_CORS=true
+      - EXIT_ON_HEALTH_FAILURE=true
+      - FUNCTION_BUILT_INS=["crypto"]
+      - FUNCTION_EXTERNALS=["request","fetch"]
+      - FUNCTION_ENABLE_INCOGNITO_MODE=false
+      - DEFAULT_STEALTH=true
+      - FUNCTION_DISABLE_SERVICE_WORKERS=true
+      - DEFAULT_IGNORE_DEFAULT_ARGS=false
+      # - DEFAULT_LAUNCH_ARGS=["--proxy-server=proxy:8080","--proxy-auth=user:pass","--disable-background-networking","--disable-features=IsolateOrigins,udioServiceOutOfProcess,ite-per-process","--no-default-browser-check","--no-pings","--use-mock-keychain","--no-zygote","--memory-pressure-off","--disable-dev-shm-usage","--password-store=basic","--disable-infobars","--headless=new","--blink-settings=imagesEnabled=false","--disable-blink-features=AutomationControlled"]
+      - OPTIONAL_LAUNCH_ARGS=["--autoplay-policy=user-gesture-required","--no-first-run","--disable-background-timer-throttling","--disable-backgrounding-occluded-windows","--disable-breakpad","--disable-client-side-phishing-detection","--disable-component-update","--disable-default-apps","--disable-domain-reliability","--disable-hang-monitor","--disable-ipc-flooding-protection","--disable-offer-store-unmasked-wallet-cards","--disable-popup-blocking","--disable-print-preview","--disable-prompt-on-repost","--disable-speech-api","--disk-cache-size=33554432","--disable-background-logging","--disable-software-rasterizer","--no-experiments","--disable-setuid-sandbox","--use-angle=vulkan","--enable-features=Vulkan","--disable-vulkan-surface","--enable-unsafe-webgpu"]
+    networks:
+      - global
+    volumes:
+      - browserless_data:/workspace
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+  playwright:
+    platform: linux/amd64
+    image: mcr.microsoft.com/playwright:v1.52.0
+    working_dir: /home/pwuser
+    user: pwuser
+    init: true
+    tty: true
+    command: /bin/sh -c "npx -y playwright@1.52.0 run-server --port 3000 --host 0.0.0.0"
+    expose:
+      - 3000
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - global
+  browser-agent:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: ./browser/use/Dockerfile
+      args:
+        TARGETPLATFORM: linux/amd64
+    ports:
+      - '7860:7860'
+    working_dir: /app
+    environment:
+      - PYTHON_ENV=production
+      - ANONYMIZED_TELEMETRY=false
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - BROWSER_HOST=ws://playwright:3000
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - USER_AGENT=${USER_AGENT}
+      - OLLAMA_BASE_URL="http://ollama:11434"
+      # - AI_MODEL="gemma:7b-instruct"
+      - LLM_PROVIDER=ollama
+      - LLM_MODEL="gemma:7b-instruct"
+      - LLM_API=http://ollama:11434
+      - BROWSER_MODE=remote
+      - BROWSER_WS_ENDPOINT=ws://playwright:3000
+    # command: python /app/agent/browser/browserless.py
+    depends_on:
+      - playwright
+      - ollama
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - global
+  browser-agent-ui:
+    platform: linux/amd64
+    build:
+      context: ./browser
+      dockerfile: ui/Dockerfile
+      args:
+        TARGETPLATFORM: linux/amd64
+    ports:
+      - "7788:7788"
+      - "6080:6080"
+      - "5901:5901"
+      - "9222:9222"
+    environment:
+      # LLM API Keys & Endpoints
+      - OPENAI_ENDPOINT=${OPENAI_ENDPOINT:-https://api.openai.com/v1}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OLLAMA_ENDPOINT=${OLLAMA_ENDPOINT:-http://host.docker.internal:11434}
+      - OLLAMA_API_BASE_URL=http://ollama:11434
+      - OLLAMA_BASE_URL=http://ollama:11434
+
+      # Application Settings
+      - ANONYMIZED_TELEMETRY=${ANONYMIZED_TELEMETRY:-false}
+      - BROWSER_USE_LOGGING_LEVEL=${BROWSER_USE_LOGGING_LEVEL:-info}
+
+      # Browser Settings
+      - BROWSER_PATH=
+      - BROWSER_USER_DATA=
+      - BROWSER_DEBUGGING_PORT=${BROWSER_DEBUGGING_PORT:-9222}
+      - BROWSER_DEBUGGING_HOST=localhost
+      - USE_OWN_BROWSER=false
+      - KEEP_BROWSER_OPEN=true
+      - BROWSER_CDP=${BROWSER_CDP:-http://localhost:9222} # e.g., http://localhost:9222
+
+      # Display Settings
+      - DISPLAY=:99
+      # This ENV is used by the Dockerfile during build time if Patchright respects it.
+      # It's not strictly needed at runtime by docker-compose unless your app or scripts also read it.
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-browsers # Matches Dockerfile ENV
+      - RESOLUTION=${RESOLUTION:-1920x1080x24}
+      - RESOLUTION_WIDTH=${RESOLUTION_WIDTH:-1920}
+      - RESOLUTION_HEIGHT=${RESOLUTION_HEIGHT:-1080}
+
+      # VNC Settings
+      - VNC_PASSWORD=vncpassword
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      # - ./my_chrome_data:/app/data/chrome_data # Optional: persist browser data
+    restart: unless-stopped
+    shm_size: '2gb'
+    cap_add:
+      - SYS_ADMIN
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "5901" ] # VNC port
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - global
+    depends_on:
+      - ollama
+      - playwright
+
+networks:
+  global:
+    driver: bridge
+
+volumes:
+  browserless_data:
