@@ -34,3 +34,8 @@ tmp/
 *-oauth.*
 projects/
 k8s/
+vendors/
+browser/ui
+browser/extension
+**/public/system
+**/migrations
