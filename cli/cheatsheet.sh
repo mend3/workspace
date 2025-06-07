@@ -24,3 +24,6 @@ docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Command}}\t{{.CreatedAt}}\t{{.
 
 # zip a folder excluding certain directories
 zip -r folder.zip folder -x "*node_modules*" "*/.next*" "*/.git"
+
+# add a git submodule
+git submodule add "$url" "$path"

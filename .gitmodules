@@ -7,3 +7,6 @@
 [submodule "browser/use"]
 	path = browser/use
 	url = git@github.com:mend3/browser-use.git
+[submodule "sws"]
+	path = sws
+	url = git@github.com:mendshell/sws.git
