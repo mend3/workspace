@@ -3,9 +3,9 @@ import os
 import argparse
 import fnmatch
 from typing import List
-from .vector_store.store_handler import VectorStoreHandler
-from .lib.file import UTF8FileHandler, FileHandler
-from .lib.dir import OsScandirDirectoryScanner, DirectoryScanner
+from ..vector_store.store_handler import VectorStoreHandler
+from ..lib.file import UTF8FileHandler, FileHandler
+from ..lib.dir import OsScandirDirectoryScanner, DirectoryScanner
 
 
 class ProjectContextGenerator:
@@ -66,7 +66,8 @@ class ProjectContextGenerator:
                     try:
                         content = self.file_handler.read(entry.path)
                     except Exception as e:
-                        print(f"Skipping file {relative_path}: {e}")
+                        print(
+                            f"Skipping file {relative_path}: {e}", flush=True)
                         continue
                     context_parts.append(
                         f"=== File: {relative_path} ===\n"
@@ -77,9 +78,42 @@ class ProjectContextGenerator:
                     self.total_size += len(content)
 
         except Exception as e:
-            print(f"Error accessing {root_dir}: {e}")
+            print(f"Error accessing {root_dir}: {e}", flush=True)
 
         return "\n".join(context_parts)
+
+
+def start(args, ignore_dir_patterns: List[str], ignore_file_patterns: List[str]):
+    file_handler = UTF8FileHandler()
+
+    relative_output = os.path.join(args.root, args.output)
+    already_exists = os.path.exists(relative_output)
+
+    if already_exists:
+        print(f"Using existing context from {args.output}", flush=True)
+        context = file_handler.read(args.output)
+    else:
+        directory_scanner = OsScandirDirectoryScanner()
+        generator = ProjectContextGenerator(
+            file_handler, directory_scanner)
+        print(f"Generating new context from {args.root}", flush=True)
+        context = generator.generate(
+            args.root,
+            ignore_dirs=ignore_dir_patterns,
+            ignore_files=ignore_file_patterns,
+            follow_symlinks=True,
+        )
+        print(
+            f"✅ Context generated with {generator.file_count} files, total size: {generator.total_size // 1024} KB.")
+        if args.output and context:
+            file_handler.write(context, args.output)
+
+    if args.store and context:
+        vector_store_handler = VectorStoreHandler(
+            args.collection, store=args.store
+        )
+        vector_store_handler.save(
+            content=context, incremental=args.mode == "incremental")
 
 
 def main():
@@ -95,7 +129,7 @@ def main():
     parser.add_argument(
         "--output",
         type=str,
-        default=".cache/ai-context.txt",
+        default=".cache/output.txt",
         help="Output file (absolute path of the file to save the context)",
     )
     parser.add_argument(
@@ -138,46 +172,17 @@ def main():
                             for pattern in args.ignore_files.split(",") if pattern.strip()]
 
     if not args.collection:
-        print("Collection name is required")
+        print("Collection name is required", flush=True)
         return
 
-    print(f"Base directory: {args.root}")
-    print(f"Output file: {args.output}")
-    print(f"Collection name: {args.collection}")
-    print(f"Ignore patterns: {ignore_dir_patterns}")
-    print(f"Ingestion mode: {args.mode}")
-    print(f"Vector Store: {args.store}")
+    print(f"Base directory: {args.root}", flush=True)
+    print(f"Output file: {args.output}", flush=True)
+    print(f"Collection name: {args.collection}", flush=True)
+    print(f"Ignore patterns: {ignore_dir_patterns}", flush=True)
+    print(f"Ingestion mode: {args.mode}", flush=True)
+    print(f"Vector Store: {args.store}", flush=True)
 
-    file_handler = UTF8FileHandler()
-
-    relative_output = os.path.join(args.root, args.output)
-    already_exists = os.path.exists(relative_output)
-
-    if already_exists:
-        print(f"Using existing context from {args.output}")
-        context = file_handler.read(args.output)
-    else:
-        directory_scanner = OsScandirDirectoryScanner()
-        generator = ProjectContextGenerator(
-            file_handler, directory_scanner)
-        print(f"Generating new context from {args.root}")
-        context = generator.generate(
-            args.root,
-            ignore_dirs=ignore_dir_patterns,
-            ignore_files=ignore_file_patterns,
-            follow_symlinks=True,
-        )
-        print(
-            f"✅ Context generated with {generator.file_count} files, total size: {generator.total_size // 1024} KB.")
-        if args.output and context:
-            file_handler.write(context, args.output)
-
-    if args.store and context:
-        vector_store_handler = VectorStoreHandler(
-            args.collection, store=args.store
-        )
-        vector_store_handler.save(
-            content=context, incremental=args.mode == "incremental")
+    start(args, ignore_dir_patterns, ignore_file_patterns)
 
 
 if __name__ == "__main__":

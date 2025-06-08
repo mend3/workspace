@@ -1,5 +1,3 @@
-name: global
-
 services:
   ai-context:
     platform: linux/amd64
@@ -11,20 +9,24 @@ services:
       target: workspace
       args:
         - VECTOR_TOOL=vector_from_files
-    command: python -m tools.vector_from_files --store qdrant --collection workspace_embedding --ignore-dirs ".git,.tmp,tmp,__pycache__,node_modules" --ignore-files "package-lock.json,yarn.lock,pnpm-lock.yaml" --output /app/.cache/ai-context.txt
+    command: python3 -m tools.generators.vector_from_files --root . --store pgvector --collection workspace_embedding --ignore-dirs ".git,.tmp,tmp,__pycache__,node_modules" --ignore-files "package-lock.json,yarn.lock,pnpm-lock.yaml" --output /app/.cache/output.txt
     environment:
-      - QDRANT_URL=http://qdrant:6333
-      - PGVECTOR_CONNECTION_STRING=postgresql+psycopg2://postgres:postgres@pgvector:5432/vector_db
+      - PGVECTOR_CONNECTION_STRING=postgresql+psycopg2://postgres:postgres@pgvector:5432/vector_db # only when using pgvector
+      - PYTHONDONTWRITEBYTECODE=1
       - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
       - EMBEDDING_PROVIDER=fastembed
-      - PYTHONDONTWRITEBYTECODE=1
+      # - QDRANT_URL=http://qdrant:6333 # only using Qdrant
+      # - PINECONE_API_KEY=apilocal # only when using Pinecone
     volumes:
-      - .cache/llm:/app/.cache
+      - .:/app
     networks:
       - global
     links:
       - qdrant
+      - pgvector
     depends_on:
+      pgvector:
+        condition: service_started
       qdrant:
         condition: service_started
   pgvector:

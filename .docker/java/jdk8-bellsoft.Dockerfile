@@ -14,6 +14,6 @@ ENV JAVA_HOME=/opt/jdk8u452
 ENV PATH="$JAVA_HOME/bin:$PATH"
 ENV CLASSPATH="$CLASSPATH:./libs/*:./config/:."
 
-WORKDIR /usr/app
+WORKDIR /app
 
 CMD ["java", "-version"]

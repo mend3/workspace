@@ -4,7 +4,7 @@ import re
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import FastEmbedEmbeddings
 from langchain_community.vectorstores.pgvector import PGVector
-from .config import EMBEDDING_MODEL
+from ..config import EMBEDDING_MODEL
 
 
 def clean_text(text):

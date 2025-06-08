@@ -1,6 +1,6 @@
 CONTAINER_RUNTIME ?= "docker"
 PROFILE ?= "global"
-TARGET?="*" ## Target for L2, can be "extalia" or "docs"
+TARGET?="*" ## Target (service name) for docker compose
 
 .PHONY: help
 help: ## Display help for each make command
@@ -10,14 +10,14 @@ help: ## Display help for each make command
 extalia:  ## Starts Extalia server
 	 $(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
    -f ./extalia/docker-compose.yml \
-    up --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate l2-$(TARGET)
+    up --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate gameserver
 
 .PHONY: mcp
 mcp:  ## Starts mcp server
 	 $(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
    -f ./tools/docker-compose.yml \
    -f ./mcp/docker-compose.yml \
-    up --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate ai-context mcp-*
+    up --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate ai-context mcp-$(TARGET)
 
 .PHONY: up
 up:  ## Run selected target
@@ -39,31 +39,16 @@ down:  ## Drops everything (docker)
    -f ./shared/docker-compose.yml \
     down -v --remove-orphans
 
-.PHONY: local-context
-local-context:  ## Generate AI Context based on local repo
-	$(CONTAINER_RUNTIME) compose -f ./docker-compose.yml build ai-context && \
-  docker create --name context-container ${PROFILE}-ai-context  && \
-  docker cp context-container:/app/.cache/ai-context.txt .cache/ai-context.txt && \
-  docker rm context-container
-
 .PHONY: bump_submodules
 bump_submodules:  ## Bump submodules to latest commit
 	./cli/bump_submodules.sh
 
-.PHONY: k6
-k6:  ## Run k6 tests (k8s)
-	./cli/k6.sh
+.PHONY: clean
+clean:  ## Clean cache folders
+	sudo rm -rf .cache **/__pycache__
 
-.PHONY: konvert
-konvert:  ## Convert docker-compose files to k8s deployments using konvert (k8s)
-	kompose convert -f ./docker-compose.yml -f \
-    ./docker/http.compose.yml -f \
-    ./docker/k6.compose.yml -f \
-    ./docker/java.compose.yml -f
-
-.PHONY: convert
-convert:  ## Convert docker-compose files to k8s deployments using docker compose-bridge plugin (k8s)
-	compose-bridge convert -f ../../docker-compose.yml -f \
-    ./docker/http.compose.yml -f \
-    ./docker/k6.compose.yml -f \
-    ./docker/java.compose.yml -f
+.PHONY: ai-context
+ai-context: clean ## Bump submodules to latest commit
+	$(CONTAINER_RUNTIME) compose -f docker-compose.yml -f tools/docker-compose.yml up \
+    --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate \
+    ai-context

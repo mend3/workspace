@@ -15,18 +15,20 @@ class VectorStoreHandler:
         self.collectionName = collectionName
         self.store = store
         self.namespace = f"{store}/{collectionName}"
+
+        db_url = PGVECTOR_CONNECTION_STRING if self.store == "pgvector" else "sqlite:///.cache/record_manager_cache.sql"
+        engine_kwargs = None if self.store == "pgvector" else {
+            "echo": True,
+            "pool_pre_ping": True,
+            "pool_recycle": 3600,
+            "pool_size": 10,
+            "max_overflow": 20,
+            "pool_timeout": 30,
+            "pool_use_lifo": True,
+        }
+
         self.record_manager = SQLRecordManager(
-            self.namespace, db_url=PGVECTOR_CONNECTION_STRING, engine_kwargs={
-                "echo": False,
-                "pool_pre_ping": True,
-                "pool_recycle": 3600,
-                "pool_size": 10,
-                "max_overflow": 20,
-                "pool_timeout": 30,
-                "pool_use_lifo": True,
-            }
-        ) if self.store == "pgvector" else SQLRecordManager(
-            self.namespace, db_url="sqlite:///.cache/record_manager_cache.sql"
+            self.namespace, db_url=db_url, engine_kwargs=engine_kwargs
         )
 
         self.record_manager.create_schema()
@@ -90,13 +92,14 @@ class VectorStoreHandler:
 
             print("Starting to create embeddings...")
             embeddings = EmbeddingFactory.create(
-                provider="huggingface",
+                provider=EMBEDDING_PROVIDER,
                 model_name=EMBEDDING_MODEL,
                 use_gpu=False
             )
             print("Embeddings created successfully!")
 
-            print(f"Creating a {self.store} vector store via factory...")
+            print(
+                f"Creating a {self.store} vector store via factory...")
             factory = VectorStoreFactory(
                 store=self.store,
                 collection_name=self.collectionName,
@@ -105,7 +108,8 @@ class VectorStoreHandler:
             client = factory.create_client()
             print(f"Vector store client created successfully!")
 
-            print(f"Creating store and loading documents into vector store...")
+            print(
+                f"Creating store and loading documents into vector store...")
             store = client.create_or_load(documents, incremental=False)
             print(f"Documents loaded into vector store successfully!")
 
@@ -114,7 +118,7 @@ class VectorStoreHandler:
                 docs_source=documents,
                 record_manager=self.record_manager,
                 vector_store=store,
-                cleanup="incremental",
+                cleanup="incremental" if incremental else "full",
                 source_id_key="chunk_hash"
             )
             print("Indexing completed successfully!")

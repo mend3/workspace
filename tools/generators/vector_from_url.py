@@ -5,7 +5,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 import re
-from .config import EMBEDDING_MODEL
+from ..config import EMBEDDING_MODEL
 
 
 def clean_text(text):

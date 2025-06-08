@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     libpq-dev gcc \
     && rm -rf /var/lib/apt/lists/*
 
-COPY "./tools/${VECTOR_TOOL}.txt" ./requirements.txt
+COPY "./tools/requirements/${VECTOR_TOOL}.txt" ./requirements.txt
 
 RUN pip config set global.cache-dir "/app/.cache/pip"
 
@@ -28,4 +28,3 @@ CMD ["python3", "-m", "tools./${VECTOR_TOOL}"]
 FROM vector_base AS workspace
 ARG VECTOR_TOOL
 WORKDIR /app
-COPY . .
