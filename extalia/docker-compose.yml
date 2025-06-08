@@ -1,0 +1,93 @@
+services:
+  l2-docs:
+    platform: linux/amd64
+    container_name: ai-context
+    working_dir: /app
+    build:
+      context: .
+      dockerfile: ./.docker/python3/Dockerfile
+      target: workspace
+      args:
+        - VECTOR_TOOL=vector_from_html
+    command: python -m tools.vector_from_html
+    environment:
+      - PGVECTOR_CONNECTION_STRING=postgresql+psycopg2://postgres:postgres@pgvector:5432/vector_db
+      - PYTHONDONTWRITEBYTECODE=1
+      - COLLECTION_NAME=l2docs_embedding
+    volumes:
+      - .cache/llm:/app/.cache
+      - ./extalia/docs:/docs
+    networks:
+      - global
+    links:
+      - pgvector
+    depends_on:
+      qdrant:
+        condition: service_started
+  l2-cdn:
+    restart: always
+    build:
+      context: .
+      dockerfile: ./.docker/nginx/Dockerfile
+      target: cdn
+    volumes:
+      - ./.docker/nginx/cdn.conf:/etc/nginx/nginx.conf:ro
+      - ./.docker/nginx/cdn:/usr/share/nginx/cdn:ro
+      - ./.tmp/nginx/cdn:/var/log/nginx
+      # - ./html:/usr/share/nginx/html/
+    ports:
+      - '9999:80'
+    networks:
+      - global
+  l2-extalia:
+    build:
+      context: .
+      dockerfile: ./.docker/jdk8/Dockerfile
+    command: ./start_servers.sh
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=extalia
+    ports:
+      - 7777:7777
+      - 2106:2106
+      - 9014:9014
+    networks:
+      - global
+    volumes:
+      - ./extalia/server:/usr/app
+  loginserver:
+    build:
+      context: .
+      dockerfile: ./.docker/jdk8/Dockerfile
+    command: java -Xmx512m -cp ".:./libs/*:./LoginServer.jar" com.extalia.loginserver.L2LoginServer
+    ports:
+      - 2106:2106
+      - 9014:9014
+    networks:
+      - global
+    volumes:
+      - ./extalia/server:/usr/src/server
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  gameserver:
+    build:
+      context: .
+      dockerfile: ./.docker/jdk8/Dockerfile
+    command: java -Xmx1024m -cp ".:./libs/*:./GameServer.jar" com.extalia.gameserver.GameServer
+    ports:
+      - 7777:7777
+    networks:
+      - global
+    volumes:
+      - ./extalia/server:/usr/src/server
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      loginserver:
+        condition: service_started
+
+networks:
+  global:
+    driver: bridge

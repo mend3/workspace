@@ -1,5 +1,4 @@
 .cache
-.docker
 **/mysql/data
 **/dump
 **/logs
@@ -39,3 +38,6 @@ browser/ui
 browser/extension
 **/public/system
 **/migrations
+extalia/server
+extalia/docs
+**/.cursor*

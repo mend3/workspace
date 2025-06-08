@@ -1,0 +1,52 @@
+services:
+  k6:
+    image: grafana/k6:latest
+    container_name: k6
+    command: ['run', '/src/${K6_TEST:-load}.js']
+    environment:
+      - K6_TEST_URI=${K6_TEST_URI:-http://nginx/metrics}
+      - HTTP_PROXY=${HTTP_PROXY}
+      - HTTPS_PROXY=${HTTPS_PROXY}
+      - K6_OUT=influxdb=http://influxdb:8086/k6
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    links:
+      - influxdb
+      - grafana
+    expose:
+      - 3000
+    depends_on:
+      influxdb:
+        condition: service_started
+      grafana:
+        condition: service_started
+      api:
+        condition: service_healthy
+    volumes:
+      - ./docker/k6/:/src/
+    networks:
+      - backend
+
+  geoip2influx:
+    image: ghcr.io/gilbn/geoip2influx
+    container_name: geoip2influx
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Sao_Paulo
+      - INFLUX_HOST=influxdb
+      - INFLUX_DATABASE=geoip2influx
+      - INFLUX_HOST_PORT=8086
+      - INFLUX_RETENTION=3d
+      - INFLUX_SHARD=1d
+      - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
+    volumes:
+      - ./tmp/geoip2influx:/config
+      - ./tmp/nginx/logs/:/var/log/nginx/
+    restart: unless-stopped
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge

@@ -1,0 +1,18 @@
+{
+  "chrome": {
+    "default": "90.0",
+    "versions": {
+      "90.0": {
+        "image": "selenoid/chrome:90.0"
+      }
+    }
+  },
+  "firefox": {
+    "default": "88.0",
+    "versions": {
+      "88.0": {
+        "image": "selenoid/firefox:88.0"
+      }
+    }
+  }
+}
