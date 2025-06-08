@@ -7,5 +7,6 @@
   "printWidth": 120,
   "jsxSingleQuote": true,
   "trailingComma": "all",
+  "endOfLine": "lf",
   "semi": false
 }

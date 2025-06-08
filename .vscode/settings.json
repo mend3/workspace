@@ -130,7 +130,7 @@
   "[python]": {
     "editor.defaultFormatter": "ms-python.autopep8",
     "python.formatting.provider": "autopep8",
-    "editor.formatOnSave": true,
+    "editor.formatOnSave": true
   },
   "[dockerfile]": {
     "editor.defaultFormatter": "ms-azuretools.vscode-containers"
@@ -152,5 +152,20 @@
   "prettier.bracketSameLine": false,
   "prettier.proseWrap": "preserve",
   "prettier.endOfLine": "lf",
-  "git.ignoreLimitWarning": true
+  "git.ignoreLimitWarning": true,
+  "mcp": {
+    "inputs": [],
+    "servers": {
+      "mcp-puppeteer": {
+        "type": "sse",
+        "url": "http://localhost:8000/sse"
+      }
+    }
+  },
+  "chat.mcp.discovery.enabled": {
+    "claude-desktop": false,
+    "windsurf": false,
+    "cursor-global": true,
+    "cursor-workspace": false
+  }
 }
