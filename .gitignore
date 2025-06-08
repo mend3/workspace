@@ -41,3 +41,4 @@ browser/extension
 extalia/server
 extalia/docs
 **/.cursor*
+**./docker/data
