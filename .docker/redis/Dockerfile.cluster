@@ -1,0 +1,7 @@
+FROM redis:latest
+
+# Expose the Redis port
+EXPOSE 7000
+
+# Command to run Redis in cluster mode with the custom configuration file
+CMD ["redis-server", "/etc/redis/redis.conf", "--cluster-enabled", "yes"]

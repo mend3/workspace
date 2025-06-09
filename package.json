@@ -1,5 +1,5 @@
 {
-  "name": "@mend3/globals",
+  "name": "@mend3/workspace",
   "version": "1.0.0",
   "type": "module",
   "scripts": {},
@@ -8,21 +8,22 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.11.2",
-    "zod": "^3.24.3"
+    "@modelcontextprotocol/sdk": "1.12.1",
+    "axios": "1.9.0",
+    "zod": "3.25.56"
   },
   "devDependencies": {
     "@types/debug": "4.1.12",
-    "@types/node": "^22.15.0",
-    "@vitest/coverage-v8": "3.1.2",
-    "@vitest/ui": "3.1.2",
+    "@types/node": "22.15.30",
+    "@vitest/coverage-v8": "3.2.2",
+    "@vitest/ui": "3.2.2",
     "chalk": "5.4.1",
-    "debug": "4.4.0",
+    "debug": "4.4.1",
     "dotenv": "16.5.0",
-    "prettier": "^3.5.3",
+    "prettier": "3.5.3",
     "tsconfig-paths": "4.2.0",
     "typescript": "5.8.3",
     "vite-tsconfig-paths": "5.1.4",
-    "vitest": "3.1.2"
+    "vitest": "3.2.2"
   }
 }

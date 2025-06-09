@@ -13,6 +13,45 @@ services:
       - global
 
   # source https://github.com/nginxinc/nginx-prometheus-exporter
+  prometheus-nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.0
+    restart: always
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+    command:
+      - --nginx.scrape-uri=http://nginx:80/stub_status
+      - --no-nginx.ssl-verify
+    expose:
+      - 9113
+    networks:
+      - global
+    depends_on:
+      - prometheus
+
+  # source https://github.com/prometheus/node_exporter
+  # https://github.com/vegasbrianc/prometheus/
+  prometheus-node-exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    restart: always
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - --collector.filesystem.ignored-mount-points
+      - '^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)'
+    privileged: true
+    expose:
+      - 9100
+    networks:
+      - global
+    depends_on:
+      - prometheus
+
+  # source https://github.com/nginxinc/nginx-prometheus-exporter
   # nginx-prometheus-exporter:
   #   image: nginx/nginx-prometheus-exporter:1.0
   #   restart: always
@@ -56,7 +95,8 @@ services:
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_BASIC_ENABLED=false
-      # - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
     volumes:
       - grafana_data:/var/lib/grafana
       - ./.docker/grafana/dashboards:/var/lib/grafana/dashboards
@@ -65,8 +105,43 @@ services:
     networks:
       - global
     depends_on:
-      elasticsearch:
-        condition: service_healthy
+      - elasticsearch
+      - influxdb
+      - loki
+      - promtail
+      - cadvisor
+      - prometheus
+      - prometheus-nginx-exporter
+      - prometheus-node-exporter
+
+  loki:
+    restart: always
+    image: grafana/loki:3.0.1
+    command: '--config.file=/mnt/config/loki-config.yaml'
+    expose:
+      - 3100
+    # volumes:
+    #   - ./docker/loki/loki-config.yaml:/mnt/config/loki-config.yaml
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - global
+
+  # source: https://github.com/google/cadvisor
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    restart: always
+    depends_on:
+      - prometheus
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    expose:
+      - 8080
+    networks:
+      - global
 
   influxdb:
     image: influxdb:1.8
@@ -81,6 +156,16 @@ services:
     volumes:
       - ./.docker/influxdb/config:/etc/influxdb2
       - ./.tmp/influxdb/data:/var/lib/influxdb2
+    networks:
+      - global
+
+  promtail:
+    restart: always
+    image: grafana/promtail:3.2.1
+    command: '--config.file=/mnt/config/promtail-config.yaml'
+    volumes:
+      - ./docker/loki/promtail-config.yaml:/mnt/config/promtail-config.yaml
+      - ./tmp/nginx/logs:/var/log/nginx
     networks:
       - global
 

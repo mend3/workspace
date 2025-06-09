@@ -1,6 +1,6 @@
-# Extalia Server Website
+# Extalia Tools Hub
 
-This is the official website for the Extalia Interlude Server, featuring a news system, item set generator, and server information.
+This is the official tools hub for the Extalia Server, featuring a news system, item set generator, and server information.
 
 ## Features
 

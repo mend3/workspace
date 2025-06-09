@@ -19,6 +19,13 @@
       "protocol": "inspector",
       "restart": true,
       "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Attach to websocket gameserver",
+      "request": "attach",
+      "cwd": "${workspaceFolder}/extalia/web/apps/gameserver",
+      "type": "node",
+      "port": 9229
     }
   ]
 }

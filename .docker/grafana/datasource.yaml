@@ -51,3 +51,25 @@ datasources:
       tlsSkipVerify: false
       timeInterval: ''
     secureJsonData: { password: true }
+  - name: loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: false
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        # Field with internal link pointing to data source in Grafana.
+        # datasourceUid value can be anything, but it should be unique across all defined data source uids.
+        - datasourceUid: prometheus
+          matcherRegex: "TaskID=(\\w+)"
+          name: TraceID
+          # url will be interpreted as query for the datasource
+          url: '$${__value.raw}'
+          # optional for URL Label to set a custom display label for the link.
+          urlDisplayLabel: 'View Trace'
+
+        # Field with external link.
+        - matcherRegex: "TaskID=(\\w+)"
+          name: TraceID
+          url: 'http://localhost:16686/trace/$${__value.raw}'

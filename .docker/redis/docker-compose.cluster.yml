@@ -1,0 +1,28 @@
+version: '3'
+services:
+  redis-node-1:
+    build:
+      context: .
+      dockerfile: ./docker/redis/Dockerfile.cluster
+    ports:
+      - '7000:7000'
+    networks:
+      - backend
+
+  redis-node-2:
+    build:
+      context: .
+      dockerfile: ./docker/redis/Dockerfile.cluster
+    ports:
+      - '7001:7000'
+    networks:
+      - backend
+
+  redis-node-3:
+    build:
+      context: .
+      dockerfile: ./docker/redis/Dockerfile.cluster
+    ports:
+      - '7002:7000'
+    networks:
+      - backend

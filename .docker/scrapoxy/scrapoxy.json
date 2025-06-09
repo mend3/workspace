@@ -1,0 +1,24 @@
+{
+    "migrations": [
+        "0001-init",
+        "0002-proxidize",
+        "0003-freeproxies",
+        "0004-iproyal",
+        "0005-format",
+        "0006-sources",
+        "0007-brightdata-v2",
+        "0008-azure-spot-instances",
+        "0009-ciphers-shuffle",
+        "0010-zyte-url",
+        "0011-zyte-credential-type",
+        "0012-iproyal-residential",
+        "0013-country-case",
+        "0014-brightdata-v3",
+        "0015-remove-install"
+    ],
+    "params": {
+        "installId": "d305fb52-fe16-4682-b052-3071c43cf28f"
+    },
+    "projects": [],
+    "users": []
+}
