@@ -3,8 +3,7 @@
 ## Content
 
 - **vector_from_files.py** - Generates a txt file with all the user workspace and send to a vector store
-   - `python3 -m tools.vector_from_files --root . --output /app/.cache/output.txt --store pgvector --collection workspace_embedding`
-- **vector_from_html.py** - Generates vector data based on html extracted content (from local files)
+   - `python3 -m tools.vector_from_files --root . --store qdrant --collection workspace_embedding`
 - **vector_from_url.py** - Generates vector data based on html extracted from internet.
 
 

@@ -9,13 +9,13 @@ services:
       target: workspace
       args:
         - VECTOR_TOOL=vector_from_files
-    command: python3 -m tools.generators.vector_from_files --root . --store pgvector --collection workspace_embedding --ignore-dirs ".git,.tmp,tmp,__pycache__,node_modules" --ignore-files "package-lock.json,yarn.lock,pnpm-lock.yaml" --output /app/.cache/output.txt
+    command: python3 -m tools.generators.vector_from_files --root ./vendors --store qdrant --collection workspace_embedding --ignore-dirs "tmp,__pycache__,node_modules" --ignore-files "package-lock.json,yarn.lock,pnpm-lock.yaml"
     environment:
-      - PGVECTOR_CONNECTION_STRING=postgresql+psycopg2://postgres:postgres@pgvector:5432/vector_db # only when using pgvector
       - PYTHONDONTWRITEBYTECODE=1
       - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
       - EMBEDDING_PROVIDER=fastembed
-      # - QDRANT_URL=http://qdrant:6333 # only using Qdrant
+      - QDRANT_URL=http://qdrant:6333 # only using Qdrant
+      # - PGVECTOR_CONNECTION_STRING=postgresql+psycopg2://postgres:postgres@pgvector:5432/vector_db # only when using pgvector
       # - PINECONE_API_KEY=apilocal # only when using Pinecone
     volumes:
       - .:/app
@@ -23,10 +23,7 @@ services:
       - global
     links:
       - qdrant
-      - pgvector
     depends_on:
-      pgvector:
-        condition: service_started
       qdrant:
         condition: service_started
   pgvector:

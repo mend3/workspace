@@ -1,12 +1,8 @@
-import os
-from datetime import date
-from typing import Literal
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from typing import List, Literal
 from langchain.indexes import SQLRecordManager, index
 from langchain_core.documents import Document
 from .store_factory import VectorStoreFactory
 from .embedding_factory import EmbeddingFactory
-from ..lib.utils import chunk_hash
 from ..config import PGVECTOR_CONNECTION_STRING, EMBEDDING_MODEL, EMBEDDING_PROVIDER
 
 
@@ -16,7 +12,7 @@ class VectorStoreHandler:
         self.store = store
         self.namespace = f"{store}/{collectionName}"
 
-        db_url = PGVECTOR_CONNECTION_STRING if self.store == "pgvector" else "sqlite:///.cache/record_manager_cache.sql"
+        db_url = PGVECTOR_CONNECTION_STRING if self.store == "pgvector" else "sqlite:///./.cache/record_manager_cache.sql"
         engine_kwargs = None if self.store == "pgvector" else {
             "echo": True,
             "pool_pre_ping": True,
@@ -35,24 +31,12 @@ class VectorStoreHandler:
 
     def save(
         self,
-        content: str,
+        context: List[tuple[str, Document]],
         incremental: bool = False,
-        chunk_size: int = 1000,
-        chunk_overlap: int = 200,
     ) -> None:
         """
         Split the content, embed, and upload to pgvector.
         """
-
-        if not content.strip():
-            print("No content to process for vector store.")
-            return
-
-        today = date.today()
-
-        chunks = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size, chunk_overlap=chunk_overlap).split_text(content)
-        print(f"Number of chunks: {len(chunks)}")
 
         existing_keys = set()
         if incremental:
@@ -63,67 +47,53 @@ class VectorStoreHandler:
         total_size = 0
         skipped = 0
 
-        if chunks:
-            print(f"Creating documents of {len(chunks)} chunks")
-            for idx, chunk in enumerate(chunks):
-                h = chunk_hash(chunk)
-                if incremental and h in existing_keys:
-                    skipped += 1
-                    continue
-                documents.append(
-                    Document(
-                        page_content=chunk,
-                        metadata={
-                            "updated_at": today.isoformat(),
-                            "chunk_index": idx,
-                            "chunk_hash": h,
-                            "length": len(chunk)
-                        }
-                    )
-                )
-                total_size += len(chunk)
+        print(f"Indexing {len(context)} documents...")
+        for idx, document in context:
+            if incremental and idx in existing_keys:
+                skipped += 1
+                continue
+            documents.append(document)
+            total_size += document.metadata.get('chunk_length', 0)
 
-            if not documents:
-                print("No new or modified documents to index.")
-                return
+        if not documents:
+            print("No new or modified documents to index.")
+            return
 
-            print(
-                f"✅ Documents created successfully with \n\t{len(documents)} files, \n\t{skipped} skipped, \n\t{total_size // 1024} KB.")
+        print(
+            f"✅ Documents created successfully with \n\t{len(documents)} files, \n\t{skipped} skipped, \n\t{total_size // 1024} KB.")
 
-            print("Starting to create embeddings...")
-            embeddings = EmbeddingFactory.create(
-                provider=EMBEDDING_PROVIDER,
-                model_name=EMBEDDING_MODEL,
-                use_gpu=False
-            )
-            print("Embeddings created successfully!")
+        print("Starting to create embeddings...")
+        embeddings = EmbeddingFactory.create(
+            provider=EMBEDDING_PROVIDER,
+            model_name=EMBEDDING_MODEL,
+            use_gpu=False
+        )
+        print("Embeddings created successfully!")
 
-            print(
-                f"Creating a {self.store} vector store via factory...")
-            factory = VectorStoreFactory(
-                store=self.store,
-                collection_name=self.collectionName,
-                embeddings=embeddings,
-            )
-            client = factory.create_client()
-            print(f"Vector store client created successfully!")
+        print(
+            f"Creating a {self.store} vector store via factory...")
+        factory = VectorStoreFactory(
+            store=self.store,
+            collection_name=self.collectionName,
+            embeddings=embeddings,
+        )
+        client = factory.create_client()
+        print(f"Vector store client created successfully!")
 
-            print(
-                f"Creating store and loading documents into vector store...")
-            store = client.create_or_load(documents, incremental=False)
-            print(f"Documents loaded into vector store successfully!")
+        print(
+            f"Creating store and loading documents into vector store...")
+        store = client.create_or_load(documents, incremental=False)
+        print(f"Documents loaded into vector store successfully!")
 
-            print("Starting to index...")
-            index(
-                docs_source=documents,
-                record_manager=self.record_manager,
-                vector_store=store,
-                cleanup="incremental" if incremental else "full",
-                source_id_key="chunk_hash"
-            )
-            print("Indexing completed successfully!")
+        print("Starting to index...")
+        index(
+            docs_source=documents,
+            record_manager=self.record_manager,
+            vector_store=store,
+            cleanup="incremental" if incremental else "full",
+            source_id_key="chunk_hash"
+        )
+        print("Indexing completed successfully!")
 
-            print(
-                f"Vector store '{self.collectionName}' created and saved successfully!")
-        else:
-            print("No content extracted for vector store.")
+        print(
+            f"Vector store '{self.collectionName}' created and saved successfully!")

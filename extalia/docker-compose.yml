@@ -31,7 +31,7 @@ services:
     networks:
       - global
     volumes:
-      - ./extalia/server:/app:ro
+      - ./extalia/server:/app
     depends_on:
       mysql:
         condition: service_healthy
@@ -45,6 +45,7 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=extalia
+      - GAME_SERVER_LOGIN_HOST=loginserver
     ports:
       - 7777:7777
       - 2106:2106
@@ -52,7 +53,7 @@ services:
     networks:
       - global
     volumes:
-      - ./extalia/server:/app:ro
+      - ./extalia/server:/app
   loginserver:
     build:
       context: .
@@ -69,25 +70,26 @@ services:
     networks:
       - global
     volumes:
-      - ./extalia/server:/app:ro
+      - ./extalia/server:/app
     extra_hosts:
       - "host.docker.internal:host-gateway"
   gameserver:
     build:
       context: .
       dockerfile: ./.docker/java/jdk8-bellsoft.Dockerfile
-    command: java -Xmx1024m -cp ".:./libs/*:./GameServer.jar" com.extalia.gameserver.GameServer
+    command: java -Xmx1024m -cp ".:./libs/*:./GameServer.jar" com.extalia.gameserver.L2GameServer
     environment:
       - MYSQL_HOST=mysql
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=extalia
+      - GAME_SERVER_LOGIN_HOST=localhost
     ports:
       - 7777:7777
     networks:
       - global
     volumes:
-      - ./extalia/server:/app:ro
+      - ./extalia/server:/app
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

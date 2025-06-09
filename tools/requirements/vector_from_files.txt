@@ -10,3 +10,4 @@ pgvector[sqlalchemy]
 pinecone
 qdrant-client
 langchain-qdrant
+beautifulsoup4

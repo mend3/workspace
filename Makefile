@@ -10,7 +10,7 @@ help: ## Display help for each make command
 extalia:  ## Starts Extalia server
 	 $(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
    -f ./extalia/docker-compose.yml \
-    up --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate gameserver
+    up --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate -d gameserver
 
 .PHONY: mcp
 mcp:  ## Starts mcp server
@@ -45,7 +45,7 @@ bump_submodules:  ## Bump submodules to latest commit
 
 .PHONY: clean
 clean:  ## Clean cache folders
-	sudo rm -rf .cache **/__pycache__
+	sudo rm -rf .cache **/__pycache__ **/dist/ && mkdir -p .cache
 
 .PHONY: ai-context
 ai-context: clean ## Bump submodules to latest commit
