@@ -1,0 +1,22 @@
+[sources.docker_logs]
+type = "docker_logs"
+
+[transforms.parse_json_logs]
+type = "remap"
+inputs = ["docker_logs"]
+source = '''
+structured = parse_json!(.message) ?? {}
+. = merge(., structured)
+'''
+
+[sinks.elasticsearch]
+type = "elasticsearch"
+inputs = ["parse_json_logs"]
+endpoint = "http://elasticsearch:9200"
+index = "python-logs"
+mode = "bulk"
+
+[sinks.console_debug]
+type = "console"
+inputs = ["parse_json_logs"]
+encoding.codec = "json"

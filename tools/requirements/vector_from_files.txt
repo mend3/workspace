@@ -11,3 +11,4 @@ pinecone
 qdrant-client
 langchain-qdrant
 beautifulsoup4
+python-json-logger

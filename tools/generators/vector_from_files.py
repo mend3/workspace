@@ -11,6 +11,7 @@ from ..vector_store.store_handler import VectorStoreHandler
 from ..lib.utils import chunk_hash
 from ..lib.file import UTF8FileHandler, FileHandler
 from ..lib.dir import OsScandirDirectoryScanner, DirectoryScanner
+from ..lib.logger import logger
 
 
 def clean_text(text):
@@ -20,7 +21,8 @@ def clean_text(text):
 
 
 class ProjectContextScanner:
-    def __init__(self, file_handler: FileHandler, directory_scanner: DirectoryScanner, text_splitter: RecursiveCharacterTextSplitter):
+    def __init__(self, file_handler: FileHandler, directory_scanner: DirectoryScanner,
+                 text_splitter: RecursiveCharacterTextSplitter):
         self.file_handler = file_handler
         self.directory_scanner = directory_scanner
         self.text_splitter = text_splitter
@@ -29,12 +31,12 @@ class ProjectContextScanner:
         self.documents: List[tuple[str, Document]] = []
 
     def scan(
-        self,
-        root_dir: str,
-        base: str = "",
-        ignore_dirs: List[str] = None,
-        ignore_files: List[str] = None,
-        follow_symlinks: bool = False,
+            self,
+            root_dir: str,
+            base: str = "",
+            ignore_dirs: List[str] = None,
+            ignore_files: List[str] = None,
+            follow_symlinks: bool = False,
     ) -> None:
         """
         Recursively traverse the project directory starting at root_dir,
@@ -56,7 +58,7 @@ class ProjectContextScanner:
 
         try:
             entries = self.directory_scanner.scan(root_dir)
-            for entry in sorted(entries, key=lambda e: e.name):
+            for entry in sorted(entries, key=lambda el: el.name):
                 if entry.name.startswith('.'):
                     continue
                 relative_path = os.path.join(
@@ -76,7 +78,7 @@ class ProjectContextScanner:
                     try:
                         content = self.file_handler.read(entry.path)
                     except Exception as e:
-                        print(f"{e}", flush=True)
+                        logger.error(f"{e}")
                         continue
 
                     if entry.name.endswith(('.html', '.htm')):
@@ -86,6 +88,7 @@ class ProjectContextScanner:
                             with open(path, 'r', encoding='utf-8') as f:
                                 soup = BeautifulSoup(f, 'html.parser')
                                 return clean_text(soup.get_text(separator=' ', strip=True))
+
                         content = extract_content_from_file(entry.path)
 
                     # context_parts.append(
@@ -94,35 +97,34 @@ class ProjectContextScanner:
                     #     f"{'-'*40}\n"
                     # )
                     if not content:
-                        print(
-                            f"Skipping empty file {relative_path}", flush=True)
+                        logger.error(f"Skipping empty file {relative_path}")
                         continue
 
                     chunks = self.text_splitter.split_text(content)
                     for idx, chunk in enumerate(chunks):
                         dir_hash = chunk_hash(os.path.dirname(entry.path))
-                        hash = chunk_hash(chunk)
-                        chunk_id = "-".join([dir_hash, hash])
+                        doc_hash = chunk_hash(chunk)
                         self.documents.append(
-                            [hash, Document(
+                            (doc_hash, Document(
                                 page_content=chunk,
                                 metadata={
                                     "source": entry.name,
                                     "path": entry.path,
                                     "slug": clean_text(entry.name),
+                                    "dir_hash": dir_hash,
                                     "updated_at": today.isoformat(),
-                                    "chunk_hash": hash,
+                                    "chunk_hash": doc_hash,
                                     "chunk_index": str(idx),
                                     "chunk_length": len(chunk)
                                 }
-                            )]
+                            ))
                         )
 
                     self.file_count += 1
                     self.total_size += len(content)
 
         except Exception as e:
-            print(f"Error accessing {root_dir}: {e}", flush=True)
+            logger.error(f"Error accessing {root_dir}: {e}")
 
 
 def start(args, ignore_dir_patterns: List[str], ignore_file_patterns: List[str]):
@@ -133,7 +135,6 @@ def start(args, ignore_dir_patterns: List[str], ignore_file_patterns: List[str])
     directory_scanner = OsScandirDirectoryScanner()
     generator = ProjectContextScanner(
         file_handler, directory_scanner, text_splitter)
-    print(f"Generating new context from {args.root}", flush=True)
     generator.scan(
         args.root,
         ignore_dirs=ignore_dir_patterns,
@@ -141,15 +142,15 @@ def start(args, ignore_dir_patterns: List[str], ignore_file_patterns: List[str])
         follow_symlinks=True,
     )
     all_documents = generator.documents
-    print(
-        f"✅ Context generated with {generator.file_count} files and {len(all_documents)} documents.\n\tTotal size: {generator.total_size // 1024} KB.")
+    logger.info(f"({len(all_documents)}) documents mapped",
+                extra={"context": "generator"})
 
     if args.store and len(all_documents) > 0:
         vector_store_handler = VectorStoreHandler(
             args.collection, store=args.store
         )
-        vector_store_handler.save(
-            context=all_documents, incremental=args.mode == "incremental")
+        # vector_store_handler.save(
+        #     context=all_documents, incremental=args.mode == "incremental")
 
 
 def main():
@@ -202,14 +203,8 @@ def main():
                             for pattern in args.ignore_files.split(",") if pattern.strip()]
 
     if not args.collection:
-        print("Collection name is required", flush=True)
+        logger.error("Collection name is required")
         return
-
-    print(f"Base directory: {args.root}", flush=True)
-    print(f"Collection name: {args.collection}", flush=True)
-    print(f"Ignore patterns: {ignore_dir_patterns}", flush=True)
-    print(f"Ingestion mode: {args.mode}", flush=True)
-    print(f"Vector Store: {args.store}", flush=True)
 
     start(args, ignore_dir_patterns, ignore_file_patterns)
 

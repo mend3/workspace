@@ -17,6 +17,7 @@ mcp:  ## Starts mcp server
 	 $(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
    -f ./tools/docker-compose.yml \
    -f ./mcp/docker-compose.yml \
+   -f ./shared/monitor.compose.yml \
     up --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate ai-context mcp-$(TARGET)
 
 .PHONY: up
@@ -24,6 +25,7 @@ up:  ## Run selected target
 	$(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
    -f ./tools/docker-compose.yml \
    -f ./mcp/docker-compose.yml \
+   -f ./shared/monitor.compose.yml \
    -f ./browser/docker-compose.yml \
    -f ./extalia/docker-compose.yml \
    -f ./shared/docker-compose.yml \
@@ -34,6 +36,7 @@ down:  ## Drops everything (docker)
 	$(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
    -f ./tools/docker-compose.yml \
    -f ./mcp/docker-compose.yml \
+   -f ./shared/monitor.compose.yml \
    -f ./browser/docker-compose.yml \
    -f ./extalia/docker-compose.yml \
    -f ./shared/docker-compose.yml \
@@ -49,6 +52,12 @@ clean:  ## Clean cache folders
 
 .PHONY: ai-context
 ai-context: clean ## Bump submodules to latest commit
-	$(CONTAINER_RUNTIME) compose -f docker-compose.yml -f tools/docker-compose.yml up \
-    --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate \
+	$(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
+   -f ./tools/docker-compose.yml \
+   -f ./mcp/docker-compose.yml \
+   -f ./shared/monitor.compose.yml \
+   -f ./browser/docker-compose.yml \
+   -f ./extalia/docker-compose.yml \
+   -f ./shared/docker-compose.yml \
+    up --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate \
     ai-context

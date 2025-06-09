@@ -15,7 +15,7 @@ class PgVectorVectorStore(VectorStoreClient):
         self.connection_string = connection_string
         self.pre_delete_collection = pre_delete_collection
 
-    def create_or_load(self, documents: list[Document], incremental: bool):
+    def load(self, documents: list[Document], incremental: bool):
 
         texts = [doc.page_content for doc in documents]
         metadatas = [doc.metadata for doc in documents]

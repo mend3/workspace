@@ -2,6 +2,7 @@ import os
 
 EMBEDDING_MODEL = os.environ.get(
     "EMBEDDING_MODEL") or "sentence-transformers/all-MiniLM-L6-v2"
+
 EMBEDDING_PROVIDER = os.environ.get("EMBEDDING_PROVIDER") or "fastembed"
 
 PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY") or "apilocal"

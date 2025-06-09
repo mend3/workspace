@@ -10,7 +10,7 @@ class QdrantStore(VectorStoreClient):
         super().__init__(collection_name, embeddings)
         self.qdrant_url = qdrant_url
 
-    def create_or_load(self, documents, incremental: bool):
+    def load(self, documents, incremental: bool):
         client = QdrantClient(url=self.qdrant_url)
 
         # cria a collection se não existir

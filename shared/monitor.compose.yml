@@ -1,0 +1,120 @@
+services:
+  # source https://prometheus.io/docs/prometheus/latest/installation/
+  prometheus:
+    image: prom/prometheus:v2.45.2
+    restart: always
+    user: root
+    expose:
+      - 9090
+    volumes:
+      - ./.docker/prometheus/exporter.yml:/etc/prometheus/prometheus.yml
+      - ./.tmp/prometheus/data:/prometheus
+    networks:
+      - global
+
+  # source https://github.com/nginxinc/nginx-prometheus-exporter
+  # nginx-prometheus-exporter:
+  #   image: nginx/nginx-prometheus-exporter:1.0
+  #   restart: always
+  #   command:
+  #     - -nginx.scrape-uri=http://nginx/stub_status
+  #   networks:
+  #     - global
+  #   depends_on:
+  #     - prometheus
+  #     - nginx
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    depends_on:
+      - logstash
+    networks:
+      - global
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=10s"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # source https://grafana.com/docs/grafana/latest/installation/docker/
+  grafana:
+    image: grafana/grafana:10.0.10
+    restart: always
+    ports:
+      - 3000:3000
+    environment:
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_BASIC_ENABLED=false
+      # - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./.docker/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./.docker/grafana/dashboard.yaml:/etc/grafana/provisioning/dashboards/dashboard.yaml
+      - ./.docker/grafana/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
+    networks:
+      - global
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  influxdb:
+    image: influxdb:1.8
+    restart: always
+    expose:
+      - 8086
+    environment:
+      - INFLUXDB_DB=influxdb
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=admin
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+    volumes:
+      - ./.docker/influxdb/config:/etc/influxdb2
+      - ./.tmp/influxdb/data:/var/lib/influxdb2
+    networks:
+      - global
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.13.0
+    volumes:
+      - ./.docker/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    expose:
+      - 5000  # For Python TCP logs
+    networks:
+      - global
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9600/_node/pipelines"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+      
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.12.0
+    container_name: filebeat
+    user: root
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./.docker/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+    networks:
+      - global
+
+networks:
+  global:
+    driver: bridge
+
+volumes:
+  es_data:
+  grafana_data:

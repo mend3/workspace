@@ -12,6 +12,7 @@ services:
     command: python3 -m tools.generators.vector_from_files --root ./vendors --store qdrant --collection workspace_embedding --ignore-dirs "tmp,__pycache__,node_modules" --ignore-files "package-lock.json,yarn.lock,pnpm-lock.yaml"
     environment:
       - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
       - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
       - EMBEDDING_PROVIDER=fastembed
       - QDRANT_URL=http://qdrant:6333 # only using Qdrant
@@ -23,7 +24,16 @@ services:
       - global
     links:
       - qdrant
+    labels:
+      logging: "enabled"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     depends_on:
+      grafana:
+        condition: service_started
       qdrant:
         condition: service_started
   pgvector:

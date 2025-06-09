@@ -10,5 +10,5 @@ class VectorStoreClient(ABC):
         self.embeddings = embeddings
 
     @abstractmethod
-    def create_or_load(self, documents: List[Document], incremental: bool):
+    def load(self, documents: List[Document], incremental: bool):
         pass

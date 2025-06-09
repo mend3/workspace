@@ -1,9 +1,14 @@
 from typing import Literal, Optional, List, Union
 from langchain_core.embeddings import Embeddings
+from sentence_transformers import SentenceTransformer
+from torch import Tensor
+
 from ..config import CACHE_FOLDER
 
 
 class FastEmbedLangchainWrapper(Embeddings):
+    _embedder: SentenceTransformer
+
     def __init__(self, model_name: str, cache_dir=None, providers=None):
         from sentence_transformers import SentenceTransformer
         self._embedder = SentenceTransformer(
@@ -11,7 +16,7 @@ class FastEmbedLangchainWrapper(Embeddings):
             cache_folder=cache_dir,
         )
 
-    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+    def embed_documents(self, texts: List[str]) -> list[Tensor]:
         return list(self._embedder.encode(texts, convert_to_numpy=True))
 
     def embed_query(self, text: str) -> List[float]:

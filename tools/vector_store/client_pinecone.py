@@ -17,7 +17,7 @@ class PineconeVectorStore(VectorStoreClient):
         self.environment = environment
         self.dimension = dimension
 
-    def create_or_load(self, documents, incremental: bool):
+    def load(self, documents, incremental: bool):
         pinecone.init(api_key=self.api_key, environment=self.environment)
 
         if self.collection_name not in pinecone.list_indexes():
