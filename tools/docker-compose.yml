@@ -9,7 +9,7 @@ services:
       target: workspace
       args:
         - VECTOR_TOOL=vector_from_files
-    command: python3 -m tools.generators.vector_from_files --root ./vendors --store qdrant --collection workspace_embedding --ignore-dirs "tmp,__pycache__,node_modules" --ignore-files "package-lock.json,yarn.lock,pnpm-lock.yaml"
+    command: python3 -m tools.generators.vector_from_files --root . --store qdrant --collection workspace_embedding --ignore-dirs "tmp,__pycache__,node_modules" --ignore-files "package-lock.json,yarn.lock,pnpm-lock.yaml"
     environment:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
@@ -54,7 +54,7 @@ services:
       timeout: 5s
       retries: 10
     volumes:
-      # - pgvector_data:/var/lib/postgresql/data
+      - pgvector_data:/var/lib/postgresql/data
       - ./.docker/postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql
   pinecone:
     image: ghcr.io/pinecone-io/pinecone-local:latest
@@ -78,8 +78,8 @@ services:
       - COLLECTION_NAME=workspace_embedding
       - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
       - EMBEDDING_PROVIDER=fastembed
-    # volumes:
-    #   - qdrant_data:/qdrant/storage
+    volumes:
+      - qdrant_data:/qdrant/storage
     ports:
       - '6333:6333'
     expose:
@@ -93,6 +93,6 @@ networks:
     driver: bridge
 
 volumes:
-  pgdata:
   pgvector_data:
   pinecone_data:
+  qdrant_data:

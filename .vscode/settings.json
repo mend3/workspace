@@ -167,5 +167,11 @@
     "windsurf": false,
     "cursor-global": true,
     "cursor-workspace": false
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[php]": {
+    "editor.defaultFormatter": "DEVSENSE.phptools-vscode"
   }
 }

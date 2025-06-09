@@ -66,7 +66,7 @@ class VectorStoreHandler:
             store=self.store,
             collection_name=self.collectionName,
             embeddings=embeddings,
-        ).create_client().load(documents, incremental=False)
+        ).create_client().load(documents, incremental=incremental)
 
         index(
             docs_source=documents,

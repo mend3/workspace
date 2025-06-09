@@ -18,6 +18,23 @@ datasources:
       tlsSkipVerify: false
       timeInterval: ''
     secureJsonData: {}
+  - name: Elasticsearch
+    type: elasticsearch
+    access: proxy
+    orgId: 1
+    url: http://elasticsearch:9200
+    basicAuth: false
+    isDefault: false
+    version: 1
+    editable: true
+    jsonData:
+      includeFrozen: false,
+      index: 'python-logs*'
+      logLevelField: ''
+      logMessageField: ''
+      maxConcurrentShardRequests: 5
+      timeField: '@timestamp'
+    secureJsonData: {}
   - name: InfluxDB
     type: influxdb
     access: proxy

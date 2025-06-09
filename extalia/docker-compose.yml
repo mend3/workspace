@@ -35,6 +35,23 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+  nprotect:
+    build:
+      context: .
+      dockerfile: ./.docker/php/Dockerfile
+      target: base
+    ports:
+      - "5656:80"
+    volumes:
+      - ./extalia/nProtect:/var/www/html
+    working_dir: /var/www/html
+    environment:
+      DB_HOST: mysql
+      DB_USER: ${MYSQL_USER}
+      DB_PASS: ${MYSQL_PASSWORD}
+      DB_NAME: nProtect
+    networks:
+      - global
   l2-extalia:
     build:
       context: .

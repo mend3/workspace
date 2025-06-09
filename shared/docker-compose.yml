@@ -1,5 +1,3 @@
-name: global
-
 services:
   wallos:
     container_name: wallos
@@ -199,7 +197,8 @@ services:
     restart: always
     build:
       context: .
-      dockerfile: ./.docker/phpbb/Dockerfile
+      dockerfile: ./.docker/php/Dockerfile
+      target: phpbb
     ports:
       - '9002:80'
     volumes:

@@ -149,8 +149,8 @@ def start(args, ignore_dir_patterns: List[str], ignore_file_patterns: List[str])
         vector_store_handler = VectorStoreHandler(
             args.collection, store=args.store
         )
-        # vector_store_handler.save(
-        #     context=all_documents, incremental=args.mode == "incremental")
+        vector_store_handler.save(
+            context=all_documents, incremental=args.mode == "incremental")
 
 
 def main():

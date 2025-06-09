@@ -10,6 +10,7 @@ help: ## Display help for each make command
 extalia:  ## Starts Extalia server
 	 $(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
    -f ./extalia/docker-compose.yml \
+   -f ./extalia/web/docker-compose.yml \
     up --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate -d gameserver
 
 .PHONY: mcp
@@ -28,6 +29,7 @@ up:  ## Run selected target
    -f ./shared/monitor.compose.yml \
    -f ./browser/docker-compose.yml \
    -f ./extalia/docker-compose.yml \
+   -f ./extalia/web/docker-compose.yml \
    -f ./shared/docker-compose.yml \
     up --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate $(TARGET)
 
@@ -39,6 +41,7 @@ down:  ## Drops everything (docker)
    -f ./shared/monitor.compose.yml \
    -f ./browser/docker-compose.yml \
    -f ./extalia/docker-compose.yml \
+   -f ./extalia/web/docker-compose.yml \
    -f ./shared/docker-compose.yml \
     down -v --remove-orphans
 
@@ -58,6 +61,7 @@ ai-context: clean ## Bump submodules to latest commit
    -f ./shared/monitor.compose.yml \
    -f ./browser/docker-compose.yml \
    -f ./extalia/docker-compose.yml \
+   -f ./extalia/web/docker-compose.yml \
    -f ./shared/docker-compose.yml \
     up --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate \
     ai-context
