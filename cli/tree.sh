@@ -1,5 +1,5 @@
 #!/bin/bash
-BLACKLIST=("node_modules" ".git" "dist")
+BLACKLIST=("node_modules" ".git" "dist" "build" "coverage" "vendor" "bower_components" "tmp" "temp" ".tmp" "logs" "log" "cache" ".cache")
 
 
 is_blacklisted() {
