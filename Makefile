@@ -9,6 +9,7 @@ help: ## Display help for each make command
 .PHONY: extalia
 extalia:  ## Starts Extalia server
 	 $(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
+   -f ./sws/docker-compose.yml \
    -f ./extalia/docker-compose.yml \
    -f ./extalia/web/docker-compose.yml \
    -f ./extalia/web/docker/prod.compose.yml \
@@ -29,6 +30,7 @@ up:  ## Run selected target
    -f ./mcp/docker-compose.yml \
    -f ./shared/monitor.compose.yml \
    -f ./browser/docker-compose.yml \
+   -f ./sws/docker-compose.yml \
    -f ./extalia/docker-compose.yml \
    -f ./extalia/web/docker-compose.yml \
    -f ./extalia/web/docker/prod.compose.yml \
@@ -42,6 +44,7 @@ down:  ## Drops everything (docker)
    -f ./mcp/docker-compose.yml \
    -f ./shared/monitor.compose.yml \
    -f ./browser/docker-compose.yml \
+   -f ./sws/docker-compose.yml \
    -f ./extalia/docker-compose.yml \
    -f ./extalia/web/docker-compose.yml \
    -f ./extalia/web/docker/prod.compose.yml \
@@ -63,9 +66,24 @@ ai-context: clean ## Bump submodules to latest commit
    -f ./mcp/docker-compose.yml \
    -f ./shared/monitor.compose.yml \
    -f ./browser/docker-compose.yml \
+   -f ./sws/docker-compose.yml \
    -f ./extalia/docker-compose.yml \
    -f ./extalia/web/docker-compose.yml \
    -f ./extalia/web/docker/prod.compose.yml \
    -f ./shared/docker-compose.yml \
     up --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate \
     ai-context
+
+.PHONY: build
+build: clean ## Bump submodules to latest commit
+	$(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
+   -f ./tools/docker-compose.yml \
+   -f ./mcp/docker-compose.yml \
+   -f ./shared/monitor.compose.yml \
+   -f ./browser/docker-compose.yml \
+   -f ./sws/docker-compose.yml \
+   -f ./extalia/docker-compose.yml \
+   -f ./extalia/web/docker-compose.yml \
+   -f ./extalia/web/docker/prod.compose.yml \
+   -f ./shared/docker-compose.yml \
+    build --pull --no-cache --force-rm

@@ -1,4 +1,4 @@
-// @ts-nocheck
+import { Page } from 'puppeteer'
 
 const walmart = async ({ page }: { page: Page }) => {
   await page.evaluateOnNewDocument(() => {
@@ -71,7 +71,11 @@ const walmart = async ({ page }: { page: Page }) => {
             },
             { name: 'WebKit built-in PDF', filename: 'internal-pdf-viewer', description: 'Portable Document Format' },
           ]
-          const pluginArray = []
+          const pluginArray: {
+            name: string
+            filename: string
+            description: string
+          }[] = []
           pluginData.forEach(p => {
             function FakePlugin() {
               return p
@@ -161,7 +165,7 @@ const walmart = async ({ page }: { page: Page }) => {
         .then(element => {
           console.log("Element with role='alert' appeared in the DOM.")
           // Now interact with the element
-          console.log(element.textContent)
+          if (element instanceof HTMLElement) console.log(element.textContent)
         }),
       new Promise(res => setTimeout(() => res(new Error('timeout')), 5000)),
     ])

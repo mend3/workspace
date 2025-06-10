@@ -11,7 +11,7 @@ services:
       - './.tmp/wallos/logos:/var/www/html/images/uploads/logos'
     restart: unless-stopped
     networks:
-      - global
+      - internal
   rss:
     image: ghcr.io/leozqin/precis:latest
     environment:
@@ -24,13 +24,13 @@ services:
       # you can also configure these through the UI if you want
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - SLACK_API_TOKEN=${SLACK_API_TOKEN}
-      - JIRA_API_TOKEN=${JIRA_API_TOKEN}
-      - JIRA_EMAIL=${JIRA_EMAIL}
-      - NTFY_BASE_URL=${NTFY_BASE_URL}
-      - NTFY_TOPIC=${NTFY_TOPIC}
+      # - JIRA_API_TOKEN=${JIRA_API_TOKEN}
+      # - JIRA_EMAIL=${JIRA_EMAIL}
+      # - NTFY_BASE_URL=${NTFY_BASE_URL}
+      # - NTFY_TOPIC=${NTFY_TOPIC}
 
       # other variables that are unlikely to change
-      - GITHUB_LINK=${GITHUB_LINK-https://github.com/leozqin/precis}
+      - GITHUB_LINK=${GITHUB_LINK-https://github.com/mend3/workspace}
       - PRECIS_INTERNAL_PORT=${PRECIS_INTERNAL_PORT-80}
       - LLM_PROVIDER=ollama
       - OLLAMA_BASE_URL=http://ollama:11434
@@ -43,7 +43,7 @@ services:
       - ./.docker/precis/configs:/config
       - ./.docker/precis/data:/data
     networks:
-      - global
+      - internal
   kuma:
     image: louislam/uptime-kuma:1
     container_name: kuma
@@ -53,7 +53,7 @@ services:
     volumes:
       - kuma-data:/app/data
     networks:
-      - global
+      - internal
   docmost:
     image: docmost/docmost:latest
     depends_on:
@@ -70,7 +70,7 @@ services:
     volumes:
       - docmost_data:/app/data/storage
     networks:
-      - global
+      - internal
   cron:
     #
     # To make this work, set STATIC_CRON_TOKEN in your .env file or as an environment variable and replace PLEASE_REPLACE_WITH_32_CHAR_CODE below
@@ -82,7 +82,7 @@ services:
     env_file: ./.docker/firefly/.env
     command: sh -c " apk add tzdata && ln -s /usr/share/zoneinfo/${TZ} /etc/localtime | echo \"0 3 * * * wget -qO- http://firefly:8080/api/v1/cron/LlaqcTixcFFlN4XWUSVdWGxXzdHHLIuL;echo\" | crontab - && crond -f -L /dev/stdout"
     networks:
-      - global
+      - internal
   firefly:
     image: fireflyiii/core:latest
     hostname: app
@@ -100,7 +100,7 @@ services:
       - mysql
       - cron
     networks:
-      - global
+      - internal
   homarr:
     container_name: homarr
     image: ghcr.io/homarr-labs/homarr:latest
@@ -113,7 +113,7 @@ services:
     ports:
       - '7575:7575'
     networks:
-      - global
+      - internal
   homeassistant:
     container_name: homeassistant
     image: "ghcr.io/home-assistant/home-assistant:stable"
@@ -126,7 +126,7 @@ services:
       - 8123:8123
     privileged: true
     networks:
-      - global
+      - internal
   jellyfin:
     image: jellyfin/jellyfin:latest # or ghcr.io/jellyfin/jellyfin:latest
     container_name: jellyfin
@@ -136,13 +136,13 @@ services:
       - ./.tmp/jellyfin/cache:/cache
       - ./.tmp/jellyfin/media:/media
     networks:
-      - global
+      - internal
   pihole:
     container_name: pihole
     image: pihole/pihole:latest
     restart: unless-stopped
     networks:
-      - global
+      - internal
     ports:
       - "5353:53/tcp"
       - "5353:53/udp"
@@ -192,7 +192,7 @@ services:
     volumes:
       - wordpress-data:/var/www/html
     networks:
-      - global
+      - internal
   phpbb:
     restart: always
     build:
@@ -204,10 +204,35 @@ services:
     volumes:
       - phpbb-data:/var/www/html
     networks:
-      - global
+      - internal
+  localstack:
+    build:
+      context: .
+      dockerfile: ./docker/localstack/Dockerfile
+    environment:
+      - SERVICES=s3
+      - PERSISTENCE=/tmp/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    ports:
+      - 4566:4566
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./.docker/localstack/aws:/etc/localstack/init/ready.d
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - '-s'
+        - localhost:4566/_localstack/init
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - internal
 
 networks:
-  global:
+  internal:
     driver: bridge
 
 volumes:

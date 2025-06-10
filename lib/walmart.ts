@@ -1,9 +1,9 @@
-// @ts-nocheck
+import { Page } from 'puppeteer'
 
+let $__global__$: Element | null = null
 // Let's load up a cool dashboard and screenshot it!
 export default async ({ page }: { page: Page }) => {
   await page.evaluateOnNewDocument(() => {
-    let $__global__$ = undefined
     const __USER_AGENT__ =
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.6167.85 Safari/537.36'
 
@@ -72,7 +72,11 @@ export default async ({ page }: { page: Page }) => {
             },
             { name: 'WebKit built-in PDF', filename: 'internal-pdf-viewer', description: 'Portable Document Format' },
           ]
-          const pluginArray = []
+          const pluginArray: {
+            name: string
+            filename: string
+            description: string
+          }[] = []
           pluginData.forEach(p => {
             function FakePlugin() {
               return p
@@ -211,10 +215,10 @@ export default async ({ page }: { page: Page }) => {
     skipped = await checkTryAgain()
   }
 
-  const _mainFrame = undefined
+  const _mainFrame = page.mainFrame()
 
   while (!skipped) {
-    if (_mainFrame && !_mainFrame.isDetached()) {
+    if (_mainFrame && !_mainFrame.detached) {
       await interactWithFrame(page, _mainFrame)
       console.log(skipped)
 

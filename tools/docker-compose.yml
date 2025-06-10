@@ -21,7 +21,7 @@ services:
     volumes:
       - .:/app
     networks:
-      - global
+      - internal
     links:
       - qdrant
     labels:
@@ -40,14 +40,15 @@ services:
     image: pgvector/pgvector:pg17
     container_name: pgvector-db
     environment:
-      - PGUSER=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=vector_db
+      TZ: America/Sao_Paulo
+      PGUSER: ${POSTGRES_USER}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: vector_db
     ports:
       - '5433:5432'
     networks:
-      - global
+      - internal
     healthcheck:
       test: [ 'CMD-SHELL', 'pg_isready' ]
       interval: 1s
@@ -55,7 +56,7 @@ services:
       retries: 10
     volumes:
       - pgvector_data:/var/lib/postgresql/data
-      - ./.docker/postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./.docker/postgres/pgvector/:/docker-entrypoint-initdb.d/:ro
   pinecone:
     image: ghcr.io/pinecone-io/pinecone-local:latest
     container_name: pinecone
@@ -67,7 +68,7 @@ services:
       - PINECONE_API_KEY=apilocal
       - PINECONE_ENVIRONMENT=us-east1-gcp
     networks:
-      - global
+      - internal
     volumes:
       - pinecone_data:/root/.pinecone
   qdrant:
@@ -86,10 +87,10 @@ services:
       - 6333
     restart: unless-stopped
     networks:
-      - global
+      - internal
 
 networks:
-  global:
+  internal:
     driver: bridge
 
 volumes:

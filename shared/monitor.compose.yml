@@ -10,7 +10,7 @@ services:
       - ./.docker/prometheus/exporter.yml:/etc/prometheus/prometheus.yml
       - ./.tmp/prometheus/data:/prometheus
     networks:
-      - global
+      - internal
 
   # source https://github.com/nginxinc/nginx-prometheus-exporter
   prometheus-nginx-exporter:
@@ -25,7 +25,7 @@ services:
     expose:
       - 9113
     networks:
-      - global
+      - internal
     depends_on:
       - prometheus
 
@@ -47,7 +47,7 @@ services:
     expose:
       - 9100
     networks:
-      - global
+      - internal
     depends_on:
       - prometheus
 
@@ -75,9 +75,9 @@ services:
     depends_on:
       - logstash
     networks:
-      - global
-    ports:
-      - "9200:9200"
+      - internal
+    expose:
+      - 9200
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=10s"]
       interval: 10s
@@ -90,7 +90,7 @@ services:
     image: grafana/grafana:10.0.10
     restart: always
     ports:
-      - 3000:3000
+      - 3333:3000
     environment:
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       - GF_AUTH_ANONYMOUS_ENABLED=true
@@ -103,7 +103,7 @@ services:
       - ./.docker/grafana/dashboard.yaml:/etc/grafana/provisioning/dashboards/dashboard.yaml
       - ./.docker/grafana/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
     networks:
-      - global
+      - internal
     depends_on:
       - elasticsearch
       - influxdb
@@ -120,12 +120,12 @@ services:
     command: '--config.file=/mnt/config/loki-config.yaml'
     expose:
       - 3100
-    # volumes:
-    #   - ./docker/loki/loki-config.yaml:/mnt/config/loki-config.yaml
+    volumes:
+      - ./.docker/loki/loki-config.yaml:/mnt/config/loki-config.yaml
     extra_hosts:
       - host.docker.internal:host-gateway
     networks:
-      - global
+      - internal
 
   # source: https://github.com/google/cadvisor
   cadvisor:
@@ -141,7 +141,7 @@ services:
     expose:
       - 8080
     networks:
-      - global
+      - internal
 
   influxdb:
     image: influxdb:1.8
@@ -157,17 +157,17 @@ services:
       - ./.docker/influxdb/config:/etc/influxdb2
       - ./.tmp/influxdb/data:/var/lib/influxdb2
     networks:
-      - global
+      - internal
 
   promtail:
     restart: always
     image: grafana/promtail:3.2.1
     command: '--config.file=/mnt/config/promtail-config.yaml'
     volumes:
-      - ./docker/loki/promtail-config.yaml:/mnt/config/promtail-config.yaml
-      - ./tmp/nginx/logs:/var/log/nginx
+      - ./.docker/loki/promtail-config.yaml:/mnt/config/promtail-config.yaml
+      - ./.tmp/nginx/logs:/var/log/nginx
     networks:
-      - global
+      - internal
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.13.0
@@ -176,7 +176,7 @@ services:
     expose:
       - 5000  # For Python TCP logs
     networks:
-      - global
+      - internal
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9600/_node/pipelines"]
@@ -194,10 +194,10 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./.docker/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
     networks:
-      - global
+      - internal
 
 networks:
-  global:
+  internal:
     driver: bridge
 
 volumes:

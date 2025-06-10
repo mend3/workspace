@@ -41,8 +41,8 @@ services:
       - INFLUX_SHARD=1d
       - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
     volumes:
-      - ./tmp/geoip2influx:/config
-      - ./tmp/nginx/logs/:/var/log/nginx/
+      - ./.tmp/geoip2influx:/config
+      - ./.tmp/nginx/logs/:/var/log/nginx/
     restart: unless-stopped
     networks:
       - backend

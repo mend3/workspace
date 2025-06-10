@@ -1,17 +1,33 @@
 {
   "chrome": {
-    "default": "90.0",
+    "default": "119.0",
     "versions": {
-      "90.0": {
-        "image": "selenoid/chrome:90.0"
-      }
-    }
-  },
-  "firefox": {
-    "default": "88.0",
-    "versions": {
-      "88.0": {
-        "image": "selenoid/firefox:88.0"
+      "119.0": {
+        "image": "iamumairayub/uc_selenoid:latest",
+        "port": "4444",
+        "path": "/",
+        "env": ["TZ=UTC"],
+        "args": [
+          "--no-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-blink-features=AutomationControlled",
+          "--disable-infobars",
+          "--disable-notifications",
+          "--disable-background-networking",
+          "--disable-background-timer-throttling",
+          "--disable-backgrounding-occluded-windows",
+          "--disable-renderer-backgrounding",
+          "--disable-translate",
+          "--disable-default-apps",
+          "--metrics-recording-only",
+          "--mute-audio",
+          "--no-first-run",
+          "--no-default-browser-check",
+          "--password-store=basic",
+          "--use-mock-keychain",
+          "--remote-debugging-port=9222",
+          "--start-maximized"
+        ]
       }
     }
   }

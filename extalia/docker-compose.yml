@@ -12,7 +12,7 @@ services:
     ports:
       - '9999:80'
     networks:
-      - global
+      - internal
   extalia-server:
     build:
       context: .
@@ -28,7 +28,7 @@ services:
       - 2106:2106
       - 9014:9014
     networks:
-      - global
+      - internal
     volumes:
       - ./extalia/server:/app
     depends_on:
@@ -50,7 +50,7 @@ services:
       DB_PASS: ${MYSQL_PASSWORD}
       DB_NAME: nProtect
     networks:
-      - global
+      - internal
   l2-extalia:
     build:
       context: .
@@ -67,7 +67,7 @@ services:
       - 2106:2106
       - 9014:9014
     networks:
-      - global
+      - internal
     volumes:
       - ./extalia/server:/app
   loginserver:
@@ -84,7 +84,7 @@ services:
       - 2106:2106
       - 9014:9014
     networks:
-      - global
+      - internal
     volumes:
       - ./extalia/server:/app
     extra_hosts:
@@ -103,7 +103,7 @@ services:
     ports:
       - 7777:7777
     networks:
-      - global
+      - internal
     volumes:
       - ./extalia/server:/app
     extra_hosts:
@@ -115,5 +115,5 @@ services:
         condition: service_healthy
 
 networks:
-  global:
+  internal:
     driver: bridge

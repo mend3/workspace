@@ -14,7 +14,10 @@
         "0012-iproyal-residential",
         "0013-country-case",
         "0014-brightdata-v3",
-        "0015-remove-install"
+        "0015-remove-install",
+        "0016-remove-templatename",
+        "0017-smartproxy-is-decodo",
+        "0018-iproyal-new-api"
     ],
     "params": {
         "installId": "d305fb52-fe16-4682-b052-3071c43cf28f"
