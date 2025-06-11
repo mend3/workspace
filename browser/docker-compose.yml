@@ -17,32 +17,23 @@ services:
       - '9000:3000'
     environment:
       # - TOKEN=${BROWSER_TOKEN}
+      # - PROXY_URL=http://proxy:8080
       - ALLOW_FILE_PROTOCOL=true
       - TZ=America/Sao_Paulo
       - PREBOOT_CHROME=true
-      # - PROXY_URL=http://proxy:8080
       - KEEP_ALIVE=true
-      # - PREBOOT_QUANTITY=1
-      # - SINGLE_RUN=true
       - MAX_CONCURRENT_SESSIONS=1
       - QUEUE_LENGTH=4
-      - DEFAULT_BLOCK_ADS=true
-      - CHROME_REFRESH_TIME=60000
-      - WORKSPACE_DELETE_EXPIRED=true
-      - WORKSPACE_EXPIRE_DAYS=1
-      - ENABLE_DEBUGGER=false
-      - DEFAULT_BLOCK_ADS=false
-      - DEFAULT_IGNORE_HTTPS_ERRORS=true
       - ENABLE_CORS=true
+      - ENABLE_DEBUGGER=true
+      - DEFAULT_IGNORE_HTTPS_ERRORS=true
       - EXIT_ON_HEALTH_FAILURE=true
       - FUNCTION_BUILT_INS=["crypto"]
       - FUNCTION_EXTERNALS=["request","fetch"]
-      - FUNCTION_ENABLE_INCOGNITO_MODE=false
+      - FUNCTION_ENABLE_INCOGNITO_MODE=true
       - DEFAULT_STEALTH=true
-      - FUNCTION_DISABLE_SERVICE_WORKERS=true
-      - DEFAULT_IGNORE_DEFAULT_ARGS=false
-      # - DEFAULT_LAUNCH_ARGS=["--proxy-server=proxy:8080","--proxy-auth=user:pass","--disable-background-networking","--disable-features=IsolateOrigins,udioServiceOutOfProcess,ite-per-process","--no-default-browser-check","--no-pings","--use-mock-keychain","--no-zygote","--memory-pressure-off","--disable-dev-shm-usage","--password-store=basic","--disable-infobars","--headless=new","--blink-settings=imagesEnabled=false","--disable-blink-features=AutomationControlled"]
-      - OPTIONAL_LAUNCH_ARGS=["--autoplay-policy=user-gesture-required","--no-first-run","--disable-background-timer-throttling","--disable-backgrounding-occluded-windows","--disable-breakpad","--disable-client-side-phishing-detection","--disable-component-update","--disable-default-apps","--disable-domain-reliability","--disable-hang-monitor","--disable-ipc-flooding-protection","--disable-offer-store-unmasked-wallet-cards","--disable-popup-blocking","--disable-print-preview","--disable-prompt-on-repost","--disable-speech-api","--disk-cache-size=33554432","--disable-background-logging","--disable-software-rasterizer","--no-experiments","--disable-setuid-sandbox","--use-angle=vulkan","--enable-features=Vulkan","--disable-vulkan-surface","--enable-unsafe-webgpu"]
+      - OPTIONAL_LAUNCH_ARGS=["--proxy-server=proxy:8080","--proxy-auth=user:pass"]
+      - DEFAULT_LAUNCH_ARGS=["--autoplay-policy=user-gesture-required","--blink-settings=imagesEnabled=false","--disable-background-logging","--disable-background-networking","--disable-background-timer-throttling","--disable-backgrounding-occluded-windows","--disable-blink-features=AutomationControlled","--disable-breakpad","--disable-client-side-phishing-detection","--disable-component-update","--disable-default-apps","--disable-dev-shm-usage","--disable-domain-reliability","--disable-features=IsolateOrigins,udioServiceOutOfProcess,ite-per-process","--disable-hang-monitor","--disable-infobars","--disable-ipc-flooding-protection","--disable-offer-store-unmasked-wallet-cards","--disable-popup-blocking","--disable-print-preview","--disable-prompt-on-repost","--disable-setuid-sandbox","--disable-software-rasterizer","--disable-speech-api","--disable-vulkan-surface","--disk-cache-size=33554432","--enable-features=Vulkan","--enable-unsafe-webgpu","--headless=new","--memory-pressure-off","--no-default-browser-check","--no-experiments","--no-first-run","--no-pings","--no-zygote","--password-store=basic","--use-angle=vulkan","--use-mock-keychain"]
     networks:
       - internal
     volumes:
@@ -54,12 +45,14 @@ services:
           memory: 4G
   playwright:
     platform: linux/amd64
-    image: mcr.microsoft.com/playwright:v1.52.0
+    image: mcr.microsoft.com/playwright:v1.46.0
     working_dir: /home/pwuser
     user: pwuser
     init: true
     tty: true
-    command: /bin/sh -c "npx -y playwright@1.52.0 run-server --port 3000 --host 0.0.0.0"
+    command: /bin/sh -c "npx -y playwright@1.46.0 run-server --port 3000 --host 0.0.0.0"
+    ports:
+      - 9001:3000
     expose:
       - 3000
     extra_hosts:
@@ -101,8 +94,8 @@ services:
   browser-agent-ui:
     platform: linux/amd64
     build:
-      context: ./browser
-      dockerfile: ui/Dockerfile
+      context: ./browser/ui
+      dockerfile: Dockerfile
       args:
         TARGETPLATFORM: linux/amd64
     ports:

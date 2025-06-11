@@ -4,12 +4,12 @@ import os
 
 class DirectoryScanner(ABC):
     @abstractmethod
-    def scan(self, directory: str) -> list:
+    def scan(self, directory: str):
         pass
 
 
 class OsScandirDirectoryScanner(DirectoryScanner):
-    def scan(self, directory: str) -> list:
+    def scan(self, directory: str):
         try:
             return list(os.scandir(directory))
         except Exception as e:

@@ -1,16 +1,16 @@
 from .client_qdrant import QdrantStore
 from .client_pinecone import PineconeVectorStore
 from .client_pgvector import PgVectorVectorStore
-from .client_base import VectorStoreClient
 from ..config import PGVECTOR_CONNECTION_STRING, QDRANT_URL, PINECONE_API_KEY
+from typing import Literal
 
 
 class VectorStoreFactory:
-    def __init__(self, store: str, **kwargs):
-        self.store = store.lower()
+    def __init__(self, store: Literal["qdrant", "pinecone", "pgvector"], **kwargs):
+        self.store = store
         self.kwargs = kwargs
 
-    def create_client(self) -> VectorStoreClient:
+    def create_client(self):
         collection_name = self.kwargs["collection_name"]
         embeddings = self.kwargs["embeddings"]
 

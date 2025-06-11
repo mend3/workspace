@@ -1,0 +1,4 @@
+pyppeteer
+pyppeteer-stealth
+curl_cffi
+playwright>=1.52

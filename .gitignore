@@ -1,4 +1,5 @@
 .cache
+*.pkl
 **/brightdata
 **/mysql/data
 **/dump
@@ -43,3 +44,5 @@ extalia/server
 extalia/docs
 **/.cursor*
 **././docker/**/data
+**/*.pickle
+**/*_ignore

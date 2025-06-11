@@ -174,5 +174,8 @@
   "[php]": {
     "editor.defaultFormatter": "DEVSENSE.phptools-vscode"
   },
-  "php.validate.executablePath": "php"
+  "php.validate.executablePath": "php",
+  "[dockercompose]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

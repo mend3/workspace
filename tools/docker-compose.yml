@@ -6,10 +6,9 @@ services:
     build:
       context: .
       dockerfile: ./.docker/python3/Dockerfile
-      target: workspace
       args:
-        - VECTOR_TOOL=vector_from_files
-    command: python3 -m tools.generators.vector_from_files --root . --store qdrant --collection workspace_embedding --ignore-dirs "tmp,__pycache__,node_modules" --ignore-files "package-lock.json,yarn.lock,pnpm-lock.yaml"
+        - VECTOR_TOOL=vector_generator
+    command: python -m tools.generators.vector_from_files --root . --store qdrant --collection workspace_embedding --ignore-dirs "tmp,__pycache__,node_modules" --ignore-files "package-lock.json,yarn.lock,pnpm-lock.yaml"
     environment:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
@@ -17,13 +16,10 @@ services:
       - EMBEDDING_PROVIDER=fastembed
       - QDRANT_URL=http://qdrant:6333 # only using Qdrant
       # - PGVECTOR_CONNECTION_STRING=postgresql+psycopg2://postgres:postgres@pgvector:5432/vector_db # only when using pgvector
-      # - PINECONE_API_KEY=apilocal # only when using Pinecone
     volumes:
       - .:/app
     networks:
       - internal
-    links:
-      - qdrant
     labels:
       logging: "enabled"
     logging:
@@ -32,9 +28,9 @@ services:
         max-size: "10m"
         max-file: "3"
     depends_on:
-      grafana:
-        condition: service_started
       qdrant:
+        condition: service_started
+      logstash:
         condition: service_started
   pgvector:
     image: pgvector/pgvector:pg17
@@ -76,8 +72,8 @@ services:
     container_name: qdrant
     environment:
       - QDRANT_URL=http://localhost:6333
-      - COLLECTION_NAME=workspace_embedding
-      - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+      - COLLECTION_NAME=${WORKSPACE_COLLECTION_NAME}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL}
       - EMBEDDING_PROVIDER=fastembed
     volumes:
       - qdrant_data:/qdrant/storage

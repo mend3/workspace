@@ -2,12 +2,19 @@ import hashlib
 import unicodedata
 import os
 import subprocess
+import re
 
 
-def chunk_hash(text: str) -> str:
+def sha256_hash(text: str):
     """Return a SHA256 hash of the normalized text."""
     normalized = unicodedata.normalize("NFC", text.strip())
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
+def clean_text(text):
+    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r'[^\w\s.,!?-]', '', text)
+    return text.strip()
 
 
 def get_git_root(path):

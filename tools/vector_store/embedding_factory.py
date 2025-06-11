@@ -1,25 +1,21 @@
 from typing import Literal, Optional, List, Union
 from langchain_core.embeddings import Embeddings
 from sentence_transformers import SentenceTransformer
-from torch import Tensor
-
-from ..config import CACHE_FOLDER
 
 
 class FastEmbedLangchainWrapper(Embeddings):
     _embedder: SentenceTransformer
 
-    def __init__(self, model_name: str, cache_dir=None, providers=None):
-        from sentence_transformers import SentenceTransformer
+    def __init__(self, model_name: str, cache_dir=None):
         self._embedder = SentenceTransformer(
             model_name_or_path=model_name,
             cache_folder=cache_dir,
         )
 
-    def embed_documents(self, texts: List[str]) -> list[Tensor]:
+    def embed_documents(self, texts: List[str]):
         return list(self._embedder.encode(texts, convert_to_numpy=True))
 
-    def embed_query(self, text: str) -> List[float]:
+    def embed_query(self, text: str):
         return next(self._embedder.encode([text], convert_to_numpy=True))
 
     def __deepcopy__(self, memo):
@@ -34,11 +30,11 @@ class EmbeddingFactory:
         model_name: str,
         cache_dir: Optional[str] = None,
         use_gpu: bool = False,
-    ) -> Embeddings:
+    ):
         if provider == "fastembed":
             return FastEmbedLangchainWrapper(
                 model_name=model_name,
-                cache_dir=cache_dir or CACHE_FOLDER,
+                cache_dir=cache_dir,
                 providers=["CUDAExecutionProvider"] if use_gpu else [
                     "CPUExecutionProvider"]
             )
@@ -46,7 +42,7 @@ class EmbeddingFactory:
             from langchain_huggingface import HuggingFaceEmbeddings
             return HuggingFaceEmbeddings(
                 model_name=model_name,
-                cache_folder=cache_dir or CACHE_FOLDER,
+                cache_folder=cache_dir,
                 model_kwargs={"device": "cuda" if use_gpu else "cpu"}
             )
         raise ValueError(f"Unsupported embedding provider: {provider}")

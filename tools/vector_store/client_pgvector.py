@@ -17,20 +17,6 @@ class PgVectorVectorStore(VectorStoreClient):
 
     def load(self, documents: list[Document], incremental: bool):
 
-        texts = [doc.page_content for doc in documents]
-        metadatas = [doc.metadata for doc in documents]
-
-        # return PGVector.from_texts(
-        #     texts,
-        #     embedding=self.embeddings,
-        #     metadatas=list(metadatas),
-        #     collection_name=self.collection_name,
-        #     connection_string=self.connection_string,
-        #     use_jsonb=True,
-        #     pre_delete_collection=self.pre_delete_collection or not incremental,
-        #     distance_strategy=DistanceStrategy.COSINE,
-        # )
-
         return PGVector.from_documents(
             documents,
             embedding=self.embeddings,

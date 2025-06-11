@@ -1,4 +1,4 @@
-FROM python:3.10-slim AS vector_base
+FROM python:3.10-slim
 
 ARG VECTOR_TOOL
 ENV VECTOR_TOOL=${VECTOR_TOOL:-vector_from_files}
@@ -23,9 +23,4 @@ RUN pip install -r requirements.txt
 
 ENV HF_HOME="/app/.cache/huggingface"
 
-CMD ["python3", "-m", "tools./${VECTOR_TOOL}"]
-
-
-FROM vector_base AS workspace
-ARG VECTOR_TOOL
-WORKDIR /app
+CMD ["python3", "-v"]

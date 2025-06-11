@@ -9,7 +9,6 @@ help: ## Display help for each make command
 .PHONY: extalia
 extalia:  ## Starts Extalia server
 	 $(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
-   -f ./sws/docker-compose.yml \
    -f ./extalia/docker-compose.yml \
    -f ./extalia/web/docker-compose.yml \
    -f ./extalia/web/docker/prod.compose.yml \
@@ -19,8 +18,9 @@ extalia:  ## Starts Extalia server
 mcp:  ## Starts mcp server
 	 $(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
    -f ./tools/docker-compose.yml \
-   -f ./mcp/docker-compose.yml \
    -f ./shared/monitor.compose.yml \
+   -f ./vendors/docker-compose.yml \
+   -f ./mcp/docker-compose.yml \
     up --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate ai-context mcp-$(TARGET)
 
 .PHONY: up
@@ -28,6 +28,7 @@ up:  ## Run selected target
 	$(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
    -f ./tools/docker-compose.yml \
    -f ./mcp/docker-compose.yml \
+   -f ./vendors/docker-compose.yml \
    -f ./shared/monitor.compose.yml \
    -f ./browser/docker-compose.yml \
    -f ./sws/docker-compose.yml \
@@ -42,6 +43,7 @@ down:  ## Drops everything (docker)
 	$(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
    -f ./tools/docker-compose.yml \
    -f ./mcp/docker-compose.yml \
+   -f ./vendors/docker-compose.yml \
    -f ./shared/monitor.compose.yml \
    -f ./browser/docker-compose.yml \
    -f ./sws/docker-compose.yml \
@@ -57,13 +59,14 @@ bump_submodules:  ## Bump submodules to latest commit
 
 .PHONY: clean
 clean:  ## Clean cache folders
-	sudo rm -rf .cache **/__pycache__ **/dist/ && mkdir -p .cache
+	sudo rm -rf .cache && mkdir -p .cache
 
 .PHONY: ai-context
-ai-context: clean ## Bump submodules to latest commit
+ai-context: ## Bump submodules to latest commit
 	$(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
    -f ./tools/docker-compose.yml \
    -f ./mcp/docker-compose.yml \
+   -f ./vendors/docker-compose.yml \
    -f ./shared/monitor.compose.yml \
    -f ./browser/docker-compose.yml \
    -f ./sws/docker-compose.yml \
@@ -75,15 +78,16 @@ ai-context: clean ## Bump submodules to latest commit
     ai-context
 
 .PHONY: build
-build: clean ## Bump submodules to latest commit
+build: ## Bump submodules to latest commit
 	$(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
-   -f ./tools/docker-compose.yml \
-   -f ./mcp/docker-compose.yml \
-   -f ./shared/monitor.compose.yml \
    -f ./browser/docker-compose.yml \
+   -f ./tools/docker-compose.yml \
+   -f ./shared/docker-compose.yml \
+   -f ./shared/monitor.compose.yml \
+   -f ./mcp/docker-compose.yml \
+   -f ./vendors/docker-compose.yml \
    -f ./sws/docker-compose.yml \
    -f ./extalia/docker-compose.yml \
    -f ./extalia/web/docker-compose.yml \
    -f ./extalia/web/docker/prod.compose.yml \
-   -f ./shared/docker-compose.yml \
-    build --pull --no-cache --force-rm
+    build --pull --no-cache --force-rm $(TARGET)

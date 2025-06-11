@@ -1,40 +1,59 @@
 # Internal Notes
 
+## Ollama
+
+- Use model `all-minilm:l6-v2` as embedding model to read qdrant vector store using n8n.
+- Ollama models to pull:
+- - `all-minilm:l6-v2` - Embedding model for n8n agents
+- - `qwen2.5:7b`
+- - `gemma:7b-instruct`
+- - `deepseek-code:6.7b`
+
 ## Utils
 
+**WSL Addons:**
+
 - [Ctop](https://github.com/bcicen/ctop)
+- [Quick Install ZSH](https://gist.github.com/n1snt/454b879b8f0b7995740ae04c5fb5b7df)
+- [zsh-auto-nvm-use](https://github.com/Sparragus/zsh-auto-nvm-use)
+- [fzf-tab](https://gist.github.com/seungjulee/d72883c193ac630aac77e0602cb18270)
+- [PowerLine Fonts](https://github.com/powerline/fonts?tab=readme-ov-file)
+
+**Docker:**
+
 - [Awesome Docker](https://github.com/veggiemonk/awesome-docker/blob/master/README.md)
 - [Lazy Docker](https://github.com/jesseduffield/lazydocker#installation)
 
-## MySQL
+**GPU:**
 
-Grant privileves to a user:
+- [Install Cuda on WSL](https://docs.nvidia.com/cuda/wsl-user-guide/index.html#installing-docker)
+- [Nvidia Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-the-nvidia-container-toolkit)
+- Check installation and gpu compatibility on docker
+  - `docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi`
+
+## MCP Servers
 
 ```bash
-GRANT ALL PRIVILEGES ON *.* TO '$MYSQL_USER$'@'%' WITH GRANT OPTION;
-FLUSH PRIVILEGES;
+# build then start mcp-filesystem
+docker run -i --rm --mount type=bind,src=${PWD},dst=/projects workspace-mcp-filesystem /projects;
+
+# build then start brave search
+docker run -i --rm -e BRAVE_API_KEY=${BRAVE_API_KEY} mcp/brave-search;
 ```
-
-
-## Cuda WSL
-
-[Install on WSL](https://docs.nvidia.com/cuda/wsl-user-guide/index.html#installing-docker)
-
-[Nvidia Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-the-nvidia-container-toolkit)
-
 
 ## Shell Scripts
 
-```bash
+```sh
+
+# MYSQL: Grant privileves to a user:
+GRANT ALL PRIVILEGES ON *.* TO '$MYSQL_USER$'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
 
 # install and enable autoenv
 curl -#fLo- 'https://raw.githubusercontent.com/hyperupcall/autoenv/main/scripts/install.sh' | sh
 
-# install live server
-pnpm add -g http-server
-
-# serve local build as nginx
-http-server dist/app -P "http://localhost:4200?" -p 4200
+# install live server and serve local build as nginx
+pnpm add -g http-server && http-server dist -P "http://localhost:4200?" -p 4200
 
 # snapshot a website
 wget --recursive --no-clobber --page-requisites --html-extension --convert-links --restrict-file-names=windows --domains domain.com --no-parent https://domain.com
@@ -50,9 +69,6 @@ git submodule add "$url" "$path"
 
 # update all git submodules
 git submodule update --init --recursive
-
-# check gpu compatibility on docker
-docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi
 
 # setup local docker registry
 docker run -d -p 5000:5000 --restart=always --name registry registry:2
@@ -70,10 +86,10 @@ docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Command}}\t{{.CreatedAt}}\t{{.
 docker compose -f docker-compose.yml -f tools/docker-compose.yml up ai-context
 
 #or
-docker compose -f ./docker-compose.yml -f tools/docker-compose.yml build ai-context
-docker create --name context-container ai-context 
-docker cp context-container:/app/.cache/output.txt .cache/output.txt
-docker rm context-container
+docker compose -f ./docker-compose.yml -f tools/docker-compose.yml build service-name
+docker create --name tmp-container service-name
+docker cp tmp-container:/app/file.txt file.txt
+docker rm tmp-container
 
 # Convert docker-compose files to k8s deployments using konvert (k8s)
 kompose convert -f ./docker-compose.yml
@@ -82,21 +98,39 @@ kompose convert -f ./docker-compose.yml
 compose-bridge convert -f ./docker-compose.yml
 ```
 
-## Utils and extras
+---
 
-### zsh
-
-https://gist.github.com/n1snt/454b879b8f0b7995740ae04c5fb5b7df
-
-### nvm-auto-use
-
-https://github.com/Sparragus/zsh-auto-nvm-use
-
-### fzf-tab
-
-https://gist.github.com/seungjulee/d72883c193ac630aac77e0602cb18270
-
-### PowerLine Fonts
-
-[Official Repository](https://github.com/powerline/fonts?tab=readme-ov-file)
-
+```txt
+                                      _  _
+                            _____*~~~  **  ~~~*_____
+                         __* ___     |\__/|     ___ *__
+                       _*  / 888~~\__(8OO8)__/~~888 \  *_
+                     _*   /88888888888888888888888888\   *_
+                     *   |8888888888888888888888888888|   *
+                    /~*  \8888/~\88/~\8888/~\88/~\8888/  *~
+                   /  ~*  \88/   \/   (88)   \/   \88/  *~
+                  /    ~*  \/          \/          \/  *~
+                 /       ~~*_                      _*~~/
+                /            ~~~~~*___ ** ___*~~~~~  /
+               /                      ~  ~         /
+              /                                  /
+             /                                 /
+            /                                /
+           /                    ___sws___  /
+          /                    | ####### |
+         /            ___      | ####### |             ____i__
+        /  _____p_____l_l____  | ####### |            | ooooo |         qp
+i__p__ /  |  ###############  || ####### |__l___xp____| ooooo |      |~~~~|
+ oooo |_I_|  ###############  || ####### |oo%Xoox%ooxo| ooooo |p__h__|##%#|
+ oooo |ooo|  ###############  || ####### |o%xo%%xoooo%| ooooo |      |#xx%|
+ oooo |ooo|  ###############  || ####### |o%ooxx%ooo%%| ooooo |######|x##%|
+ oooo |ooo|  ###############  || ####### |oo%%x%oo%xoo| ooooo |######|##%x|
+ oooo |ooo|  ###############  || ####### |%x%%oo%/oo%o| ooooo |######|/#%x|
+ oooo |ooo|  ###############  || ####### |%%x/oo/xx%xo| ooooo |######|#%x/|
+ oooo |ooo|  ###############  || ####### |xxooo%%/xo%o| ooooo |######|#^x#|
+ oooo |ooo|  ###############  || ####### |oox%%o/x%%ox| ooooo |~~~$~~|x##/|
+ oooo |ooo|  ###############  || ####### |x%oo%x/o%//x| ooooo |_KKKK_|#x/%|
+ oooo |ooo|  ###############  || ####### |oox%xo%%oox%| ooooo |_|~|~~|xx%/|
+ oooo |oHo|  #####AAAA######  || ##XX### |x%x%WWx%%/ox| ooDoo |_| |Y||xGGx|
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```

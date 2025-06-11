@@ -26,6 +26,7 @@ class QdrantStore(VectorStoreClient):
             client=client,
             collection_name=self.collection_name,
             embedding=self.embeddings,
+            content_payload_key='pageContent'
         )
 
         store.add_documents(documents)

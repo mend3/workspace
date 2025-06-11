@@ -1,26 +1,25 @@
 #!/usr/bin/env python3
-import os
-import re
 import argparse
+import os
 import fnmatch
-from datetime import date
 from typing import List
+from datetime import date
 from langchain_core.documents import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from ..vector_store.store_handler import VectorStoreHandler
-from ..lib.utils import chunk_hash
-from ..lib.file import UTF8FileHandler, FileHandler
+from ..lib.file import UTF8FileHandler, ContextScanner
 from ..lib.dir import OsScandirDirectoryScanner, DirectoryScanner
 from ..lib.logger import logger
+from ..lib.file import VectorStoreHandler, FileHandler
+from ..lib.utils import sha256_hash, clean_text
+
+extensions = tuple([
+    ".ts", ".tsx", ".js", ".jsx", ".java", ".xml", ".sql", ".py", ".md", ".txt", ".json",
+    ".yaml", ".yml", ".toml", ".css", ".scss", ".sass", ".html", ".sh", ".xsd", ".cfg", ".conf",
+    ".prisma", ".schema", ".mjs", ".prettierrc", ".eslintrc", ".eslintignore", ".mdc", ".tpl", ".tf"
+])
 
 
-def clean_text(text):
-    text = re.sub(r'\s+', ' ', text)
-    text = re.sub(r'[^\w\s.,!?-]', '', text)
-    return text.strip()
-
-
-class ProjectContextScanner:
+class ContextScanner:
     def __init__(self, file_handler: FileHandler, directory_scanner: DirectoryScanner,
                  text_splitter: RecursiveCharacterTextSplitter):
         self.file_handler = file_handler
@@ -37,7 +36,7 @@ class ProjectContextScanner:
             ignore_dirs: List[str] = None,
             ignore_files: List[str] = None,
             follow_symlinks: bool = False,
-    ) -> None:
+    ):
         """
         Recursively traverse the project directory starting at root_dir,
         reading the content of every file (non-hidden) along with its relative path.
@@ -46,16 +45,9 @@ class ProjectContextScanner:
             ignore_dirs = []
         if ignore_files is None:
             ignore_files = []
-
-        # context_parts = []
-        extensions = [
-            ".ts", ".tsx", ".js", ".jsx", ".java", ".xml", ".sql", ".py", ".md", ".txt", ".json",
-            ".yaml", ".yml", ".toml", ".css", ".scss", ".sass", ".html", ".sh", ".xsd", ".cfg", ".conf",
-            ".prisma", ".schema", ".mjs", ".prettierrc", ".eslintrc", ".eslintignore", ".mdc", ".tpl", ".tf"
-        ]
-        exts = tuple(extensions)
         today = date.today()
 
+        # context_parts = []
         try:
             entries = self.directory_scanner.scan(root_dir)
             for entry in sorted(entries, key=lambda el: el.name):
@@ -72,7 +64,7 @@ class ProjectContextScanner:
                     self.scan(entry.path, relative_path,
                               ignore_dirs, ignore_files, follow_symlinks)
                 # File handling
-                elif entry.is_file(follow_symlinks=follow_symlinks) and entry.name.endswith(exts):
+                elif entry.is_file(follow_symlinks=follow_symlinks) and entry.name.endswith(extensions):
                     if any(fnmatch.fnmatch(entry.name, pattern) for pattern in ignore_files):
                         continue
                     try:
@@ -102,18 +94,19 @@ class ProjectContextScanner:
 
                     chunks = self.text_splitter.split_text(content)
                     for idx, chunk in enumerate(chunks):
-                        dir_hash = chunk_hash(os.path.dirname(entry.path))
-                        doc_hash = chunk_hash(chunk)
+                        dir_hash = sha256_hash(os.path.dirname(entry.path))
+                        chunk_hash = sha256_hash(chunk)
+                        doc_id = sha256_hash(f"{dir_hash}-{chunk_hash}")
                         self.documents.append(
-                            (doc_hash, Document(
+                            (chunk_hash, Document(
                                 page_content=chunk,
                                 metadata={
-                                    "source": entry.name,
-                                    "path": entry.path,
-                                    "slug": clean_text(entry.name),
+                                    "source": entry.path,
+                                    "file_name": entry.name,
                                     "dir_hash": dir_hash,
+                                    "doc_id": doc_id,
                                     "updated_at": today.isoformat(),
-                                    "chunk_hash": doc_hash,
+                                    "chunk_hash": chunk_hash,
                                     "chunk_index": str(idx),
                                     "chunk_length": len(chunk)
                                 }
@@ -133,7 +126,7 @@ def start(args, ignore_dir_patterns: List[str], ignore_file_patterns: List[str])
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000, chunk_overlap=200)
     directory_scanner = OsScandirDirectoryScanner()
-    generator = ProjectContextScanner(
+    generator = ContextScanner(
         file_handler, directory_scanner, text_splitter)
     generator.scan(
         args.root,

@@ -32,3 +32,4 @@ yarn.lock
 **/.terraform/
 *-oauth.json
 **/__pycache__
+.cache

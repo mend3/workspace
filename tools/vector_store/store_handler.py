@@ -3,7 +3,7 @@ from langchain.indexes import SQLRecordManager, index
 from langchain_core.documents import Document
 from .store_factory import VectorStoreFactory
 from .embedding_factory import EmbeddingFactory
-from ..config import PGVECTOR_CONNECTION_STRING, EMBEDDING_MODEL, EMBEDDING_PROVIDER
+from ..config import PGVECTOR_CONNECTION_STRING, EMBEDDING_MODEL, EMBEDDING_PROVIDER, CACHE_FOLDER
 
 
 class VectorStoreHandler:
@@ -11,6 +11,9 @@ class VectorStoreHandler:
         self.collectionName = colletion_name
         self.store = store
         self.namespace = f"{store}/{colletion_name}"
+
+        if (self.store == "pgvector" and not PGVECTOR_CONNECTION_STRING):
+            raise ValueError("PGVECTOR_CONNECTION_STRING is not set")
 
         db_url = PGVECTOR_CONNECTION_STRING if self.store == "pgvector" else "sqlite:///./.cache/record_manager_cache.sql"
         engine_kwargs = None if self.store == "pgvector" else {
@@ -33,7 +36,7 @@ class VectorStoreHandler:
         self,
         context: List[tuple[str, Document]],
         incremental: bool = False,
-    ) -> None:
+    ):
         """
         Split the content, embed, and upload to pgvector.
         """
@@ -43,15 +46,11 @@ class VectorStoreHandler:
             existing_keys = set(self.record_manager.list_keys())
 
         documents = []
-        total_size = 0
-        skipped = 0
 
         for idx, document in context:
             if incremental and idx in existing_keys:
-                skipped += 1
                 continue
             documents.append(document)
-            total_size += document.metadata.get('chunk_length', 0)
 
         if not documents:
             return
@@ -59,7 +58,8 @@ class VectorStoreHandler:
         embeddings = EmbeddingFactory.create(
             provider=EMBEDDING_PROVIDER,
             model_name=EMBEDDING_MODEL,
-            use_gpu=False
+            use_gpu=False,
+            cache_dir=CACHE_FOLDER
         )
 
         store = VectorStoreFactory(
@@ -73,5 +73,5 @@ class VectorStoreHandler:
             record_manager=self.record_manager,
             vector_store=store,
             cleanup="incremental" if incremental else "full",
-            source_id_key="chunk_hash"
+            source_id_key="doc_id"
         )
