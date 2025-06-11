@@ -52,7 +52,7 @@ def google_sheets_create(name: str, parent_folder_id=None, sheet_name=None):
     spreadsheet = service.spreadsheets().create(body=spreadsheet).execute()
 
     # Return the spreadsheet ID in the required format
-    from tools.youtube.type_definitions import GoogleSheetID
+    from python.youtube.type_definitions import GoogleSheetID
     return GoogleSheetID(id=spreadsheet['spreadsheetId'], name=name)
 
 
@@ -284,7 +284,7 @@ def google_sheets_read_spreadsheet(google_sheet_id):
     Returns:
         A GoogleSpreadsheet object with metadata and sheet data
     """
-    from tools.youtube.type_definitions import GoogleSheetCell, GoogleSheetMetadata, GoogleSpreadsheet
+    from python.youtube.type_definitions import GoogleSheetCell, GoogleSheetMetadata, GoogleSpreadsheet
 
     creds = get_credentials()
     service = build('sheets', 'v4', credentials=creds)

@@ -6,17 +6,18 @@ from typing import List
 from datetime import date
 from langchain_core.documents import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from ..lib.file import UTF8FileHandler, ContextScanner
+from ..lib.file import UTF8FileHandler, FileHandler
 from ..lib.dir import OsScandirDirectoryScanner, DirectoryScanner
 from ..lib.logger import logger
-from ..lib.file import VectorStoreHandler, FileHandler
 from ..lib.utils import sha256_hash, clean_text
+from ..vector_store.store_handler import VectorStoreHandler
 
 extensions = tuple([
     ".ts", ".tsx", ".js", ".jsx", ".java", ".xml", ".sql", ".py", ".md", ".txt", ".json",
     ".yaml", ".yml", ".toml", ".css", ".scss", ".sass", ".html", ".sh", ".xsd", ".cfg", ".conf",
     ".prisma", ".schema", ".mjs", ".prettierrc", ".eslintrc", ".eslintignore", ".mdc", ".tpl", ".tf"
 ])
+today = date.today()
 
 
 class ContextScanner:
@@ -45,7 +46,6 @@ class ContextScanner:
             ignore_dirs = []
         if ignore_files is None:
             ignore_files = []
-        today = date.today()
 
         # context_parts = []
         try:
@@ -89,7 +89,7 @@ class ContextScanner:
                     #     f"{'-'*40}\n"
                     # )
                     if not content:
-                        logger.error(f"Skipping empty file {relative_path}")
+                        logger.debug(f"Skipping empty file {relative_path}")
                         continue
 
                     chunks = self.text_splitter.split_text(content)

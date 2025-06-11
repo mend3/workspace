@@ -18,7 +18,9 @@
       "remoteRoot": "/app",
       "protocol": "inspector",
       "restart": true,
-      "skipFiles": ["<node_internals>/**"]
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
     },
     {
       "name": "Attach to websocket gameserver",
@@ -26,6 +28,17 @@
       "cwd": "${workspaceFolder}/extalia/web/apps/gameserver",
       "type": "node",
       "port": 9229
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Debug Chrome Extension",
+      "url": "https://www.drogaraia.com.br/search?w=tylenol", // Deixe como está se não houver uma URL inicial
+      "webRoot": "${workspaceFolder}/browser/extension/Plugin",
+      "runtimeArgs": [
+        "--load-extension=${workspaceFolder}/browser/extension/Plugin", // Caminho para a extensão
+        "--remote-debugging-port=9222" // Porta de depuração
+      ]
     }
   ]
 }

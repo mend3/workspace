@@ -1,93 +1,78 @@
-CONTAINER_RUNTIME ?= "docker"
-PROFILE ?= "global"
-TARGET?="*" ## Target (service name) for docker compose
+CONTAINER_RUNTIME ?= docker
+PROFILE ?= gpu
+TARGET ?= "*" ## Target (service name) for docker compose
+
+# Compose file groups
+COMMON_FILES = -f ./docker-compose.yml -f ./shared/monitor.compose.yml
+EXTALIA_FILES = $(COMMON_FILES) \
+  -f ./extalia/docker-compose.yml \
+  -f ./extalia/web/docker/prod.compose.yml \
+  -f ./extalia/web/docker-compose.yml
+
+MCP_FILES = $(COMMON_FILES) \
+  -f ./python/docker-compose.yml \
+  -f ./browser/docker-compose.yml \
+  -f ./vendors/docker-compose.yml \
+  -f ./mcp/docker-compose.yml
+
+ALL_FILES = $(COMMON_FILES) \
+  -f ./python/docker-compose.yml \
+  -f ./mcp/docker-compose.yml \
+  -f ./vendors/docker-compose.yml \
+  -f ./shared/docker-compose.yml \
+  -f ./browser/docker-compose.yml \
+  -f ./sws/docker-compose.yml
+
+# Generic compose commands
+define compose_up
+	$(CONTAINER_RUNTIME) compose --profile $(PROFILE) $(1) up --build --remove-orphans --renew-anon-volumes --force-recreate -V $(2)
+endef
+
+define compose_down
+	$(CONTAINER_RUNTIME) compose $(1) down --remove-orphans
+endef
+
+define compose_build
+	$(CONTAINER_RUNTIME) compose $(1) build --pull --no-cache --force-rm $(2)
+endef
 
 .PHONY: help
 help: ## Display help for each make command
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-
-.PHONY: extalia
-extalia:  ## Starts Extalia server
-	 $(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
-   -f ./extalia/docker-compose.yml \
-   -f ./extalia/web/docker-compose.yml \
-   -f ./extalia/web/docker/prod.compose.yml \
-    up --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate -d gameserver
-
-.PHONY: mcp
-mcp:  ## Starts mcp server
-	 $(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
-   -f ./tools/docker-compose.yml \
-   -f ./shared/monitor.compose.yml \
-   -f ./vendors/docker-compose.yml \
-   -f ./mcp/docker-compose.yml \
-    up --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate ai-context mcp-$(TARGET)
-
-.PHONY: up
-up:  ## Run selected target
-	$(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
-   -f ./tools/docker-compose.yml \
-   -f ./mcp/docker-compose.yml \
-   -f ./vendors/docker-compose.yml \
-   -f ./shared/monitor.compose.yml \
-   -f ./browser/docker-compose.yml \
-   -f ./sws/docker-compose.yml \
-   -f ./extalia/docker-compose.yml \
-   -f ./extalia/web/docker-compose.yml \
-   -f ./extalia/web/docker/prod.compose.yml \
-   -f ./shared/docker-compose.yml \
-    up --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate $(TARGET)
-
-.PHONY: down
-down:  ## Drops everything (docker)
-	$(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
-   -f ./tools/docker-compose.yml \
-   -f ./mcp/docker-compose.yml \
-   -f ./vendors/docker-compose.yml \
-   -f ./shared/monitor.compose.yml \
-   -f ./browser/docker-compose.yml \
-   -f ./sws/docker-compose.yml \
-   -f ./extalia/docker-compose.yml \
-   -f ./extalia/web/docker-compose.yml \
-   -f ./extalia/web/docker/prod.compose.yml \
-   -f ./shared/docker-compose.yml \
-    down -v --remove-orphans
-
-.PHONY: bump_submodules
-bump_submodules:  ## Bump submodules to latest commit
-	./cli/bump_submodules.sh
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
+	awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: clean
-clean:  ## Clean cache folders
+clean: ## Clean cache folders
 	sudo rm -rf .cache && mkdir -p .cache
 
+.PHONY: extalia
+extalia: ## Starts Extalia compound (http + java)
+	$(call compose_up,$(EXTALIA_FILES),extalia-*)
+
+.PHONY: extalia-dev
+extalia-dev: ## Starts Extalia development server
+	$(call compose_up,$(EXTALIA_FILES),dev-extalia-*)
+
+.PHONY: sws
+sws: ## Starts SWS service
+	$(call compose_up,$(ALL_FILES),sws)
+
+.PHONY: mcp
+mcp: ## Starts MCP server
+	$(call compose_up,$(MCP_FILES),ai-context mcp-*)
+
 .PHONY: ai-context
-ai-context: ## Bump submodules to latest commit
-	$(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
-   -f ./tools/docker-compose.yml \
-   -f ./mcp/docker-compose.yml \
-   -f ./vendors/docker-compose.yml \
-   -f ./shared/monitor.compose.yml \
-   -f ./browser/docker-compose.yml \
-   -f ./sws/docker-compose.yml \
-   -f ./extalia/docker-compose.yml \
-   -f ./extalia/web/docker-compose.yml \
-   -f ./extalia/web/docker/prod.compose.yml \
-   -f ./shared/docker-compose.yml \
-    up --remove-orphans --renew-anon-volumes --build --force-recreate -V --force-recreate \
-    ai-context
+ai-context: ## Starts only the AI context services
+	$(call compose_up,$(COMMON_FILES) -f ./python/docker-compose.yml,ai-context)
+
+.PHONY: up
+up: ## Starts all defined services
+	$(call compose_up,$(ALL_FILES),$(TARGET))
+
+.PHONY: down
+down: ## Stops and removes all services
+	$(call compose_down,$(ALL_FILES))
 
 .PHONY: build
-build: ## Bump submodules to latest commit
-	$(CONTAINER_RUNTIME) compose -f ./docker-compose.yml \
-   -f ./browser/docker-compose.yml \
-   -f ./tools/docker-compose.yml \
-   -f ./shared/docker-compose.yml \
-   -f ./shared/monitor.compose.yml \
-   -f ./mcp/docker-compose.yml \
-   -f ./vendors/docker-compose.yml \
-   -f ./sws/docker-compose.yml \
-   -f ./extalia/docker-compose.yml \
-   -f ./extalia/web/docker-compose.yml \
-   -f ./extalia/web/docker/prod.compose.yml \
-    build --pull --no-cache --force-rm $(TARGET)
+build: ## Build all Docker images
+	$(call compose_build,$(ALL_FILES),$(TARGET))

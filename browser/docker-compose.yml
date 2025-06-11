@@ -15,7 +15,9 @@ services:
       start_period: 5s
     ports:
       - '9000:3000'
+    runtime: nvidia
     environment:
+      - NVIDIA_VISIBLE_DEVICES=all
       # - TOKEN=${BROWSER_TOKEN}
       # - PROXY_URL=http://proxy:8080
       - ALLOW_FILE_PROTOCOL=true
@@ -33,42 +35,46 @@ services:
       - FUNCTION_ENABLE_INCOGNITO_MODE=true
       - DEFAULT_STEALTH=true
       - OPTIONAL_LAUNCH_ARGS=["--proxy-server=proxy:8080","--proxy-auth=user:pass"]
-      - DEFAULT_LAUNCH_ARGS=["--autoplay-policy=user-gesture-required","--blink-settings=imagesEnabled=false","--disable-background-logging","--disable-background-networking","--disable-background-timer-throttling","--disable-backgrounding-occluded-windows","--disable-blink-features=AutomationControlled","--disable-breakpad","--disable-client-side-phishing-detection","--disable-component-update","--disable-default-apps","--disable-dev-shm-usage","--disable-domain-reliability","--disable-features=IsolateOrigins,udioServiceOutOfProcess,ite-per-process","--disable-hang-monitor","--disable-infobars","--disable-ipc-flooding-protection","--disable-offer-store-unmasked-wallet-cards","--disable-popup-blocking","--disable-print-preview","--disable-prompt-on-repost","--disable-setuid-sandbox","--disable-software-rasterizer","--disable-speech-api","--disable-vulkan-surface","--disk-cache-size=33554432","--enable-features=Vulkan","--enable-unsafe-webgpu","--headless=new","--memory-pressure-off","--no-default-browser-check","--no-experiments","--no-first-run","--no-pings","--no-zygote","--password-store=basic","--use-angle=vulkan","--use-mock-keychain"]
+      - DEFAULT_LAUNCH_ARGS=["--autoplay-policy=user-gesture-required","--blink-settings=imagesEnabled=true","--disable-background-logging","--disable-background-networking","--disable-background-timer-throttling","--disable-backgrounding-occluded-windows","--disable-blink-features=AutomationControlled","--disable-breakpad","--disable-client-side-phishing-detection","--disable-component-update","--disable-dev-shm-usage","--disable-domain-reliability","--disable-features=IsolateOrigins,SitePerProcess","--disable-hang-monitor","--disable-infobars","--disable-ipc-flooding-protection","--disable-offer-store-unmasked-wallet-cards","--disable-print-preview","--disable-prompt-on-repost","--disable-setuid-sandbox","--disable-speech-api","--disk-cache-size=33554432","--enable-features=Vulkan","--headless=new","--memory-pressure-off","--no-default-browser-check","--no-experiments","--no-first-run","--no-pings","--no-zygote","--password-store=basic","--use-angle=vulkan","--use-gl=egl","--ignore-gpu-blocklist"]
     networks:
       - internal
     volumes:
       - browserless_data:/workspace
+      - /dev/shm:/dev/shm
     deploy:
       resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
         limits:
           cpus: '2'
           memory: 4G
   playwright:
     platform: linux/amd64
-    image: mcr.microsoft.com/playwright:v1.46.0
+    image: mcr.microsoft.com/playwright:v1.52.0
     working_dir: /home/pwuser
     user: pwuser
     init: true
     tty: true
-    command: /bin/sh -c "npx -y playwright@1.46.0 run-server --port 3000 --host 0.0.0.0"
+    command: /bin/sh -c "npx -y playwright@1.52.0 run-server --port 3000 --host 0.0.0.0"
     ports:
       - 9001:3000
     expose:
       - 3000
-    extra_hosts:
-      - host.docker.internal:host-gateway
     networks:
       - internal
   browser-agent:
     platform: linux/amd64
     build:
-      context: .
-      dockerfile: ./browser/use/Dockerfile
+      context: browser/use
+      dockerfile: Dockerfile
       args:
-        TARGETPLATFORM: linux/amd64
+        - TARGETPLATFORM=linux/amd64
+        - NODE_VERSION=${NODE_VERSION}
     ports:
       - '7860:7860'
     working_dir: /app
+    tty: true
     environment:
       - PYTHON_ENV=production
       - ANONYMIZED_TELEMETRY=false
@@ -83,7 +89,7 @@ services:
       - LLM_API=http://ollama:11434
       - BROWSER_MODE=remote
       - BROWSER_WS_ENDPOINT=ws://playwright:3000
-    # command: python /app/agent/browser/browserless.py
+    command: --cdp-url http://browserless:3000 # /app/agent/examples/use-cases/captcha.py
     depends_on:
       - playwright
       - ollama
@@ -94,10 +100,10 @@ services:
   browser-agent-ui:
     platform: linux/amd64
     build:
-      context: ./browser/ui
+      context: browser/ui
       dockerfile: Dockerfile
       args:
-        TARGETPLATFORM: linux/amd64
+        - TARGETPLATFORM=linux/amd64
     ports:
       - "7788:7788"
       - "6080:6080"
@@ -107,9 +113,10 @@ services:
       # LLM API Keys & Endpoints
       - OPENAI_ENDPOINT=${OPENAI_ENDPOINT:-https://api.openai.com/v1}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - OLLAMA_ENDPOINT=${OLLAMA_ENDPOINT:-http://host.docker.internal:11434}
+      - OLLAMA_ENDPOINT=http://ollama:11434
       - OLLAMA_API_BASE_URL=http://ollama:11434
       - OLLAMA_BASE_URL=http://ollama:11434
+      - DEFAULT_LLM=ollama
 
       # Application Settings
       - ANONYMIZED_TELEMETRY=${ANONYMIZED_TELEMETRY:-false}
@@ -134,10 +141,9 @@ services:
       - RESOLUTION_HEIGHT=${RESOLUTION_HEIGHT:-1080}
 
       # VNC Settings
-      - VNC_PASSWORD=vncpassword
+      - VNC_PASSWORD=${VNC_PASSWORD:-vncpassword}
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      # - ./my_chrome_data:/app/data/chrome_data # Optional: persist browser data
     restart: unless-stopped
     shm_size: '2gb'
     cap_add:
@@ -155,7 +161,6 @@ services:
       - internal
     depends_on:
       - ollama
-      - playwright
   selenoid:
     network_mode: bridge
     image: aerokube/selenoid:latest-release

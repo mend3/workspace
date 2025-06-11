@@ -48,7 +48,7 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 # Set platform for ARM64 compatibility
 ARG TARGETPLATFORM=linux/amd64
-RUN pip install playwright>=1.52.0 langchain-community langchain-ollama
+RUN pip install playwright==1.52.0 patchright
 # Install Playwright and browsers with system dependencies
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN playwright install --with-deps chromium
@@ -57,18 +57,17 @@ RUN playwright install-deps
 WORKDIR /app
 
 
-FROM base AS agent-ui
+FROM base AS ui
 # Install noVNC
 RUN git clone https://github.com/novnc/noVNC.git /opt/novnc \
   && git clone https://github.com/novnc/websockify /opt/novnc/utils/websockify \
   && ln -s /opt/novnc/vnc.html /opt/novnc/index.html
 
-# copy browser-agent package
-COPY ./browser/use/ /app/browser/agent/
 COPY ./browser/ui/requirements.txt ./requirements.txt
 # Copy requirements and install Python dependencies
 RUN pip install --no-cache-dir -r ./requirements.txt
-RUN pip install --upgrade pip maincontentextractor
+# copy browser-agent package
+COPY ./browser/use/ browser/agent/
 # Copy the application code
 COPY ./browser/ui .
 

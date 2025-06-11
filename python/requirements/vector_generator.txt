@@ -12,3 +12,5 @@ langchain-qdrant
 beautifulsoup4
 python-json-logger
 requests
+pinecone
+optimum[onnxruntime-gpu]

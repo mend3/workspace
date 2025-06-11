@@ -1,8 +1,8 @@
 from typing import List, Set, Tuple
 from datetime import datetime
 from .google_sheets import *
-from tools.youtube.type_definitions import *
-from tools.youtube.utils import *
+from python.youtube.type_definitions import *
+from python.youtube.utils import *
 
 
 def research_youtube_videos_improved(search_query: str, destination_sheet: Optional[GoogleSheetID] = None, num_pages: int = 1, pagination_token: Optional[str] = None):

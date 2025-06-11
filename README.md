@@ -31,14 +31,17 @@
 - Check installation and gpu compatibility on docker
   - `docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi`
 
+```sh
+sudo apt install nvidia-container-toolkit
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker
+```
+
 ## MCP Servers
 
 ```bash
-# build then start mcp-filesystem
-docker run -i --rm --mount type=bind,src=${PWD},dst=/projects workspace-mcp-filesystem /projects;
-
-# build then start brave search
-docker run -i --rm -e BRAVE_API_KEY=${BRAVE_API_KEY} mcp/brave-search;
+# automatically starts all mcp servers using docker
+make mcp
 ```
 
 ## Shell Scripts
@@ -83,10 +86,10 @@ docker images --format "table {{.ID}}\t{{.Tag}}\t{{.Repository}}"
 docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Command}}\t{{.CreatedAt}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}"
 
 # generate AI context based on local files
-docker compose -f docker-compose.yml -f tools/docker-compose.yml up ai-context
+make ai-context
 
 #or
-docker compose -f ./docker-compose.yml -f tools/docker-compose.yml build service-name
+docker compose -f ./docker-compose.yml -f python/docker-compose.yml build service-name
 docker create --name tmp-container service-name
 docker cp tmp-container:/app/file.txt file.txt
 docker rm tmp-container

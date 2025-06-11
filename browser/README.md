@@ -48,3 +48,36 @@ This wiki is open for general contribution, so if you've benefited from the comm
 
 - [playwright-extra](https://github.com/berstend/puppeteer-extra/tree/master/packages/playwright-extra)
 - [puppeteer-extra](https://github.com/berstend/puppeteer-extra/tree/master/packages/puppeteer-extra)
+
+## Browser use
+
+```txt
+Usage: browser-use [OPTIONS]
+
+  Browser-Use Interactive TUI or Command Line Executor
+
+  Use --user-data-dir to specify a local Chrome profile directory. Common
+  Chrome profile locations:   macOS: ~/Library/Application
+  Support/Google/Chrome   Linux: ~/.config/google-chrome   Windows:
+  %LOCALAPPDATA%\Google\Chrome\User Data
+
+  Use --profile-directory to specify which profile within the user data
+  directory. Examples: "Default", "Profile 1", "Profile 2", etc.
+
+Options:
+  --version                 Print version and exit
+  --model TEXT              Model to use (e.g., gpt-4o,
+                            claude-3-opus-20240229, gemini-pro)
+  --debug                   Enable verbose startup logging
+  --headless                Run browser in headless mode
+  --window-width INTEGER    Browser window width
+  --window-height INTEGER   Browser window height
+  --user-data-dir TEXT      Path to Chrome user data directory (e.g.,
+                            ~/Library/Application Support/Google/Chrome)
+  --profile-directory TEXT  Chrome profile directory name (e.g., "Default",
+                            "Profile 1")
+  --cdp-url TEXT            Connect to existing Chrome via CDP URL (e.g.,
+                            http://localhost:9222)
+  -p, --prompt TEXT         Run a single task without the TUI (headless mode)
+  --help                    Show this message and exit.
+```

@@ -58,7 +58,7 @@ class VectorStoreHandler:
         embeddings = EmbeddingFactory.create(
             provider=EMBEDDING_PROVIDER,
             model_name=EMBEDDING_MODEL,
-            use_gpu=False,
+            use_gpu=True,
             cache_dir=CACHE_FOLDER
         )
 

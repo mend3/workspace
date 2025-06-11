@@ -20,10 +20,8 @@ services:
         condition: service_started
       grafana:
         condition: service_started
-      api:
-        condition: service_healthy
     volumes:
-      - ./docker/k6/:/src/
+      - ./.docker/k6/${K6_TEST:-load}.js:/src/${K6_TEST:-load}.js
     networks:
       - backend
 

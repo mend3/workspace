@@ -1,6 +1,6 @@
 # https://github.com/abhinavsingh/proxy.py
 # FROM abhinavsingh/proxy.py:latest as base
-FROM docker.io/library/python:3.13.10-slim AS base
+FROM python:3.12-slim AS base
 RUN apt-get -y update
 RUN apt-get -y install git make
 RUN pip install "httpx[http2]"

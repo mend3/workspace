@@ -1,43 +1,85 @@
 name: ${NAMESPACE:-workspace}
 
+x-n8n: &service-n8n
+  image: n8nio/n8n:latest
+  networks: ['internal']
+  environment:
+    - DB_TYPE=postgresdb
+    - DB_POSTGRESDB_HOST=postgres
+    - DB_POSTGRESDB_USER=${POSTGRES_USER}
+    - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+    - N8N_DIAGNOSTICS_ENABLED=false
+    - N8N_PERSONALIZATION_ENABLED=false
+    - N8N_ENCRYPTION_KEY
+    - N8N_USER_MANAGEMENT_JWT_SECRET
+  links:
+    - postgres
+
+x-ollama: &service-ollama
+  image: ollama/ollama:latest
+  container_name: ollama
+  networks: ['internal']
+  restart: unless-stopped
+  ports:
+    - 11434:11434
+  environment:
+    - VECTOR_STORE_PATH=/app/vector_store
+    - NVIDIA_VISIBLE_DEVICES=all
+  volumes:
+    - ollama_data:/root/.ollama
+    - ./.tmp/.ollama:/root/.ollama
+    - ./.docker/ollama:/code
+
+x-init-ollama: &init-ollama
+  image: ollama/ollama:latest
+  container_name: ollama-pull-llama
+  networks:
+    - internal
+  volumes:
+    - ollama_data:/root/.ollama
+  entrypoint: /bin/sh
+  command:
+    - '-c'
+    - "sleep 3; \
+      OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:7b;\
+      OLLAMA_HOST=ollama:11434 ollama pull all-minilm:l6-v2;\
+      OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text"
+
 services:
+  n8n-import:
+    <<: *service-n8n
+    container_name: n8n-import
+    entrypoint: /bin/sh
+    command:
+      - '-c'
+      - 'n8n import:credentials --separate --input=/backup/credentials && n8n import:workflow --separate --input=/backup/workflows'
+    volumes:
+      - ./.docker/n8n/backup:/backup:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   n8n:
-    image: n8nio/n8n:latest
+    <<: *service-n8n
     container_name: n8n
     restart: unless-stopped
     ports:
       - 5678:5678
-    environment:
-      - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD=admin
-      - N8N_PORT=5678
-      - WEBHOOK_URL=http://localhost:5678
-      - TZ=America/Sao_Paulo
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - n8n_data:/home/node/.n8n
+      - ./.docker/n8n/backup:/backup
+      - ./.docker/n8n/shared:/data/shared
+    depends_on:
+      postgres:
+        condition: service_healthy
+      n8n-import:
+        condition: service_completed_successfully
     networks:
       - internal
+
   ollama:
-    # docker compose exec ollama ollama pull nomic-embed-text
-    image: ollama/ollama:latest
-    ports:
-      - 11434:11434
-    pull_policy: always
-    tty: true
-    restart: always
-    expose:
-      - 11434
-    environment:
-      - VECTOR_STORE_PATH=/app/vector_store
-    networks:
-      - internal
-    volumes:
-      - ollama_data:/root/.ollama
-      # - ./.tmp/vector_store:/app/vector_store
-      - ./.tmp/.ollama:/root/.ollama
-      - ./.docker/ollama:/code
+    <<: *service-ollama
+    profiles: ['cpu', 'gpu']
     deploy:
       resources:
         reservations:
@@ -45,17 +87,41 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+
+  ollama-cpu:
+    profiles: ['cpu']
+    <<: *service-ollama
+
+  ollama-gpu:
+    profiles: ['gpu']
+    <<: *service-ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+  ollama-pull-llama-cpu:
+    profiles: ['cpu']
+    <<: *init-ollama
+    depends_on:
+      - ollama-cpu
+
+  ollama-pull-llama-gpu:
+    profiles: ['gpu']
+    <<: *init-ollama
+    depends_on:
+      - ollama-gpu
   open-webui:
     image: ghcr.io/open-webui/open-webui:cuda
     container_name: open-webui
+    runtime: nvidia
     ports:
       - '3000:8080'
     environment:
-      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
       - NVIDIA_VISIBLE_DEVICES=all
-    deploy:
-      restart_policy:
-        condition: always
     depends_on:
       - ollama
     volumes:
@@ -64,7 +130,15 @@ services:
       - internal
     extra_hosts:
       - 'host.docker.internal:host-gateway'
-    runtime: nvidia
+    deploy:
+      restart_policy:
+        condition: always
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
   postgres:
     image: postgres
     restart: always
@@ -74,9 +148,9 @@ services:
       PGUSER: ${POSTGRES_USER}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_DB: n8n
     healthcheck:
-      test: pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}
+      test: pg_isready -U ${POSTGRES_USER} -d n8n
       interval: 2s
       timeout: 5s
       retries: 10
@@ -87,8 +161,8 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - .docker/postgres/sws/:/docker-entrypoint-initdb.d/:ro
       - postgres_data:/var/lib/postgresql/data
+      # - .docker/postgres/sws/:/docker-entrypoint-initdb.d/:ro
   redis:
     platform: linux/amd64
     image: redislabs/rejson:2.0.6
@@ -128,7 +202,7 @@ services:
     volumes:
       - ./.docker/mysql/mysqld.cnf:/etc/mysql/conf.d/mysqld.cnf
       - ./.docker/mysql/data:/var/lib/mysql
-      # - ./.docker/mysql/init:/docker-entrypoint-initdb.d/
+      - ./.docker/mysql/init:/docker-entrypoint-initdb.d/
     networks:
       - internal
   mongo:

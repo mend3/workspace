@@ -1,6 +1,15 @@
 DO $$
 BEGIN
    IF NOT EXISTS (
+      SELECT FROM pg_database WHERE datname = 'n8n'
+   ) THEN
+      CREATE DATABASE n8n;
+   END IF;
+END
+$$;
+DO $$
+BEGIN
+   IF NOT EXISTS (
       SELECT FROM pg_database WHERE datname = 'sws'
    ) THEN
       CREATE DATABASE sws;

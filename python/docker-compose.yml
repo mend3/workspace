@@ -8,30 +8,38 @@ services:
       dockerfile: ./.docker/python3/Dockerfile
       args:
         - VECTOR_TOOL=vector_generator
-    command: python -m tools.generators.vector_from_files --root . --store qdrant --collection workspace_embedding --ignore-dirs "tmp,__pycache__,node_modules" --ignore-files "package-lock.json,yarn.lock,pnpm-lock.yaml"
+    command: python -m python.generators.vector_from_files --root . --store qdrant --collection workspace_embedding --ignore-dirs "tmp,__pycache__,node_modules" --ignore-files "package-lock.json,yarn.lock,pnpm-lock.yaml"
     environment:
+      - NVIDIA_VISIBLE_DEVICES=all
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
-      - EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
-      - EMBEDDING_PROVIDER=fastembed
-      - QDRANT_URL=http://qdrant:6333 # only using Qdrant
-      # - PGVECTOR_CONNECTION_STRING=postgresql+psycopg2://postgres:postgres@pgvector:5432/vector_db # only when using pgvector
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
+      - EMBEDDING_PROVIDER=huggingface
+      - QDRANT_URL=${QDRANT_URL:-http://qdrant:6333} # only using Qdrant
+      # - PGVECTOR_CONNECTION_STRING=${PGVECTOR_CONNECTION_STRING:-postgresql+psycopg2://postgres:postgres@pgvector:5432/vector_db}
     volumes:
       - .:/app
     networks:
       - internal
     labels:
-      logging: "enabled"
+      logging: 'enabled'
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
     depends_on:
+      pgvector:
+        condition: service_healthy
       qdrant:
         condition: service_started
-      logstash:
-        condition: service_started
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
   pgvector:
     image: pgvector/pgvector:pg17
     container_name: pgvector-db
@@ -41,12 +49,12 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: vector_db
-    ports:
-      - '5433:5432'
+    expose:
+      - 5432
     networks:
       - internal
     healthcheck:
-      test: [ 'CMD-SHELL', 'pg_isready' ]
+      test: ['CMD-SHELL', 'pg_isready']
       interval: 1s
       timeout: 5s
       retries: 10
@@ -56,13 +64,13 @@ services:
   pinecone:
     image: ghcr.io/pinecone-io/pinecone-local:latest
     container_name: pinecone
-    ports:
-      - '5081:5081'
+    expose:
+      - 5081
     environment:
       - PORT=5081
-      - PINECONE_HOST=localhost
-      - PINECONE_API_KEY=apilocal
-      - PINECONE_ENVIRONMENT=us-east1-gcp
+      - PINECONE_HOST=${PINECONE_HOST:-localhost}
+      - PINECONE_API_KEY=${PINECONE_API_KEY:-apilocal}
+      - PINECONE_ENVIRONMENT=${PINECONE_ENVIRONMENT:-us-east1-gcp}
     networks:
       - internal
     volumes:
@@ -71,10 +79,10 @@ services:
     image: qdrant/qdrant
     container_name: qdrant
     environment:
-      - QDRANT_URL=http://localhost:6333
+      - QDRANT_URL=${QDRANT_URL:-http://qdrant:6333}
       - COLLECTION_NAME=${WORKSPACE_COLLECTION_NAME}
-      - EMBEDDING_MODEL=${EMBEDDING_MODEL}
-      - EMBEDDING_PROVIDER=fastembed
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
+      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-fastembed}
     volumes:
       - qdrant_data:/qdrant/storage
     ports:

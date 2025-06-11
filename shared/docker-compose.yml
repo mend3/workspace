@@ -208,13 +208,11 @@ services:
   localstack:
     build:
       context: .
-      dockerfile: ./docker/localstack/Dockerfile
+      dockerfile: ./.docker/localstack/Dockerfile
     environment:
       - SERVICES=s3
       - PERSISTENCE=/tmp/localstack/data
       - DOCKER_HOST=unix:///var/run/docker.sock
-    ports:
-      - 4566:4566
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./.docker/localstack/aws:/etc/localstack/init/ready.d

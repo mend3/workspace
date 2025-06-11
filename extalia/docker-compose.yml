@@ -1,10 +1,12 @@
 services:
-  l2-cdn:
+  extalia-cdn:
     restart: always
     build:
       context: .
       dockerfile: ./.docker/nginx/Dockerfile
       target: cdn
+      args:
+        - NGINX_VERSION=${NGINX_VERSION}
     volumes:
       - ./.docker/nginx/cdn.conf:/etc/nginx/nginx.conf:ro
       - ./.docker/nginx/cdn:/usr/share/nginx/cdn:ro
@@ -23,6 +25,7 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=extalia
+      - GAME_SERVER_LOGIN_HOST=localhost
     ports:
       - 7777:7777
       - 2106:2106
@@ -51,25 +54,6 @@ services:
       DB_NAME: nProtect
     networks:
       - internal
-  l2-extalia:
-    build:
-      context: .
-      dockerfile: ./.docker/java/jdk8-bellsoft.Dockerfile
-    command: ./start_servers.sh
-    environment:
-      - MYSQL_HOST=mysql
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_DATABASE=extalia
-      - GAME_SERVER_LOGIN_HOST=loginserver
-    ports:
-      - 7777:7777
-      - 2106:2106
-      - 9014:9014
-    networks:
-      - internal
-    volumes:
-      - ./extalia/server:/app
   loginserver:
     build:
       context: .
@@ -99,7 +83,7 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=extalia
-      - GAME_SERVER_LOGIN_HOST=localhost
+      - GAME_SERVER_LOGIN_HOST=loginserver
     ports:
       - 7777:7777
     networks:

@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "DrogaRaia Plugin",
+  "version": "1.4",
+  "description": "Plugin para adição de informações de produtos e vendas para o site Drogaraia",
+  "icons": {
+    "48": "./image/logo.png"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://www.drogaraia.com.br/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "scritps": [
+      "components/search.js",
+      "components/product.js",
+      "components/category.js"
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://www.drogaraia.com.br/*"
+      ],
+      "js": [
+        "tools/url.js",
+        "tools/tags.js",
+        "tools/index.js",
+        "tools/format.js",
+        "components/search.js",
+        "components/product.js",
+        "components/category.js",
+        "content.js"
+      ]
+    }
+  ],
+  "action": {
+    "default_icon": "./image/logo.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;"
+  }
+}

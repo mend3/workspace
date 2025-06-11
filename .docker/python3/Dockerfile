@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.12-slim
 
 ARG VECTOR_TOOL
 ENV VECTOR_TOOL=${VECTOR_TOOL:-vector_from_files}
@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     libpq-dev gcc \
     && rm -rf /var/lib/apt/lists/*
 
-COPY "./tools/requirements/${VECTOR_TOOL}.txt" ./requirements.txt
+COPY "./python/requirements/${VECTOR_TOOL}.txt" ./requirements.txt
 
 RUN pip config set global.cache-dir "/app/.cache/pip"
 
