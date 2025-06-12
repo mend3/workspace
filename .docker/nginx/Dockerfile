@@ -33,10 +33,7 @@ FROM builder AS nginx
 ARG APP
 ARG NODE_VERSION
 WORKDIR /usr/share/nginx/html
-COPY --from=nginx-certs /etc/ssl/private/selfsigned.key /etc/ssl/private/selfsigned.key
-COPY --from=nginx-certs /etc/ssl/certs/ /etc/ssl/certs/
+# COPY --from=nginx-certs /etc/ssl/private/selfsigned.key /etc/ssl/private/selfsigned.key
+# COPY --from=nginx-certs /etc/ssl/certs/ /etc/ssl/certs/
 COPY --from=builder /etc/nginx/modules/ngx_http_proxy_connect_module.so /usr/local/nginx/modules/
 COPY --from=builder /usr/sbin/nginx /usr/sbin/nginx
-
-FROM builder AS cdn
-WORKDIR /usr/share/nginx/cdn

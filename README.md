@@ -1,5 +1,12 @@
 # Internal Notes
 
+## Pre-requisites
+
+- Node v22.14+ (and pnpm)
+- Python v3.12+ (and pip)
+- Make
+- Docker
+
 ## Ollama
 
 - Use model `all-minilm:l6-v2` as embedding model to read qdrant vector store using n8n.
@@ -10,6 +17,57 @@
 - - `deepseek-code:6.7b`
 
 ## Utils
+
+---
+
+## mkcert
+
+### ✅ Step 1: Properly install `mkcert` in WSL (Linux)
+
+If you're in **WSL (Ubuntu or Debian)**, install it via:
+
+```bash
+sudo apt install libnss3-tools -y
+curl -JLO https://github.com/FiloSottile/mkcert/releases/latest/download/mkcert-v1.4.4-linux-amd64
+chmod +x mkcert-v1.4.4-linux-amd64
+sudo mv mkcert-v1.4.4-linux-amd64 /usr/local/bin/mkcert
+```
+
+> ✅ You can verify with:
+
+```bash
+mkcert --version
+```
+
+You should see:
+
+```
+mkcert v1.4.4
+```
+
+---
+
+### ✅ Step 2: Generate certificates (with wildcard correctly quoted)
+
+```bash
+mkcert -cert-file traefik/certs/devshell.local.crt -key-file traefik/certs/devshell.local.key \
+  devshell.local \
+  '*.devshell.local'
+```
+
+---
+
+### ✅ Step 3: Trust the local CA (once per system)
+
+You’ll also need to install the local root CA to your trust store:
+
+```bash
+mkcert -install
+
+cat $(mkcert -CAROOT)/rootCA.pem
+```
+
+---
 
 **WSL Addons:**
 

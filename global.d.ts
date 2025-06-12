@@ -3,6 +3,12 @@ import 'reflect-metadata'
 type NodeEnv = 'development' | 'production' | 'test'
 
 declare global {
+  interface Window {
+    mcpHelper: {
+      logs: string[]
+      originalConsole: Partial<typeof console>
+    }
+  }
   interface ObjectConstructor {
     entries<U, T extends string | number | symbol>(o: { [key in T]: U } | ArrayLike<U>): [T, U][]
     keys<T>(obj: T): (keyof T)[]
@@ -29,7 +35,6 @@ declare global {
       : T)
 
   type OmitValue<T, U> = Pick<T, ExcludeKeys<T, U>>
-
   type Unpacked<T> = T extends (infer U)[] ? U : T
   type NoNullable<T> = Exclude<T, undefined | null>
   type InnerType<T> = NoNullable<Unpacked<T>>

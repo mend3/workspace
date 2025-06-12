@@ -40,64 +40,7 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-  pgvector:
-    image: pgvector/pgvector:pg17
-    container_name: pgvector-db
-    environment:
-      TZ: America/Sao_Paulo
-      PGUSER: ${POSTGRES_USER}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: vector_db
-    expose:
-      - 5432
-    networks:
-      - internal
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready']
-      interval: 1s
-      timeout: 5s
-      retries: 10
-    volumes:
-      - pgvector_data:/var/lib/postgresql/data
-      - ./.docker/postgres/pgvector/:/docker-entrypoint-initdb.d/:ro
-  pinecone:
-    image: ghcr.io/pinecone-io/pinecone-local:latest
-    container_name: pinecone
-    expose:
-      - 5081
-    environment:
-      - PORT=5081
-      - PINECONE_HOST=${PINECONE_HOST:-localhost}
-      - PINECONE_API_KEY=${PINECONE_API_KEY:-apilocal}
-      - PINECONE_ENVIRONMENT=${PINECONE_ENVIRONMENT:-us-east1-gcp}
-    networks:
-      - internal
-    volumes:
-      - pinecone_data:/root/.pinecone
-  qdrant:
-    image: qdrant/qdrant
-    container_name: qdrant
-    environment:
-      - QDRANT_URL=${QDRANT_URL:-http://qdrant:6333}
-      - COLLECTION_NAME=${WORKSPACE_COLLECTION_NAME}
-      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
-      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-fastembed}
-    volumes:
-      - qdrant_data:/qdrant/storage
-    ports:
-      - '6333:6333'
-    expose:
-      - 6333
-    restart: unless-stopped
-    networks:
-      - internal
 
 networks:
   internal:
     driver: bridge
-
-volumes:
-  pgvector_data:
-  pinecone_data:
-  qdrant_data:

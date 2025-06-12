@@ -92,7 +92,7 @@ services:
       - firefly_iii_upload:/var/www/html/storage/upload
     env_file: ./.docker/firefly/.env
     ports:
-      - 8080:8080
+      - 9090:8080
     depends_on:
       - mysql
     links:

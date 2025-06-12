@@ -1,10 +1,11 @@
 services:
   extalia-cdn:
     restart: always
+    working_dir: /usr/share/nginx/cdn
     build:
       context: .
       dockerfile: ./.docker/nginx/Dockerfile
-      target: cdn
+      target: builder
       args:
         - NGINX_VERSION=${NGINX_VERSION}
     volumes:
@@ -15,7 +16,7 @@ services:
       - '9999:80'
     networks:
       - internal
-  extalia-server:
+  l2j-server:
     build:
       context: .
       dockerfile: ./.docker/java/jdk8-bellsoft.Dockerfile
@@ -37,7 +38,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-  nprotect:
+  extalia-nprotect:
+    container_name: nprotect
     build:
       context: .
       dockerfile: ./.docker/php/Dockerfile
@@ -52,6 +54,8 @@ services:
       DB_USER: ${MYSQL_USER}
       DB_PASS: ${MYSQL_PASSWORD}
       DB_NAME: nProtect
+    depends_on:
+      - mysql
     networks:
       - internal
   loginserver:
@@ -71,6 +75,9 @@ services:
       - internal
     volumes:
       - ./extalia/server:/app
+    depends_on:
+      mysql:
+        condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
   gameserver:

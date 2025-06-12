@@ -1,6 +1,8 @@
 .cache
 browserless_data
 *.pkl
+**/certs
+*.pem
 **/brightdata
 **/mysql/data
 **/dump

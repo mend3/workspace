@@ -3,10 +3,10 @@ PROFILE ?= gpu
 TARGET ?= "*" ## Target (service name) for docker compose
 
 # Compose file groups
-COMMON_FILES = -f ./docker-compose.yml -f ./shared/monitor.compose.yml
+COMMON_FILES = -f ./docker-compose.yml -f ./shared/monitor.compose.yml -f ./shared/docker-compose.yml
 EXTALIA_FILES = $(COMMON_FILES) \
   -f ./extalia/docker-compose.yml \
-  -f ./extalia/web/docker/prod.compose.yml \
+  -f ./extalia/web/prod.compose.yml \
   -f ./extalia/web/docker-compose.yml
 
 MCP_FILES = $(COMMON_FILES) \
@@ -16,11 +16,8 @@ MCP_FILES = $(COMMON_FILES) \
   -f ./mcp/docker-compose.yml
 
 ALL_FILES = $(COMMON_FILES) \
-  -f ./python/docker-compose.yml \
-  -f ./mcp/docker-compose.yml \
-  -f ./vendors/docker-compose.yml \
-  -f ./shared/docker-compose.yml \
-  -f ./browser/docker-compose.yml \
+  $(EXTALIA_FILES) \
+  $(MCP_FILES) \
   -f ./sws/docker-compose.yml
 
 # Generic compose commands
@@ -29,11 +26,11 @@ define compose_up
 endef
 
 define compose_down
-	$(CONTAINER_RUNTIME) compose $(1) down --remove-orphans
+	$(CONTAINER_RUNTIME) compose --profile $(PROFILE) $(1) down --remove-orphans
 endef
 
 define compose_build
-	$(CONTAINER_RUNTIME) compose $(1) build --pull --no-cache --force-rm $(2)
+	$(CONTAINER_RUNTIME) compose --profile $(PROFILE) $(1) build --pull --no-cache --force-rm $(2)
 endef
 
 .PHONY: help
@@ -47,7 +44,7 @@ clean: ## Clean cache folders
 
 .PHONY: extalia
 extalia: ## Starts Extalia compound (http + java)
-	$(call compose_up,$(EXTALIA_FILES),extalia-*)
+	$(call compose_up,$(EXTALIA_FILES),-d traefik extalia-*)
 
 .PHONY: extalia-dev
 extalia-dev: ## Starts Extalia development server
@@ -55,7 +52,7 @@ extalia-dev: ## Starts Extalia development server
 
 .PHONY: sws
 sws: ## Starts SWS service
-	$(call compose_up,$(ALL_FILES),sws)
+	$(call compose_up,$(ALL_FILES),-d traefik sws-*)
 
 .PHONY: mcp
 mcp: ## Starts MCP server
@@ -67,7 +64,7 @@ ai-context: ## Starts only the AI context services
 
 .PHONY: up
 up: ## Starts all defined services
-	$(call compose_up,$(ALL_FILES),$(TARGET))
+	$(call compose_up,$(ALL_FILES),-d traefik $(TARGET))
 
 .PHONY: down
 down: ## Stops and removes all services
