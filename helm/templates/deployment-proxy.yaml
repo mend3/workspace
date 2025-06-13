@@ -31,7 +31,7 @@ spec:
             - name: NODE_ENV
               valueFrom:
                 configMapKeyRef:
-                  name: sws-config
+                  name: workspace-config
                   key: NODE_ENV
           ports:
             - containerPort: 8080

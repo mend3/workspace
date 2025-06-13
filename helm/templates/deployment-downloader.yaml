@@ -35,77 +35,77 @@ spec:
             - name: NODE_ENV
               valueFrom:
                 configMapKeyRef:
-                  name: sws-config
+                  name: workspace-config
                   key: NODE_ENV
             # - name: LOKI_HOST
             #   valueFrom:
             #     configMapKeyRef:
-            #       name: sws-config
+            #       name: workspace-config
             #       key: LOKI_HOST
             - name: BRONZE_RAW_BUCKET_NAME
               valueFrom:
                 configMapKeyRef:
-                  name: sws-config
+                  name: workspace-config
                   key: BRONZE_RAW_BUCKET_NAME
             - name: USER_AGENT
               valueFrom:
                 configMapKeyRef:
-                  name: sws-config
+                  name: workspace-config
                   key: USER_AGENT
             - name: PROXY_HOST
               valueFrom:
                 configMapKeyRef:
-                  name: sws-config
+                  name: workspace-config
                   key: PROXY_HOST
             - name: PROXY_AUTH
               valueFrom:
                 configMapKeyRef:
-                  name: sws-config
+                  name: workspace-config
                   key: PROXY_AUTH
             - name: FLARESOLVER_HOST
               valueFrom:
                 configMapKeyRef:
-                  name: sws-config
+                  name: workspace-config
                   key: FLARESOLVER_HOST
             - name: BROWSER_HOST
               valueFrom:
                 configMapKeyRef:
-                  name: sws-config
+                  name: workspace-config
                   key: BROWSER_HOST
             - name: REDIS_HOST
               valueFrom:
                 configMapKeyRef:
-                  name: sws-config
+                  name: workspace-config
                   key: REDIS_HOST
             - name: POSTGRES_HOST
               valueFrom:
                 configMapKeyRef:
-                  name: sws-config
+                  name: workspace-config
                   key: POSTGRES_HOST
             - name: POSTGRES_DB
               valueFrom:
                 configMapKeyRef:
-                  name: sws-config
+                  name: workspace-config
                   key: POSTGRES_DB
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: sws-secrets
+                  name: workspace-secrets
                   key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: sws-secrets
+                  name: workspace-secrets
                   key: POSTGRES_PASSWORD
             - name: MONGO_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
-                  name: sws-secrets
+                  name: workspace-secrets
                   key: MONGO_CONNECTION_STRING
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: sws-keys
+                  name: workspace-keys
                   key: OPENAI_API_KEY
           ports:
             - containerPort: 80

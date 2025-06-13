@@ -5,6 +5,8 @@ set -e # Exit on first error
 # === LOAD ENVIRONMENT VARIABLES ===
 source .env.sh
 
+kubectl config set-context --current --namespace=${NAMESPACE}
+
 # === BUILD & LOAD DOCKER IMAGES ===
 eval $(minikube -p "${NAMESPACE}" docker-env)
 

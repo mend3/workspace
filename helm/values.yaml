@@ -3,7 +3,7 @@ awsRegion: 'us-east-1'
 
 # Services
 services:
-  lokiHost: 'http://loki.monitoring:3100'
+  lokiHost: 'http://loki.o11y:3100'
   redisHost: 'redis'
   proxyHost: 'proxy:8080'
   browserHost: 'http://browserless:9000?token=45241bbb-c7b1-41f7-8e62-561c075b19fc'

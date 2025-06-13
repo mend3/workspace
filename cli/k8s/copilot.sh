@@ -1,3 +1,10 @@
+#!/bin/bash
+
+set -e  # Exit on first error
+
+# === LOAD ENVIRONMENT VARIABLES ===
+source .env.sh
+
 copilot-set() {
   export COPILOT_APP=$1
   export COPILOT_ENV=$2

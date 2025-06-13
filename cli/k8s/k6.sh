@@ -8,6 +8,8 @@ source .env.sh
 K6_TEST_MODE="${K6_TEST_MODE:-load}"
 K6_TEST_URI="${K6_TEST_URI:-https://nginx:443/api/health}"
 
+kubectl config set-context --current --namespace=${NAMESPACE}
+
 echo "# Generate Secrets for k6..."
 kubectl create secret generic k6-secrets \
   --from-literal=k6_test_mode=$K6_TEST_MODE \

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e  # Exit on first error
+set -e # Exit on first error
 
 # === LOAD ENVIRONMENT VARIABLES ===
 source .env.sh
@@ -12,16 +12,22 @@ check_dependency "helm"
 
 start_minikube
 
+minikube -p ${NAMESPACE} addons enable ingress
+
+create_namespace "${NAMESPACE}"
+
+kubectl config set-context --current --namespace=${NAMESPACE}
+
 log "🌐 Cluster phase complete."
 
 # helm is in separate file so we can helm without recreating the whole cluster
 ./cli/k8s/helm.sh
 
 # build is in separate file so we can build without recreating the whole cluster
-./cli/k8s/build.sh
+# ./cli/k8s/build.sh
 
 # generate secrets on the fly based on env vars
-# ./cli/k8s/secrets.sh
+./cli/k8s/secrets.sh
 
 # deploy is in separate file so we can deploy without recreating the whole cluster
 # ./cli/k8s/deploy.sh

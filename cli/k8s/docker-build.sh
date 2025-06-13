@@ -1,5 +1,8 @@
 #!/bin/bash
-source ".env.sh"
+set -e # Exit on first error
+
+# === LOAD ENVIRONMENT VARIABLES ===
+source .env.sh
 
 # Check if the correct number of arguments is provided
 if [ "$#" -ne 2 ]; then

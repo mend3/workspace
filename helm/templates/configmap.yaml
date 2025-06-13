@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Values.namespace }}-config
+  name: workspace-config
   namespace: {{ .Values.namespace | default .Release.Namespace }}
 data:
   # General App Configs

@@ -5,8 +5,9 @@ set -e # Exit on first error
 # === LOAD ENVIRONMENT VARIABLES ===
 source .env.sh
 
-# Create sws-keys secret if missing
-create_secret_if_missing "sws-keys" "${NAMESPACE}" \
+kubectl config set-context --current --namespace=${NAMESPACE}
+
+create_secret_if_missing "app-keys" "${NAMESPACE}" \
   "OPENAI_API_KEY=${OPENAI_API_KEY}" \
   "COOKIE_SECRET=${COOKIE_SECRET}"
 

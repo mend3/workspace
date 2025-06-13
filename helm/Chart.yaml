@@ -17,4 +17,4 @@ maintainers:
 icon: https://devshell.tech/assets/icons/favicon.ico
 deprecated: false
 annotations:
-  meta.helm.sh/release-namespace: sws
+  meta.helm.sh/release-namespace: workspace
