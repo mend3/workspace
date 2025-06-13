@@ -30,7 +30,7 @@ define compose_down
 endef
 
 define compose_build
-	$(CONTAINER_RUNTIME) compose --profile $(PROFILE) $(1) build --pull --force-rm $(2)
+	$(CONTAINER_RUNTIME) compose --profile $(PROFILE) $(1) build --no-cache --pull --force-rm $(2)
 endef
 
 define compose_bridge
