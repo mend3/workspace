@@ -1,0 +1,20 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: sws-storage
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+  fsType: ext4
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete
+allowVolumeExpansion: false
+mountOptions:
+  - debug
+allowedTopologies:
+  - matchLabelExpressions:
+    - key: topology.ebs.csi.aws.com/zone
+      values:
+        - us-east-1a
+        - us-east-1b
+        - us-east-1c

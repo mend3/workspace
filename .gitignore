@@ -1,3 +1,4 @@
+.k8s
 .cache
 browserless_data
 *.pkl
@@ -37,8 +38,8 @@ tmp/
 **/*.env.*
 *-oauth.*
 projects/
-k8s/
 vendors/
+knowledge/
 browser/ui
 **/public/system
 **/migrations

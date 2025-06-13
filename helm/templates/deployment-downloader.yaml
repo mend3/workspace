@@ -1,0 +1,135 @@
+{{- $_ := set .Values "component" "downloader" -}}
+{{ include "dev-realm.deploymentHeader" . | nindent 0 }}
+spec:
+  replicas: {{ .Values.downloader.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ printf "%s-%s" .Release.Name .Values.component }}
+  template:
+    metadata:
+      labels:
+        app: {{ printf "%s-%s" .Release.Name .Values.component }}
+        environment: {{ .Values.environment }}
+    spec:
+      nodeSelector:
+        eks.amazonaws.com/nodegroup: nodejs
+      tolerations:
+        - key: 'dedicated'
+          operator: 'Equal'
+          value: 'nodejs'
+          effect: 'NoSchedule'
+      containers:
+        - args:
+            - node
+            - dist/downloader/main.js
+          name: {{ .Values.downloader.name }}
+          image: "{{ .Values.awsAccountId }}.dkr.ecr.{{ .Values.awsRegion }}.amazonaws.com/{{ .Values.downloader.name }}:{{ .Values.downloader.tag }}"
+          imagePullPolicy: Always
+          env:
+            - name: APP
+              value: {{ .Values.component }}
+            - name: TZ
+              value: America/Sao_Paulo
+            - name: REDIS_PORT
+              value: "6379"
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: sws-config
+                  key: NODE_ENV
+            # - name: LOKI_HOST
+            #   valueFrom:
+            #     configMapKeyRef:
+            #       name: sws-config
+            #       key: LOKI_HOST
+            - name: BRONZE_RAW_BUCKET_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: sws-config
+                  key: BRONZE_RAW_BUCKET_NAME
+            - name: USER_AGENT
+              valueFrom:
+                configMapKeyRef:
+                  name: sws-config
+                  key: USER_AGENT
+            - name: PROXY_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: sws-config
+                  key: PROXY_HOST
+            - name: PROXY_AUTH
+              valueFrom:
+                configMapKeyRef:
+                  name: sws-config
+                  key: PROXY_AUTH
+            - name: FLARESOLVER_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: sws-config
+                  key: FLARESOLVER_HOST
+            - name: BROWSER_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: sws-config
+                  key: BROWSER_HOST
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: sws-config
+                  key: REDIS_HOST
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: sws-config
+                  key: POSTGRES_HOST
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: sws-config
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: sws-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sws-secrets
+                  key: POSTGRES_PASSWORD
+            - name: MONGO_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: sws-secrets
+                  key: MONGO_CONNECTION_STRING
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sws-keys
+                  key: OPENAI_API_KEY
+          ports:
+            - containerPort: 80
+              protocol: TCP
+              name: "metrics"
+          workingDir: /app
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 80
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 30
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10

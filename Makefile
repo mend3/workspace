@@ -30,7 +30,15 @@ define compose_down
 endef
 
 define compose_build
-	$(CONTAINER_RUNTIME) compose --profile $(PROFILE) $(1) build --pull --no-cache --force-rm $(2)
+	$(CONTAINER_RUNTIME) compose --profile $(PROFILE) $(1) build --pull --force-rm $(2)
+endef
+
+define compose_bridge
+	compose-bridge convert $(1)
+endef
+
+define kompose
+	kompose convert $(1)
 endef
 
 .PHONY: help
@@ -73,3 +81,23 @@ down: ## Stops and removes all services
 .PHONY: build
 build: ## Build all Docker images
 	$(call compose_build,$(ALL_FILES),$(TARGET))
+
+.PHONY: minikube
+minikube:  ## Start minikube cluster and the whole namespace (k8s)
+	./cli/k8s/minikube.sh
+
+.PHONY: minikube-down
+minikube-down:  ## Drops minikube cluster
+	minikube delete --all --purge
+
+.PHONY: dashboard
+dashboard:  ## Open minikube dashboard (k8s)
+	minikube dashboard
+
+.PHONY: konvert
+konvert:  ## Convert docker-compose files to k8s deployments using konvert (k8s)
+	$(call konvert,$(ALL_FILES))
+
+.PHONY: convert
+convert:  ## Convert docker-compose files to k8s deployments using docker compose-bridge plugin (k8s)
+	$(call compose_bridge,$(ALL_FILES))

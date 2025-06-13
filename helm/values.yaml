@@ -1,0 +1,61 @@
+awsAccountId: '721982957283'
+awsRegion: 'us-east-1'
+
+# Services
+services:
+  lokiHost: 'http://loki.monitoring:3100'
+  redisHost: 'redis'
+  proxyHost: 'proxy:8080'
+  browserHost: 'http://browserless:9000?token=45241bbb-c7b1-41f7-8e62-561c075b19fc'
+  flaresolverHost: 'http://flaresolverr:8191'
+  ollamaHost: 'http://ollama:11434'
+
+# Application Globals
+app_global:
+  port: 80
+  target: 'production'
+  nodeEnv: 'production'
+  proxyAuth: 'user:pass'
+  userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+
+# MongoDB Configurations
+mongodb:
+  connectionString: 'mongodb://root:s3cr3t@mongodb:27017/database?authSource=admin'
+  username: 'root'
+  password: 's3cr3t'
+  database: 'database'
+
+# PostgreSQL Configurations
+postgresql:
+  host: 'postgresql'
+  port: 5432
+  user: 'admin'
+  password: 'admin'
+  database: 'platform'
+  replicaCount: 1
+
+api:
+  name: sws-api
+  imagePullPolicy: Always
+  tag: latest
+  replicaCount: 1
+
+downloader:
+  name: sws-downloader
+  imagePullPolicy: Always
+  tag: latest
+  replicaCount: 1
+
+proxy:
+  name: sws-proxy
+  imagePullPolicy: Always
+  tag: latest
+  replicaCount: 1
+
+s3:
+  bronzeRawBucketName: sws-bronze-raw
+  bronzeProcessedBucketName: sws-bronze-processed
+  silverRawBucketName: sws-silver-raw
+  silverProcessedBucketName: sws-silver-processed
+  goldRawBucketName: sws-gold-raw
+  goldProcessedBucketName: sws-gold-processed

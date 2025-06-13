@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.namespace }}-config
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+data:
+  # General App Configs
+  NODE_ENV: "{{ .Values.app_global.nodeEnv }}"
+
+  # MongoDB
+  MONGODB_DATABASE: "{{ .Values.mongodb.database }}"
+
+  # PostgreSQL
+  POSTGRES_HOST: "{{ .Values.postgresql.host }}"
+  POSTGRES_DB: "{{ .Values.postgresql.database }}"
+
+  # Scraper
+  USER_AGENT: "{{ .Values.app_global.userAgent }}"
+
+  # Upload
+  BRONZE_RAW_BUCKET_NAME: "{{ .Values.s3.bronzeRawBucketName }}"
+
+  # Proxy
+  PROXY_AUTH: "{{ .Values.app_global.proxyAuth }}"
+
+  BROWSER_HOST: "{{ .Values.services.browserHost }}"
+  FLARESOLVER_HOST: "{{ .Values.services.flaresolverHost }}"
+  REDIS_HOST: "{{ .Values.services.redisHost }}"
+  PROXY_HOST: "{{ .Values.services.proxyHost }}"
+  LOKI_HOST: "{{ .Values.services.lokiHost }}"
+  OLLAMA_HOST: "{{ .Values.services.ollamaHost }}"

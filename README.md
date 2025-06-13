@@ -1,11 +1,22 @@
 # Internal Notes
 
+![Helm](https://img.shields.io/badge/Helm-Chart-blue)
+![Prometheus](https://img.shields.io/badge/Monitoring-Prometheus-orange)
+![Loki](https://img.shields.io/badge/Logging-Loki-blue)
+![Grafana](https://img.shields.io/badge/Dashboard-Grafana-orange)
+![TypeScript](https://img.shields.io/badge/Made_with-TypeScript-pink)
+
+
 ## Pre-requisites
 
 - Node v22.14+ (and pnpm)
 - Python v3.12+ (and pip)
 - Make
 - Docker
+- Minikube (optional, to use k8s)
+  - Helm
+
+---
 
 ## Ollama
 
@@ -16,13 +27,128 @@
 - - `gemma:7b-instruct`
 - - `deepseek-code:6.7b`
 
-## Utils
+## [Install Helm](https://helm.sh/docs/intro/install/#from-script)
 
 ---
 
-## mkcert
+```bash
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
-### ✅ Step 1: Properly install `mkcert` in WSL (Linux)
+```
+
+---
+
+## [Install minikube](https://minikube.sigs.k8s.io/docs/start/)
+
+Minikube is local Kubernetes, focusing on making it easy to learn and develop for Kubernetes.
+
+All you need is [Docker](https://docs.docker.com/engine/install/ubuntu/) (or similarly compatible) container or a Virtual Machine environment, and Kubernetes is a single command away: `minikube start`
+
+What you’ll need
+
+- 2 CPUs or more
+- 2GB of free memory
+- 20GB of free disk space
+- Internet connection
+- Container or virtual machine manager, such as: Docker, QEMU, Hyperkit, Hyper-V, KVM, Parallels, Podman, VirtualBox, or VMware Fusion/Workstation
+
+```bash
+curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+
+minikube version
+# minikube version: v1.35.0
+# commit: dd5d320e41b5451cdf3c01891bc4e13d189586ed-dirty
+```
+
+> Secrets should be in _base64_ using `echo -n "your-secret-value" | base64`
+
+```bash
+# clear custom namespaces
+kubectl delete namespace $(kubectl get namespaces --no-headers | awk '$1 !~ /^(default|kube-system|kube-public|kube-node-lease)$/ {print $1}') && \
+helm list -A -q | xargs -I {} helm uninstall {} --namespace $(helm list -A | awk '{print $2}' | tail -n +2)
+
+# get all namespaces
+kubectl get namespaces
+
+# list all helms
+helm list -A
+
+# delete all helms
+helm list -A -q | xargs -I {} helm uninstall {} --namespace $(helm list -A | awk '{print $2}' | tail -n +2)
+
+# manually create a namespace
+kubectl create namespace ${NAMESPACE}
+
+kubectl label namespace ${NAMESPACE} app.kubernetes.io/managed-by=Helm --overwrite
+kubectl annotate namespace ${NAMESPACE} meta.helm.sh/release-name=${HELM_RELEASE} --overwrite
+kubectl annotate namespace ${NAMESPACE} meta.helm.sh/release-namespace=${NAMESPACE} --overwrite
+
+# package helm for deployment
+helm package k8s/helm
+# install from local helm files
+helm install ${NAMESPACE} ./k8s/helm --namespace ${NAMESPACE} --create-namespace
+# or preview
+helm install ${NAMESPACE} ./k8s/helm --set namespace=${NAMESPACE} --debug --dry-run
+
+helm history ${NAMESPACE} -n ${NAMESPACE}
+
+make kbuild
+
+# after the cluster is up on k8s, run
+kubectl apply -f helm/vendors/aws-auth.yaml
+```
+
+---
+
+## Terraform
+
+- [Terraform Account](https://app.terraform.io/app/devshell/workspaces)
+- [Organization Page](https://app.terraform.io/app/organizations)
+- [DevShell Workspace](https://app.terraform.io/app/devshell/workspaces)
+
+### Initialize state holders
+
+```sh
+aws s3api create-bucket --bucket ${NAMESPACE}-terraform-state --region us-east-1
+
+aws s3api put-bucket-versioning --bucket ${NAMESPACE}-terraform-state --versioning-configuration Status=Enabled
+
+aws dynamodb create-table \
+  --table-name ${NAMESPACE}-terraform-lock \
+  --attribute-definitions AttributeName=LockID,AttributeType=S \
+  --key-schema AttributeName=LockID,KeyType=HASH \
+  --billing-mode PAY_PER_REQUEST
+
+aws ecr create-repository --repository-name ${NAMESPACE}-docker-repository
+
+- name: Update kubeconfig for EKS
+  run: |
+    mkdir -p $HOME/.kube
+    aws eks update-kubeconfig --name ${{ env.CLUSTER_NAME }} --region ${{ env.AWS_REGION }} --kubeconfig $HOME/.kube/config
+    echo 'KUBE_CONFIG_DATA<<EOF' >> $GITHUB_ENV
+    echo $(cat $HOME/.kube/config | base64) >> $GITHUB_ENV
+    echo 'EOF' >> $GITHUB_ENV
+    export KUBECONFIG=$HOME/.kube/config
+
+
+aws ecr get-login-password --region ${AWS_REGION} | kubectl create secret docker-registry ecr-secret \
+  --docker-server=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com \
+  --docker-username=AWS \
+  --docker-password=$(aws ecr get-login-password --region ${AWS_REGION}) \
+  --docker-email=your-email@example.com \
+  --namespace ${NAMESPACE} \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+```
+
+---
+
+## Utils
+
+### mkcert
+
+✅ Step 1: Properly install `mkcert` in WSL (Linux)
 
 If you're in **WSL (Ubuntu or Debian)**, install it via:
 
@@ -47,17 +173,17 @@ mkcert v1.4.4
 
 ---
 
-### ✅ Step 2: Generate certificates (with wildcard correctly quoted)
+✅ Step 2: Generate certificates (with wildcard correctly quoted)
 
 ```bash
-mkcert -cert-file traefik/certs/devshell.local.crt -key-file traefik/certs/devshell.local.key \
-  devshell.local \
-  '*.devshell.local'
+mkcert -cert-file traefik/certs/domain.com.crt -key-file traefik/certs/domain.com.key \
+  domain.com \
+  '*.domain.com'
 ```
 
 ---
 
-### ✅ Step 3: Trust the local CA (once per system)
+✅ Step 3: Trust the local CA (once per system)
 
 You’ll also need to install the local root CA to your trust store:
 
@@ -77,10 +203,14 @@ cat $(mkcert -CAROOT)/rootCA.pem
 - [fzf-tab](https://gist.github.com/seungjulee/d72883c193ac630aac77e0602cb18270)
 - [PowerLine Fonts](https://github.com/powerline/fonts?tab=readme-ov-file)
 
+---
+
 **Docker:**
 
 - [Awesome Docker](https://github.com/veggiemonk/awesome-docker/blob/master/README.md)
 - [Lazy Docker](https://github.com/jesseduffield/lazydocker#installation)
+
+---
 
 **GPU:**
 
@@ -95,12 +225,16 @@ sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 ```
 
+---
+
 ## MCP Servers
 
 ```bash
 # automatically starts all mcp servers using docker
 make mcp
 ```
+
+---
 
 ## Shell Scripts
 
@@ -151,12 +285,6 @@ docker compose -f ./docker-compose.yml -f python/docker-compose.yml build servic
 docker create --name tmp-container service-name
 docker cp tmp-container:/app/file.txt file.txt
 docker rm tmp-container
-
-# Convert docker-compose files to k8s deployments using konvert (k8s)
-kompose convert -f ./docker-compose.yml
-
-# Convert docker-compose files to k8s deployments using docker compose-bridge plugin (k8s)
-compose-bridge convert -f ./docker-compose.yml
 ```
 
 ---

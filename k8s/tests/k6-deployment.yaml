@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: extalia
+  labels:
+    app: k6
+  name: k6
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: k6
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: k6
+    spec:
+      containers:
+        - name: k6
+          image: grafana/k6:latest
+          args:
+            - run
+            - '--insecure-skip-tls-verify'
+            - '--summary-time-unit=ms'
+            - '/src/script.js'
+          env:
+            - name: HTTPS_PROXY
+            - name: HTTP_PROXY
+            - name: K6_TEST_MODE
+              valueFrom:
+                secretKeyRef:
+                  key: k6_test_mode
+                  name: k6-secrets
+            - name: K6_TLS_CERT
+              value: /etc/tls/tls.crt
+            - name: K6_TLS_KEY
+              value: /etc/tls/tls.key
+            - name: K6_OUT
+              value: influxdb=http://influxdb:8086/k6
+            - name: K6_TEST_URI
+              valueFrom:
+                secretKeyRef:
+                  key: k6_test_uri
+                  name: k6-secrets
+          volumeMounts:
+            - mountPath: /src
+              name: script
+              readOnly: true
+            - name: tls-secret
+              mountPath: /etc/tls
+              readOnly: true
+          resources:
+            requests:
+              memory: '512Mi'
+              cpu: '250m'
+            limits:
+              memory: '1Gi'
+              cpu: '500m'
+      restartPolicy: Always
+      volumes:
+        - name: tls-secret
+          secret:
+            secretName: tls-secret
+        - configMap:
+            name: k6-script
+          name: script

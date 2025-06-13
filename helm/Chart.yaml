@@ -1,0 +1,20 @@
+apiVersion: v2
+name: devshell
+description: Helm chart for controlling deployment environments (alpha, beta, dev).
+version: 1.0.0
+appVersion: '1.0'
+kubeVersion: '>=1.16.0-0'
+type: application
+keywords:
+  - environment
+  - deployment
+home: https://devshell.tech
+sources:
+  - https://github.com/mendshell/sws
+maintainers:
+  - name: Victor Mendonça
+    email: victor.mendonca@devshell.tech
+icon: https://devshell.tech/assets/icons/favicon.ico
+deprecated: false
+annotations:
+  meta.helm.sh/release-namespace: sws
