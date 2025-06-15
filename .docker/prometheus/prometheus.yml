@@ -1,0 +1,39 @@
+# source https://prometheus.io/docs/prometheus/latest/getting_started/
+global:
+  scrape_interval: 15s
+  external_labels:
+    monitor: 'workspace'
+rule_files:
+  - 'alert.rules'
+scrape_configs:
+  - job_name: 'stub_status'
+    static_configs:
+      - targets: ['sws-nginx:80']
+    tls_config:
+      insecure_skip_verify: true
+  - job_name: 'metrics'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['flaresolverr:8000']
+      - targets: ['sws-api:80']
+      - targets: ['sws-proxy:9090']
+      - targets: ['sws-downloader:80']
+    tls_config:
+      insecure_skip_verify: true
+  - job_name: 'prometheus'
+    static_configs:
+      - targets:
+        - 'localhost:9090'
+        - 'cadvisor:8080'
+        - 'prometheus-node-exporter:9100'
+        - 'sws-nginx-exporter:9113'
+        - 'extalia-nginx-exporter:9113'
+        - 'loki:3100'
+  - job_name: 'traefik'
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+    dns_sd_configs:
+    - names:
+      - 'tasks.traefik'
+      type: 'A'
+      port: 8080

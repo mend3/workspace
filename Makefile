@@ -22,11 +22,11 @@ ALL_FILES = $(COMMON_FILES) \
 
 # Generic compose commands
 define compose_up
-	$(CONTAINER_RUNTIME) compose --profile $(PROFILE) $(1) up --build --remove-orphans --renew-anon-volumes --force-recreate -V $(2)
+	$(CONTAINER_RUNTIME) compose --profile $(PROFILE) $(1) up --remove-orphans --build --renew-anon-volumes --force-recreate -V $(2)
 endef
 
 define compose_down
-	$(CONTAINER_RUNTIME) compose --profile $(PROFILE) $(1) down --remove-orphans
+	$(CONTAINER_RUNTIME) compose --profile $(PROFILE) $(1) down -v --remove-orphans
 endef
 
 define compose_build

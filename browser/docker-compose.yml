@@ -14,7 +14,7 @@ services:
       retries: 3
       start_period: 5s
     ports:
-      - '9000:3000'
+      - '3000:3000'
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
@@ -58,7 +58,7 @@ services:
     tty: true
     command: /bin/sh -c "npx -y playwright@1.52.0 run-server --port 3000 --host 0.0.0.0"
     ports:
-      - 9001:3000
+      - 3001:3000
     expose:
       - 3000
     networks:
@@ -71,8 +71,8 @@ services:
       args:
         - TARGETPLATFORM=linux/amd64
         - NODE_VERSION=${NODE_VERSION}
-    ports:
-      - '7860:7860'
+    expose:
+      - 7860
     working_dir: /app
     tty: true
     environment:
@@ -126,10 +126,10 @@ services:
       - BROWSER_PATH=
       - BROWSER_USER_DATA=
       - BROWSER_DEBUGGING_PORT=${BROWSER_DEBUGGING_PORT:-9222}
-      - BROWSER_DEBUGGING_HOST=localhost
+      - BROWSER_DEBUGGING_HOST=playwright
       - USE_OWN_BROWSER=false
       - KEEP_BROWSER_OPEN=true
-      - BROWSER_CDP=${BROWSER_CDP:-http://localhost:9222} # e.g., http://localhost:9222
+      - BROWSER_CDP=${BROWSER_CDP:-http://playwright:9222} # e.g., http://localhost:9222
 
       # Display Settings
       - DISPLAY=:99
@@ -225,10 +225,10 @@ services:
     restart: always
     image: scrapoxy/scrapoxy
     environment:
-      - AUTH_LOCAL_USERNAME=admin
-      - AUTH_LOCAL_PASSWORD=password
-      - BACKEND_JWT_SECRET=secret1
-      - FRONTEND_JWT_SECRET=secret2
+      - AUTH_LOCAL_USERNAME=${AUTH_LOCAL_USERNAME}
+      - AUTH_LOCAL_PASSWORD=${AUTH_LOCAL_PASSWORD}
+      - BACKEND_JWT_SECRET=${BACKEND_JWT_SECRET}
+      - FRONTEND_JWT_SECRET=${FRONTEND_JWT_SECRET}
       - STORAGE_FILE_FILENAME=/cfg/scrapoxy.json
     volumes:
       - ./.docker/scrapoxy:/cfg

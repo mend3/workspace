@@ -43,7 +43,7 @@ WORKDIR /app
 COPY . .
 CMD ["nx", "serve", "$APP", "--verbose"]
 
-FROM base AS dist
+FROM prod-deps AS dist
 ARG APP
 WORKDIR /app
 COPY --from=prod-deps /app/prod_modules ./node_modules

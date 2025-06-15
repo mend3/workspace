@@ -4,5 +4,10 @@ providers:
     org_id: 1
     folder: ''
     type: 'file'
+    # <bool> disable dashboard deletion
+    disableDeletion: false
+    # <bool> enable dashboard editing
+    editable: true
+    updateIntervalSeconds: 60
     options:
       path: /var/lib/grafana/dashboards

@@ -123,8 +123,7 @@ class ContextScanner:
 def start(args, ignore_dir_patterns: List[str], ignore_file_patterns: List[str]):
     file_handler = UTF8FileHandler()
 
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000, chunk_overlap=200)
+    text_splitter = RecursiveCharacterTextSplitter(separators=["\n\n", "\n"])
     directory_scanner = OsScandirDirectoryScanner()
     generator = ContextScanner(
         file_handler, directory_scanner, text_splitter)

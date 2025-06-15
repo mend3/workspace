@@ -12,7 +12,7 @@
         560
       ],
       "credentials": {
-        "postgres": {
+        "postgresdb": {
           "id": "iN7fO2CgatVwq73z",
           "name": "Postgres account"
         }

@@ -32,7 +32,7 @@ x-n8n: &service-n8n
   image: n8nio/n8n:latest
   networks: ['internal']
   environment:
-    - DB_TYPE=postgres
+    - DB_TYPE=postgresql
     - DB_POSTGRESDB_HOST=postgres
     - DB_POSTGRESDB_USER=${POSTGRES_USER}
     - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
@@ -44,9 +44,9 @@ x-n8n: &service-n8n
     - N8N_DEFAULT_USER_EMAIL=${N8N_DEFAULT_USER_EMAIL}
     - N8N_DEFAULT_USER_PASSWORD=${N8N_DEFAULT_USER_PASSWORD}
     - N8N_BASIC_AUTH_ACTIVE=false
-    - N8N_HOST=n8n.devshell.localhost
+    - N8N_HOST=localhost
     - N8N_PORT=5678
-    - WEBHOOK_URL=https://n8n.devshell.localhost
+    - WEBHOOK_URL=https://localhost:5678
   depends_on:
     postgres:
       condition: service_healthy
@@ -95,16 +95,19 @@ services:
     command:
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
+      - --metrics.prometheus=true
+      - --metrics.prometheus.buckets=0.1,0.3,1.2,5.0
       - --providers.docker=true
+      - --providers.docker.watch
       - --providers.docker.exposedbydefault=false
       - --api.dashboard=true
       - --certificatesresolvers.selfsigned.acme.tlschallenge=false
       - --log.level=INFO
       - --accesslog=true
-      - '--providers.file.filename=/etc/traefik/tls.yml'
+      - --providers.file.filename=/etc/traefik/tls.yml
     ports:
-      - '80:80'
-      - '443:443'
+      - 80:80
+      - 443:443
     networks:
       - internal
     volumes:
@@ -112,12 +115,16 @@ services:
       - .docker/traefik/config.yaml:/etc/traefik/traefik.yaml:ro
       - .docker/traefik/certs:/certs:ro
     labels:
-      traefik.enable: "true"
+      traefik.enable: true
       traefik.http.routers.traefik.rule: Host(`workspace.com`)
       traefik.http.routers.traefik.service: api@internal
       traefik.http.routers.traefik.tls: true
       traefik.http.routers.traefik.entrypoints: websecure
       traefik.http.services.traefik.loadbalancer.server.port: 8080
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
   n8n-import:
     <<: *service-n8n
     container_name: n8n-import
@@ -168,7 +175,7 @@ services:
     container_name: open-webui
     runtime: nvidia
     ports:
-      - '3000:8080'
+      - '8080:8080'
     environment:
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
       - NVIDIA_VISIBLE_DEVICES=all
@@ -213,7 +220,7 @@ services:
       - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - .docker/postgres/sws/:/docker-entrypoint-initdb.d/:ro
+      # - .docker/postgres/sws/:/docker-entrypoint-initdb.d/:ro
   redis:
     platform: linux/amd64
     image: redislabs/rejson:2.0.6
