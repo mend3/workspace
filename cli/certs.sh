@@ -4,9 +4,11 @@ set -euo pipefail
 
 CERT_DIR=".docker/traefik/certs"
 DOMAINS=(
-  "workspace.localhost"
-  "extalia.workspace.localhost"
-  "sws.workspace.localhost"
+  "workspace.com"
+  "extalia.workspace.com"
+  "extalia-api.workspace.com"
+  "extalia-gameserver.workspace.com"
+  "sws.workspace.com"
 )
 
 # Check mkcert is installed
@@ -32,9 +34,9 @@ cd "$CERT_DIR"
 
 # Generate certs with SAN support
 echo "🔐 Generating cert for: ${DOMAINS[*]}"
-mkcert -cert-file workspace.localhost.crt -key-file workspace.localhost.key "${DOMAINS[@]}"
+mkcert -cert-file workspace.com.crt -key-file workspace.com.key "${DOMAINS[@]}"
 
 echo "✅ Certificates created:"
-ls -lh workspace.localhost.*
+ls -lh workspace.com.*
 
 echo "📂 Output directory: $CERT_DIR"

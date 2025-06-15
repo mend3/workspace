@@ -113,7 +113,7 @@ services:
       - .docker/traefik/certs:/certs:ro
     labels:
       traefik.enable: "true"
-      traefik.http.routers.traefik.rule: Host(`workspace.localhost`)
+      traefik.http.routers.traefik.rule: Host(`workspace.com`)
       traefik.http.routers.traefik.service: api@internal
       traefik.http.routers.traefik.tls: true
       traefik.http.routers.traefik.entrypoints: websecure
@@ -199,9 +199,9 @@ services:
       PGUSER: ${POSTGRES_USER}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: n8n
+      POSTGRES_DB: workspace
     healthcheck:
-      test: pg_isready -U ${POSTGRES_USER} -d n8n
+      test: pg_isready -U ${POSTGRES_USER} -d workspace
       interval: 2s
       timeout: 5s
       retries: 10
@@ -213,7 +213,7 @@ services:
       - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # - .docker/postgres/sws/:/docker-entrypoint-initdb.d/:ro
+      - .docker/postgres/sws/:/docker-entrypoint-initdb.d/:ro
   redis:
     platform: linux/amd64
     image: redislabs/rejson:2.0.6

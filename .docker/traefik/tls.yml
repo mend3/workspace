@@ -2,8 +2,8 @@
 # see https://doc.traefik.io/traefik/v2.5/https/tls/
 tls:
   certificates:
-    - certFile: /etc/traefik/certs/workspace.local.crt
-      keyFile: /etc/traefik/certs/workspace.local.key
+    - certFile: /certs/workspace.com.crt
+      keyFile: /certs/workspace.com.key
       stores:
         - default
   options:

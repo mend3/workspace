@@ -8,19 +8,21 @@ tls:
   stores:
     default:
       defaultCertificate:
-        certFile: "/certs/workspace.localhost.crt"
-        keyFile: "/certs/workspace.localhost.key"
+        certFile: "/certs/workspace.com.crt"
+        keyFile: "/certs/workspace.com.key"
 
   certificates:
-    - certFile: "/certs/workspace.localhost.crt"
-      keyFile: "/certs/workspace.localhost.key"
+    - certFile: "/certs/workspace.com.crt"
+      keyFile: "/certs/workspace.com.key"
       stores:
         - default
       domains:
-        - main: "workspace.localhost"
+        - main: "workspace.com"
           sans:
-            - "extalia.workspace.localhost"
-            - "sws.workspace.localhost"
+            - "extalia.workspace.com"
+            - "extalia-api.workspace.com"
+            - "extalia-gameserver.workspace.com"
+            - "sws.workspace.com"
 
 providers:
   docker:
