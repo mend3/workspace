@@ -39,7 +39,6 @@ tmp/
 projects/
 vendors/
 knowledge/
-browser/ui
 **/public/system
 **/migrations
 deployment/extalia/server
