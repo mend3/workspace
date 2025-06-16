@@ -5,8 +5,6 @@ browserless_data
 **/certs
 *.pem
 **/brightdata
-**/mysql/data
-**/dump/
 **/logs
 *.log
 **/node_modules
@@ -47,7 +45,7 @@ browser/ui
 deployment/extalia/server
 deployment/extalia/app
 deployment/extalia/docs
-**/.cursor*
-**././docker/**/data
+.docker/precis/**
+.docker/**/data
 **/*.pickle
 **/*_ignore

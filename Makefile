@@ -31,7 +31,7 @@ ALL_FILES = $(COMMON_FILES) \
 
 # Generic compose commands
 define compose_up
-	$(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --remove-orphans --build --force-recreate --renew-anon-volumes -V -d traefik $(2)
+	$(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --remove-orphans --build --force-recreate --renew-anon-volumes -V -d $(2)
 endef
 
 define compose_down
@@ -90,6 +90,10 @@ ai: ## Starts AI compounds
 .PHONY: ai-context
 ai-context: ## Starts only the AI context services
 	$(call compose_up,$(COMMON_FILES) -f ./python/docker-compose.yml,ai-context)
+
+.PHONY: homelab
+homelab: ## Starts all homelab services
+	$(call compose_up,$(HOMELAB_FILES),$(TARGET))
 
 .PHONY: up
 up: ## Starts all defined services

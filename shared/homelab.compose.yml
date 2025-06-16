@@ -2,14 +2,18 @@ services:
   wallos:
     container_name: wallos
     image: bellamy/wallos:latest
-    ports:
-      - '8282:80/tcp'
+    expose:
+      - 80
     environment:
       TZ: 'America/Sao_Paulo'
     volumes:
       - './.tmp/wallos/db:/var/www/html/db'
       - './.tmp/wallos/logos:/var/www/html/images/uploads/logos'
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wallos.rule=Host(`wallos.workspace.com`)"
+      - "traefik.http.routers.wallos.entrypoints=web"
     networks:
       - internal
   rss:
@@ -33,23 +37,33 @@ services:
       - GITHUB_LINK=${GITHUB_LINK-https://github.com/mend3/workspace}
       - PRECIS_INTERNAL_PORT=${PRECIS_INTERNAL_PORT-80}
       - LLM_PROVIDER=ollama
-      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
       - LLM_MODEL="gemma:7b-instruct"
-    ports:
-      - 9003:80
+    expose:
+      - 80
     volumes:
       - ./.docker/precis/configs:/config
       - ./.docker/precis/data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.rss.rule=Host(`rss.workspace.com`)"
+      - "traefik.http.routers.rss.entrypoints=web"
     networks:
       - internal
   kuma:
     image: louislam/uptime-kuma:1
     container_name: kuma
     restart: always
-    ports:
-      - "3001:3001"
+    expose:
+      - 3001
     volumes:
       - kuma-data:/app/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kuma.rule=Host(`kuma.workspace.com`)"
+      - "traefik.http.routers.kuma.service=kuma"
+      - "traefik.http.routers.kuma.entrypoints=web"
+      - "traefik.http.services.kuma.loadbalancer.server.port=3001"
     networks:
       - internal
   docmost:
@@ -62,11 +76,17 @@ services:
       APP_SECRET: 'a783b2t4983274b92834tf73246tf327'
       DATABASE_URL: 'postgresql://postgres:postgres@postgres:5432/docmost?schema=public'
       REDIS_URL: 'redis://redis:6379'
-    ports:
-      - "9004:3000"
+    expose:
+      - 3000
     restart: unless-stopped
     volumes:
       - docmost_data:/app/data/storage
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.docmost.rule=Host(`docmost.workspace.com`)"
+      - "traefik.http.routers.docmost.service=docmost"
+      - "traefik.http.routers.docmost.entrypoints=web"
+      - "traefik.http.services.docmost.loadbalancer.server.port=3000"
     networks:
       - internal
   cron:
@@ -76,7 +96,7 @@ services:
     #
     image: alpine
     restart: always
-    container_name: firefly_iii_cron
+    container_name: firefly-cron
     env_file: ./.docker/firefly/.env
     command: sh -c " apk add tzdata && ln -s /usr/share/zoneinfo/${TZ} /etc/localtime | echo \"0 3 * * * wget -qO- http://firefly:8080/api/v1/cron/LlaqcTixcFFlN4XWUSVdWGxXzdHHLIuL;echo\" | crontab - && crond -f -L /dev/stdout"
     networks:
@@ -84,19 +104,25 @@ services:
   firefly:
     image: fireflyiii/core:latest
     hostname: app
-    container_name: firefly_iii_core
+    container_name: firefly
     restart: always
     volumes:
       - firefly_iii_upload:/var/www/html/storage/upload
     env_file: ./.docker/firefly/.env
-    ports:
-      - 9090:8080
+    expose:
+      - 8080
     depends_on:
       - mysql
     links:
       - redis
       - mysql
       - cron
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.firefly.rule=Host(`firefly.workspace.com`)"
+      - "traefik.http.routers.firefly.service=firefly"
+      - "traefik.http.routers.firefly.entrypoints=web"
+      - "traefik.http.services.firefly.loadbalancer.server.port=8080"
     networks:
       - internal
   homarr:
@@ -108,8 +134,14 @@ services:
       - ./.tmp/homarr/appdata:/appdata
     environment:
       - SECRET_ENCRYPTION_KEY=492bceee14479019b56ce491c1247d2a2a7c6ef17efeb988dad572645df5df8d
-    ports:
-      - '7575:7575'
+    expose:
+      - 7575
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homarr.rule=Host(`homarr.workspace.com`)"
+      - "traefik.http.routers.homarr.service=homarr"
+      - "traefik.http.routers.homarr.entrypoints=web"
+      - "traefik.http.services.homarr.loadbalancer.server.port=7575"
     networks:
       - internal
   homeassistant:
@@ -120,68 +152,22 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
     restart: unless-stopped
-    ports:
-      - 8123:8123
+    expose:
+      - 8123
     privileged: true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.home.rule=Host(`home.workspace.com`)"
+      - "traefik.http.routers.home.service=home"
+      - "traefik.http.routers.home.entrypoints=web"
+      - "traefik.http.services.home.loadbalancer.server.port=8123"
     networks:
       - internal
-  jellyfin:
-    image: jellyfin/jellyfin:latest # or ghcr.io/jellyfin/jellyfin:latest
-    container_name: jellyfin
-    restart: unless-stopped
-    volumes:
-      - ./.tmp/jellyfin/config:/config
-      - ./.tmp/jellyfin/cache:/cache
-      - ./.tmp/jellyfin/media:/media
-    networks:
-      - internal
-  pihole:
-    container_name: pihole
-    image: pihole/pihole:latest
-    restart: unless-stopped
-    networks:
-      - internal
-    ports:
-      - "5353:53/tcp"
-      - "5353:53/udp"
-      - "80:80"
-      - "443:443"
-    environment:
-      TZ: 'America/Sao_Paulo'
-      WEBPASSWORD: "us3rs3cr3t"
-    volumes:
-      - './.tmp/pihole/etc-pihole/:/etc/pihole/'
-      - './.tmp/pihole/etc-dnsmasq.d/:/etc/dnsmasq.d/'
-    cap_add:
-      - NET_ADMIN
-    dns:
-      - 127.0.0.1
-      - 1.1.1.1
-  syncthing:
-    image: syncthing/syncthing
-    container_name: syncthing
-    hostname: my-syncthing
-    environment:
-      - PUID=1000
-      - PGID=1000
-    volumes:
-      - ./.tmp/syncthing:/var/syncthing
-    ports:
-      - 8384:8384 # Web UI
-      - 22000:22000/tcp # TCP file transfers
-      - 22000:22000/udp # QUIC file transfers
-      - 21027:21027/udp # Receive local discovery broadcasts
-    restart: unless-stopped
-    healthcheck:
-      test: curl -fkLsS -m 2 127.0.0.1:8384/rest/noauth/health | grep -o --color=never OK || exit 1
-      interval: 1m
-      timeout: 10s
-      retries: 3
   wordpress:
     image: wordpress:latest
     restart: always
-    ports:
-      - '9001:80'
+    expose:
+      - 80
     environment:
       WORDPRESS_DB_HOST: 'mysql:3306'
       WORDPRESS_DB_USER: ${MYSQL_USER}
@@ -189,20 +175,38 @@ services:
       WORDPRESS_DB_NAME: wordpress
     volumes:
       - wordpress-data:/var/www/html
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wordpress-http.rule=Host(`wordpress.workspace.com`)"
+      - "traefik.http.routers.wordpress-http.entrypoints=web"
+      - "traefik.http.routers.wordpress-https.rule=Host(`wordpress.workspace.com`)"
+      - "traefik.http.routers.wordpress-https.entrypoints=websecure"
+      - "traefik.http.routers.wordpress-https.tls=true"
     networks:
       - internal
+    depends_on:
+      - mysql
   phpbb:
     restart: always
     build:
       context: .
       dockerfile: ./.docker/php/Dockerfile
       target: phpbb
-    ports:
-      - '9002:80'
+    expose:
+      - 80
     volumes:
       - phpbb-data:/var/www/html
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.phpbb-http.rule=Host(`phpbb.workspace.com`)"
+      - "traefik.http.routers.phpbb-http.entrypoints=web"
+      - "traefik.http.routers.phpbb-https.rule=Host(`phpbb.workspace.com`)"
+      - "traefik.http.routers.phpbb-https.entrypoints=websecure"
+      - "traefik.http.routers.phpbb-https.tls=true"
     networks:
       - internal
+    depends_on:
+      - mysql
 
 networks:
   internal:

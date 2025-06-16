@@ -23,6 +23,7 @@ tls:
             - "extalia-api.workspace.com"
             - "extalia-gameserver.workspace.com"
             - "sws.workspace.com"
+            - "dashboard.workspace.com"
 
 providers:
   docker:
