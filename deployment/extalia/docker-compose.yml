@@ -1,0 +1,106 @@
+services:
+  extalia-cdn:
+    restart: always
+    working_dir: /usr/share/nginx/cdn
+    build:
+      context: .
+      dockerfile: ./.docker/nginx/Dockerfile
+      target: builder
+      args:
+        - NGINX_VERSION=${NGINX_VERSION}
+    volumes:
+      - ./.docker/nginx/cdn.conf:/etc/nginx/nginx.conf:ro
+      - ./.docker/nginx/cdn:/usr/share/nginx/cdn:ro
+      # - ./.tmp/nginx/cdn:/var/log/nginx
+    ports:
+      - '9999:80'
+    networks:
+      - internal
+  l2j-server:
+    build:
+      context: .
+      dockerfile: ./.docker/java/jdk8-bellsoft.Dockerfile
+    command: ./start_servers.sh
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=extalia
+      - GAME_SERVER_LOGIN_HOST=localhost
+    ports:
+      - 7777:7777
+      - 2106:2106
+      - 9014:9014
+    networks:
+      - internal
+    volumes:
+      - ./deployment/extalia/server:/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+  extalia-nprotect:
+    container_name: nprotect
+    build:
+      context: .
+      dockerfile: ./.docker/php/Dockerfile
+      target: base
+    ports:
+      - "5656:80"
+    volumes:
+      - ./deployment/extalia/nProtect:/var/www/html
+    working_dir: /var/www/html
+    environment:
+      DB_HOST: mysql
+      DB_USER: ${MYSQL_USER}
+      DB_PASS: ${MYSQL_PASSWORD}
+      DB_NAME: nProtect
+    depends_on:
+      - mysql
+    networks:
+      - internal
+  loginserver:
+    build:
+      context: .
+      dockerfile: ./.docker/java/jdk8-bellsoft.Dockerfile
+    command: java -Xmx512m -cp ".:./libs/*:./LoginServer.jar" com.extalia.loginserver.L2LoginServer
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=extalia
+    ports:
+      - 2106:2106
+      - 9014:9014
+    networks:
+      - internal
+    volumes:
+      - ./deployment/extalia/server:/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+  gameserver:
+    build:
+      context: .
+      dockerfile: ./.docker/java/jdk8-bellsoft.Dockerfile
+    command: java -Xmx1024m -cp ".:./libs/*:./GameServer.jar" com.extalia.gameserver.L2GameServer
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=extalia
+      - GAME_SERVER_LOGIN_HOST=loginserver
+    ports:
+      - 7777:7777
+    networks:
+      - internal
+    volumes:
+      - ./deployment/extalia/server:/app
+    depends_on:
+      loginserver:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+
+networks:
+  internal:
+    driver: bridge

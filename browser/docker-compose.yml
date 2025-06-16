@@ -13,8 +13,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 5s
-    ports:
-      - '3000:3000'
+    expose:
+      - 3000
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
@@ -43,12 +43,9 @@ services:
       - /dev/shm:/dev/shm
     deploy:
       resources:
-        reservations:
-          devices:
-            - capabilities: [gpu]
         limits:
           cpus: '2'
-          memory: 4G
+          memory: 2G
   playwright:
     platform: linux/amd64
     image: mcr.microsoft.com/playwright:v1.52.0
@@ -57,8 +54,6 @@ services:
     init: true
     tty: true
     command: /bin/sh -c "npx -y playwright@1.52.0 run-server --port 3000 --host 0.0.0.0"
-    ports:
-      - 3001:3000
     expose:
       - 3000
     networks:
@@ -89,12 +84,9 @@ services:
       - LLM_API=http://ollama:11434
       - BROWSER_MODE=remote
       - BROWSER_WS_ENDPOINT=ws://playwright:3000
-    command: --cdp-url http://browserless:3000 # /app/agent/examples/use-cases/captcha.py
+    command: --cdp-url http://playwright:3000 # /app/agent/examples/use-cases/captcha.py
     depends_on:
       - playwright
-      - ollama
-    extra_hosts:
-      - host.docker.internal:host-gateway
     networks:
       - internal
   browser-agent-ui:
@@ -141,7 +133,7 @@ services:
       - RESOLUTION_HEIGHT=${RESOLUTION_HEIGHT:-1080}
 
       # VNC Settings
-      - VNC_PASSWORD=${VNC_PASSWORD:-vncpassword}
+      - VNC_PASSWORD=${VNC_PASSWORD}
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
     restart: unless-stopped
@@ -155,17 +147,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-    extra_hosts:
-      - host.docker.internal:host-gateway
     networks:
       - internal
-    depends_on:
-      - ollama
   selenoid:
     network_mode: bridge
     image: aerokube/selenoid:latest-release
-    ports:
-      - 4444:4444
+    expose:
+      - 4444
     volumes:
       - ./.docker/selenoid/config:/etc/selenoid
       - /var/run/docker.sock:/var/run/docker.sock
@@ -178,8 +166,8 @@ services:
       - selenoid
     links:
       - selenoid
-    ports:
-      - 4445:8080
+    expose:
+      - 8080
     command: [--selenoid-uri, http://selenoid:4444]
   flaresolverr:
     restart: always
@@ -188,8 +176,8 @@ services:
       - TZ=America/Sao_Paulo
       - PROMETHEUS_ENABLED=true
       - PROMETHEUS_PORT=8000
-    ports:
-      - '8191:8191'
+    expose:
+      - 8191
     healthcheck:
       test:
         - CMD
@@ -231,7 +219,7 @@ services:
       - FRONTEND_JWT_SECRET=${FRONTEND_JWT_SECRET}
       - STORAGE_FILE_FILENAME=/cfg/scrapoxy.json
     volumes:
-      - ./.docker/scrapoxy:/cfg
+      - scrapoxy_data:/cfg
     networks:
       - internal
 
@@ -242,3 +230,4 @@ networks:
 
 volumes:
   browserless_data:
+  scrapoxy_data:

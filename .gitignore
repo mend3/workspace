@@ -6,7 +6,7 @@ browserless_data
 *.pem
 **/brightdata
 **/mysql/data
-**/dump
+**/dump/
 **/logs
 *.log
 **/node_modules
@@ -36,6 +36,7 @@ tmp/
 **/*.env
 **/.env.*
 **/*.env.*
+!**/.env.sh
 *-oauth.*
 projects/
 vendors/
@@ -43,8 +44,9 @@ knowledge/
 browser/ui
 **/public/system
 **/migrations
-extalia/server
-extalia/docs
+deployment/extalia/server
+deployment/extalia/app
+deployment/extalia/docs
 **/.cursor*
 **././docker/**/data
 **/*.pickle

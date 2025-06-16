@@ -97,11 +97,11 @@ spec:
                 secretKeyRef:
                   name: workspace-secrets
                   key: POSTGRES_PASSWORD
-            - name: MONGO_CONNECTION_STRING
+            - name: MONGODB_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
                   name: workspace-secrets
-                  key: MONGO_CONNECTION_STRING
+                  key: MONGODB_CONNECTION_STRING
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:

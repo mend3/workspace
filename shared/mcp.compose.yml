@@ -1,0 +1,159 @@
+services:
+  mcp-puppeteer:
+    build:
+      context: shared/mcp
+      dockerfile: Dockerfile
+      args:
+        - NODE_VERSION=${NODE_VERSION}
+    container_name: mcp-puppeteer
+    command: tsx src/puppeteer.ts
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:80/healthz', res => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 3
+    environment:
+      BROWSER_HOST: ws://browserless:3000/
+      ALLOW_DANGEROUS: 'true'
+      PUPPETEER_LAUNCH_OPTIONS: '{"args": ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]}'
+    networks:
+      - internal
+    ports:
+      - 8000:80
+  mcp-pgvector:
+    build:
+      context: shared/mcp
+      dockerfile: Dockerfile
+      args:
+        - NODE_VERSION=${NODE_VERSION}
+    container_name: mcp-pgvector
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:80/healthz', res => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 3
+    command: tsx src/pgvector.ts
+    environment:
+      PGHOST: ${PGVECTOR_HOST}
+      PGPORT: ${PGVECTOR_PORT}
+      PGUSER: ${PGVECTOR_USER}
+      PGPASSWORD: ${PGVECTOR_PASSWORD}
+      PGDATABASE: ${PGVECTOR_DATABASE}
+    networks:
+      - internal
+    ports:
+      - 8001:80
+  mcp-mysql:
+    build:
+      context: shared/mcp
+      dockerfile: Dockerfile
+      args:
+        - NODE_VERSION=${NODE_VERSION}
+    container_name: mcp-mysql
+    command: tsx src/mysql.ts
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:80/healthz', res => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 3
+    environment:
+      MYSQL_DRIVER: ${MYSQL_DRIVER:-mysql} # or mariadb
+      MYSQL_HOST: ${MYSQL_HOST:-mysql}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      IO_REDIS_HOST: ${REDIS_HOST:-redis}
+      DEBUG: false # or true to enable mysql debug mode
+    networks:
+      - internal
+    ports:
+      - 8002:80
+
+  mcp-crawl4ai-rag:
+    build:
+      context: vendors/mcp-crawl4ai-rag
+      dockerfile: Dockerfile
+    container_name: mcp-crawl4ai-rag
+    expose:
+      - 8051
+    environment:
+      USE_AGENTIC_RAG: False
+      USE_HYBRID_SEARCH: True
+      USE_RERANKING: True
+      TRANSPORT: sse
+      HOST: 0.0.0.0
+      PORT: 8051
+    networks:
+      - internal
+  mcp-qdrant:
+    build:
+      context: vendors/mcp-qdrant
+      dockerfile: Dockerfile
+    container_name: mcp-qdrant
+    expose:
+      - 8000
+    environment:
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      QDRANT_API_KEY: ${QDRANT_API_KEY}
+      COLLECTION_NAME: ${WORKSPACE_COLLECTION_NAME}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL}
+      EMBEDDING_PROVIDER: fastembed
+      QDRANT_VERIFY_SSL: False
+    depends_on:
+      - qdrant
+    networks:
+      - internal
+  mcp-bravesearch:
+    build:
+      context: .
+      dockerfile: .docker/mcp/brave.Dockerfile
+      args:
+        - BRAVE_API_KEY=${BRAVE_API_KEY}
+    container_name: mcp-bravesearch
+    tty: true
+  mcp-filesystem:
+    build:
+      context: vendors/mcp-servers
+      dockerfile: src/filesystem/Dockerfile
+      target: release
+    container_name: mcp-filesystem
+    command: /projects
+    tty: true
+    volumes:
+      - .:/projects:ro
+  mcp-sequentialthinking:
+    build:
+      context: vendors/mcp-servers
+      dockerfile: src/sequentialthinking/Dockerfile
+      target: release
+    container_name: mcp-sequentialthinking
+    tty: true
+  mcp-memory:
+    build:
+      context: vendors/mcp-servers
+      dockerfile: src/memory/Dockerfile
+      target: release
+    container_name: mcp-memory
+    tty: true
+
+networks:
+  internal:
+    driver: bridge

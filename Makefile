@@ -1,36 +1,49 @@
 CONTAINER_RUNTIME ?= docker
-PROFILE ?= gpu
+PROFILE ?= gpu-nvidia
 TARGET ?= "*" ## Target (service name) for docker compose
 
 # Compose file groups
-COMMON_FILES = -f ./docker-compose.yml -f ./shared/monitor.compose.yml -f ./shared/docker-compose.yml
-EXTALIA_FILES = $(COMMON_FILES) \
-  -f ./extalia/docker-compose.yml \
-  -f ./extalia/web/prod.compose.yml \
-  -f ./extalia/web/docker-compose.yml
+COMMON_FILES = -f ./docker-compose.yml \
+  -f ./shared/monitor.compose.yml
 
-MCP_FILES = $(COMMON_FILES) \
-  -f ./python/docker-compose.yml \
+EXTALIA_FILES = $(COMMON_FILES) \
+  -f ./deployment/extalia/docker-compose.yml \
+  -f ./deployment/extalia/web/prod.compose.yml \
+  -f ./deployment/extalia/web/docker-compose.yml
+
+SWS_FILES = $(COMMON_FILES) \
   -f ./browser/docker-compose.yml \
-  -f ./vendors/docker-compose.yml \
-  -f ./mcp/docker-compose.yml
+  -f ./deployment/sws/docker-compose.yml
+
+AI_FILES = $(COMMON_FILES) \
+  -f ./python/docker-compose.yml \
+  -f ./shared/mcp.compose.yml \
+  -f ./vendors/local-ai-packaged/docker-compose.yml
+
+HOMELAB_FILES = $(COMMON_FILES) \
+  -f ./shared/homelab.compose.yml
 
 ALL_FILES = $(COMMON_FILES) \
   $(EXTALIA_FILES) \
-  $(MCP_FILES) \
-  -f ./sws/docker-compose.yml
+  $(SWS_FILES) \
+  $(AI_FILES) \
+  $(HOMELAB_FILES)
 
 # Generic compose commands
 define compose_up
-	$(CONTAINER_RUNTIME) compose --profile $(PROFILE) $(1) up --remove-orphans --build --renew-anon-volumes --force-recreate -V $(2)
+	$(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --remove-orphans --build --force-recreate --renew-anon-volumes -V -d traefik $(2)
 endef
 
 define compose_down
-	$(CONTAINER_RUNTIME) compose --profile $(PROFILE) $(1) down -v --remove-orphans
+	$(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) down -v --remove-orphans
+endef
+
+define compose_stop
+	$(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) stop
 endef
 
 define compose_build
-	$(CONTAINER_RUNTIME) compose --profile $(PROFILE) $(1) build --no-cache --pull --force-rm $(2)
+	$(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) build --no-cache --pull --force-rm $(2)
 endef
 
 define compose_bridge
@@ -52,19 +65,27 @@ clean: ## Clean cache folders
 
 .PHONY: extalia
 extalia: ## Starts Extalia compound (http + java)
-	$(call compose_up,$(EXTALIA_FILES),-d traefik extalia-*)
+	$(call compose_up,$(EXTALIA_FILES),-d extalia-*)
 
 .PHONY: extalia-dev
-extalia-dev: ## Starts Extalia development server
+extalia-dev: ## Starts Extalia service in development mode
 	$(call compose_up,$(EXTALIA_FILES),dev-extalia-*)
 
 .PHONY: sws
 sws: ## Starts SWS service
-	$(call compose_up,$(ALL_FILES),-d traefik sws-*)
+	$(call compose_up,$(SWS_FILES),-d sws-*)
+
+.PHONY: sws-dev
+sws-dev: ## Starts SWS service in development mode
+	$(call compose_up,$(SWS_FILES),-d dev-sws-*)
 
 .PHONY: mcp
 mcp: ## Starts MCP server
-	$(call compose_up,$(MCP_FILES),ai-context mcp-*)
+	$(call compose_up,$(AI_FILES),ai-context mcp-*)
+
+.PHONY: ai
+ai: ## Starts AI compounds
+	$(call compose_up,$(AI_FILES),"*")
 
 .PHONY: ai-context
 ai-context: ## Starts only the AI context services
@@ -72,11 +93,15 @@ ai-context: ## Starts only the AI context services
 
 .PHONY: up
 up: ## Starts all defined services
-	$(call compose_up,$(ALL_FILES),-d traefik $(TARGET))
+	$(call compose_up,$(ALL_FILES),$(TARGET))
 
 .PHONY: down
 down: ## Stops and removes all services
 	$(call compose_down,$(ALL_FILES))
+
+.PHONY: stop
+stop: ## Stops and removes all services
+	$(call compose_stop,$(ALL_FILES))
 
 .PHONY: build
 build: ## Build all Docker images

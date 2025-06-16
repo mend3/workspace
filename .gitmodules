@@ -1,5 +1,5 @@
 [submodule "mcp"]
-	path = mcp
+	path = shared/mcp
 	url = git@github.com:mend3/mcp.git
 [submodule "shared/typestack"]
 	path = shared/typestack
@@ -11,11 +11,11 @@
 	path = browser/use
 	url = git@github.com:mend3/browser-use.git
 [submodule "extalia/java"]
-	path = extalia/java
+	path = deployment/extalia/java
 	url = git@github.com:mend3/extalia.git
 [submodule "extalia/web"]
-	path = extalia/web
+	path = deployment/extalia/web
 	url = git@github.com:mend3/l2-web.git
 [submodule "sws"]
-	path = sws
+	path = deployment/sws
 	url = git@github.com:mendshell/sws.git

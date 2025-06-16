@@ -8,8 +8,6 @@ services:
       - HTTP_PROXY=${HTTP_PROXY}
       - HTTPS_PROXY=${HTTPS_PROXY}
       - K6_OUT=influxdb=http://influxdb:8086/k6
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
     links:
       - influxdb
       - grafana

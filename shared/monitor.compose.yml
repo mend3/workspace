@@ -113,8 +113,6 @@ services:
       - 3100
     volumes:
       - ./.docker/loki/loki-config.yaml:/mnt/config/loki-config.yaml
-    extra_hosts:
-      - host.docker.internal:host-gateway
     networks:
       - internal
 

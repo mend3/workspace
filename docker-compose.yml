@@ -1,41 +1,54 @@
 name: ${NAMESPACE:-workspace}
 
-x-qdrant: &service-qdrant
-  image: qdrant/qdrant
-  container_name: qdrant
-  environment:
-    - NVIDIA_VISIBLE_DEVICES=all
-    - QDRANT__GPU__INDEXING=true
-  volumes:
-    - qdrant_data:/qdrant/storage
-  ports:
-    - '6333:6333'
-  expose:
-    - 6333
-  restart: unless-stopped
+x-ollama: &service-ollama
+  image: ollama/ollama:latest
   networks:
     - internal
+  container_name: ollama
+  restart: unless-stopped
+  expose:
+    - 11434/tcp
+  environment:
+    - OLLAMA_CONTEXT_LENGTH=8192
+    - OLLAMA_FLASH_ATTENTION=1
+    - OLLAMA_KV_CACHE_TYPE=q8_0
+    - OLLAMA_MAX_LOADED_MODELS=2
+    - VECTOR_STORE_PATH=/app/vector_store
+    - NVIDIA_VISIBLE_DEVICES=all
+  volumes:
+    - ollama_storage:/root/.ollama
   healthcheck:
-    test: ['CMD', 'curl', '-f', 'http://localhost:6333/readyz']
+    test: ['CMD', 'curl', '-f', 'http://localhost:11434']
     interval: 10s
     timeout: 5s
     retries: 5
-  deploy:
-    resources:
-      reservations:
-        devices:
-          - driver: nvidia
-            count: all
-            capabilities: [gpu]
+
+x-init-ollama: &init-ollama
+  image: ollama/ollama:latest
+  networks:
+    - internal
+  container_name: ollama-pull-llama
+  volumes:
+    - ollama_storage:/root/.ollama
+  entrypoint: /bin/sh
+  command:
+    - '-c'
+    - >
+      set -e;
+      sleep 3;
+      OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:7b-instruct-q4_K_M &&
+      OLLAMA_HOST=ollama:11434 ollama pull all-minilm:l6-v2 &&
+      OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text
 
 x-n8n: &service-n8n
   image: n8nio/n8n:latest
   networks: ['internal']
   environment:
-    - DB_TYPE=postgresql
+    - DB_TYPE=postgresdb
     - DB_POSTGRESDB_HOST=postgres
     - DB_POSTGRESDB_USER=${POSTGRES_USER}
     - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+    - DB_POSTGRESDB_DATABASE=postgres
     - N8N_DIAGNOSTICS_ENABLED=false
     - N8N_PERSONALIZATION_ENABLED=false
     - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
@@ -46,49 +59,83 @@ x-n8n: &service-n8n
     - N8N_BASIC_AUTH_ACTIVE=false
     - N8N_HOST=localhost
     - N8N_PORT=5678
-    - WEBHOOK_URL=https://localhost:5678
+    - WEBHOOK_URL=${N8N_HOSTNAME:+https://}${N8N_HOSTNAME:-http://localhost:5678}
   depends_on:
     postgres:
       condition: service_healthy
 
-x-ollama: &service-ollama
-  image: ollama/ollama:latest
-  container_name: ollama
-  networks: ['internal']
-  restart: unless-stopped
-  ports:
-    - 11434:11434
-  environment:
-    - VECTOR_STORE_PATH=/app/vector_store
-    - NVIDIA_VISIBLE_DEVICES=all
-  volumes:
-    - ollama_data:/root/.ollama
-    - ./.tmp/.ollama:/root/.ollama
-    - ./.docker/ollama:/code
-  healthcheck:
-    test: ['CMD', 'curl', '-f', 'http://localhost:11434']
-    interval: 10s
-    timeout: 5s
-    retries: 5
-
-x-init-ollama: &init-ollama
-  image: ollama/ollama:latest
-  container_name: ollama-pull-llama
-  networks:
-    - internal
-  volumes:
-    - ollama_data:/root/.ollama
-  entrypoint: /bin/sh
-  command:
-    - '-c'
-    - >
-      set -e;
-      sleep 3;
-      OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:7b &&
-      OLLAMA_HOST=ollama:11434 ollama pull all-minilm:l6-v2 &&
-      OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text
-
 services:
+
+  ollama-cpu:
+    profiles: ['cpu']
+    <<: *service-ollama
+
+  ollama-gpu:
+    profiles: ['gpu-nvidia']
+    <<: *service-ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  ollama-gpu-amd:
+    profiles: ['gpu-amd']
+    <<: *service-ollama
+    image: ollama/ollama:rocm
+    networks:
+      - internal
+    devices:
+      - '/dev/kfd'
+      - '/dev/dri'
+
+  ollama-pull-llama-cpu:
+    profiles: ['cpu']
+    <<: *init-ollama
+    depends_on:
+      - ollama-cpu
+
+  ollama-pull-llama-gpu:
+    profiles: ['gpu-nvidia']
+    <<: *init-ollama
+    depends_on:
+      - ollama-gpu
+
+  ollama-pull-llama-gpu-amd:
+    profiles: [gpu-amd]
+    <<: *init-ollama
+    image: ollama/ollama:rocm
+    networks:
+      - internal
+    depends_on:
+      - ollama-gpu-amd
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:cuda
+    container_name: open-webui
+    runtime: nvidia
+    ports:
+      - '8080:8080'
+    expose:
+      - 8080/tcp
+    environment:
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - openwebui_data:/app/backend/data
+    networks:
+      - internal
+    deploy:
+      restart_policy:
+        condition: always
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
   traefik:
     image: traefik
     container_name: traefik
@@ -123,8 +170,8 @@ services:
       traefik.http.services.traefik.loadbalancer.server.port: 8080
     logging:
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
   n8n-import:
     <<: *service-n8n
     container_name: n8n-import
@@ -145,79 +192,49 @@ services:
       - 5678:5678
     volumes:
       - n8n_data:/home/node/.n8n
-      - ./.docker/n8n/backup:/backup
+      - ./vendors/local-ai-packaged/n8n/backup:/backup
       - ./.docker/n8n/shared:/data/shared
     depends_on:
       n8n-import:
         condition: service_completed_successfully
     networks:
       - internal
-
-  ollama:
-    <<: *service-ollama
-    profiles: ['cpu', 'gpu']
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-
-  ollama-pull:
-    <<: *init-ollama
-    profiles: ['gpu']
-    depends_on:
-      ollama:
-        condition: service_started
-  open-webui:
-    image: ghcr.io/open-webui/open-webui:cuda
-    container_name: open-webui
-    runtime: nvidia
-    ports:
-      - '8080:8080'
-    environment:
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
-      - NVIDIA_VISIBLE_DEVICES=all
-    depends_on:
-      ollama-pull:
-        condition: service_completed_successfully
-    volumes:
-      - openwebui_data:/app/backend/data
+  flowise:
+    image: flowiseai/flowise
     networks:
       - internal
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
-    deploy:
-      restart_policy:
-        condition: always
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    restart: unless-stopped
+    container_name: flowise
+    expose:
+      - 3001/tcp
+    environment:
+      - PORT=3001
+      - FLOWISE_USERNAME=${FLOWISE_USERNAME}
+      - FLOWISE_PASSWORD=${FLOWISE_PASSWORD}
+    volumes:
+      - flowise_data:/root/.flowise
+    entrypoint: /bin/sh -c "sleep 3; flowise start"
   postgres:
-    image: postgres
-    restart: always
+    image: postgres:${POSTGRES_VERSION:-latest}
+    restart: unless-stopped
     user: postgres
     environment:
       TZ: America/Sao_Paulo
       PGUSER: ${POSTGRES_USER}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: workspace
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
     healthcheck:
-      test: pg_isready -U ${POSTGRES_USER} -d workspace
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 2s
       timeout: 5s
       retries: 10
     networks:
       - internal
     expose:
-      - 5432
-    ports:
-      - 5432:5432
+      - 5432/tcp
+    # ports:
+    #   - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
       # - .docker/postgres/sws/:/docker-entrypoint-initdb.d/:ro
@@ -229,24 +246,25 @@ services:
       - TZ=America/Sao_Paulo
       - REDISTIMESERIES_ARGS="RETENTION_POLICY=20"
     healthcheck:
-      test:
-        - CMD
-        - redis-cli
-        - ping
-      interval: 30s
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 3s
       timeout: 10s
-      retries: 3
-      start_period: 5s
+      retries: 10
     volumes:
       - redis_data:/data
+    expose:
+      - 6379/tcp
     ports:
       - 6379:6379
     networks:
       - internal
-    extra_hosts:
-      - host.docker.internal:host-gateway
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '1m'
+        max-file: '1'
   mysql:
-    restart: always
+    restart: unless-stopped
     image: mysql/mysql-server:${MYSQL_VERSION}
     command: ['--default-authentication-plugin', 'mysql_native_password']
     pid: host
@@ -266,7 +284,7 @@ services:
   mongo:
     platform: linux/amd64
     image: mongo:4
-    restart: always
+    restart: unless-stopped
     ports:
       - '27017:27017'
     environment:
@@ -279,6 +297,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 5s
+    volumes:
+      - mongodb_data:/data/db
     networks:
       - internal
   pgvector:
@@ -289,7 +309,7 @@ services:
       PGUSER: ${POSTGRES_USER}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: vector_db
+      POSTGRES_DB: pgvector
     expose:
       - 5432
     networks:
@@ -301,7 +321,7 @@ services:
       retries: 10
     volumes:
       - pgvector_data:/var/lib/postgresql/data
-      - ./.docker/postgres/pgvector/:/docker-entrypoint-initdb.d/:ro
+      # - ./.docker/postgres/pgvector/:/docker-entrypoint-initdb.d/:ro
   pinecone:
     image: ghcr.io/pinecone-io/pinecone-local:latest
     container_name: pinecone
@@ -317,12 +337,35 @@ services:
     volumes:
       - pinecone_data:/root/.pinecone
   qdrant:
-    image: qdrant/qdrant:gpu-nvidia-latest
+    image: qdrant/qdrant
+    container_name: qdrant
     environment:
-      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-fastembed}
+      - NVIDIA_VISIBLE_DEVICES=all
       - QDRANT__GPU__INDEXING=true
-    profiles: ['gpu']
-    <<: *service-qdrant
+      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-fastembed}
+    volumes:
+      - qdrant_data:/qdrant/storage
+    ports:
+      - '6333:6333'
+    expose:
+      - 6333
+    restart: unless-stopped
+    networks:
+      - internal
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
 networks:
   internal:
@@ -330,10 +373,12 @@ networks:
 
 volumes:
   n8n_data:
-  ollama_data:
+  ollama_storage:
+  flowise_data:
   openwebui_data:
   postgres_data:
   redis_data:
   pgvector_data:
   pinecone_data:
   qdrant_data:
+  mongodb_data:

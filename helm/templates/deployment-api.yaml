@@ -40,11 +40,11 @@ spec:
             #     configMapKeyRef:
             #       name: workspace-config
             #       key: LOKI_HOST
-            - name: MONGO_CONNECTION_STRING
+            - name: MONGODB_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
                   name: workspace-secrets
-                  key: MONGO_CONNECTION_STRING
+                  key: MONGODB_CONNECTION_STRING
             - name: COOKIE_SECRET
               valueFrom:
                 secretKeyRef:

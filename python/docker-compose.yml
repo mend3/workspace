@@ -32,7 +32,7 @@ services:
       pgvector:
         condition: service_healthy
       qdrant:
-        condition: service_started
+        condition: service_healthy
     deploy:
       resources:
         reservations:

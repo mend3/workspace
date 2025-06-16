@@ -15,8 +15,15 @@
 - Docker
 - Minikube (optional, to use k8s)
   - Helm
-
+- `jq` for shell
 ---
+
+## `jq`
+
+```sh
+sudo apt update
+sudo apt install -y jq
+```
 
 ## Ollama
 
