@@ -1,0 +1,62 @@
+services:
+  mcp-bravesearch:
+    image: mcp/brave-search
+    environment:
+      - BRAVE_API_KEY=${BRAVE_API_KEY}
+    container_name: mcp-bravesearch
+    tty: true
+  mcp-crawl4ai-rag:
+    build:
+      context: vendors/mcp-crawl4ai-rag
+      dockerfile: Dockerfile
+    container_name: mcp-crawl4ai-rag
+    ports:
+      - 8003:8051
+    expose:
+      - 8051
+    environment:
+      USE_AGENTIC_RAG: False
+      USE_HYBRID_SEARCH: True
+      USE_RERANKING: True
+      SUPABASE_URL: ${SUPABASE_PROJECT_URL}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      TRANSPORT: sse
+      HOST: 0.0.0.0
+      PORT: 8051
+    networks:
+      - internal
+  mcp-qdrant:
+    build:
+      context: vendors/mcp-qdrant
+      dockerfile: Dockerfile
+    container_name: mcp-qdrant
+    ports:
+      - 8004:8000
+    expose:
+      - 8000
+    environment:
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      QDRANT_API_KEY: ${QDRANT_API_KEY}
+      COLLECTION_NAME: ${WORKSPACE_COLLECTION_NAME}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL}
+      EMBEDDING_PROVIDER: fastembed
+      QDRANT_VERIFY_SSL: False
+    depends_on:
+      - qdrant
+    networks:
+      - internal
+  mcp-filesystem:
+    build:
+      context: vendors/mcp-servers
+      dockerfile: src/filesystem/Dockerfile
+      target: release
+  mcp-sequentialthinking:
+    build:
+      context: vendors/mcp-servers
+      dockerfile: src/sequentialthinking/Dockerfile
+      target: release
+  mcp-memory:
+    build:
+      context: vendors/mcp-servers
+      dockerfile: src/memory/Dockerfile
+      target: release

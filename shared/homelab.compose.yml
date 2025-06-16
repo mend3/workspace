@@ -208,10 +208,6 @@ services:
     depends_on:
       - mysql
 
-networks:
-  internal:
-    driver: bridge
-
 volumes:
   wordpress-data:
   phpbb-data:

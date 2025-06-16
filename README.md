@@ -1,297 +1,275 @@
-# Internal Notes
+# 🛠️ mend3 Workspace
 
-![Helm](https://img.shields.io/badge/Helm-Chart-blue)
-![Prometheus](https://img.shields.io/badge/Monitoring-Prometheus-orange)
-![Loki](https://img.shields.io/badge/Logging-Loki-blue)
-![Grafana](https://img.shields.io/badge/Dashboard-Grafana-orange)
-![TypeScript](https://img.shields.io/badge/Made_with-TypeScript-pink)
+A complete local development environment powered by Docker, Kubernetes, AI tooling, and modern observability stacks.
 
-
-## Pre-requisites
-
-- Node v22.14+ (and pnpm)
-- Python v3.12+ (and pip)
-- Make
-- Docker
-- Minikube (optional, to use k8s)
-  - Helm
-- `jq` for shell
 ---
 
-## `jq`
+- [🛠️ mend3 Workspace](#️-mend3-workspace)
+  - [📋 Requirements](#-requirements)
+  - [🌐 Domain Routing with Traefik](#-domain-routing-with-traefik)
+  - [🤖 Ollama Model Pull List](#-ollama-model-pull-list)
+  - [🐳 Docker Tips](#-docker-tips)
+  - [☸️ Kubernetes \& Minikube](#️-kubernetes--minikube)
+    - [Install Minikube](#install-minikube)
+    - [Kompose](#kompose)
+    - [Cleanup](#cleanup)
+    - [Helm Chart Installation](#helm-chart-installation)
+  - [🔒 TLS Certificates (mkcert)](#-tls-certificates-mkcert)
+  - [🌿 Terraform on AWS](#-terraform-on-aws)
+    - [Create Remote State](#create-remote-state)
+  - [🔐 AWS ECR Kubernetes Secret](#-aws-ecr-kubernetes-secret)
+  - [📈 Monitoring Stack (Local)](#-monitoring-stack-local)
+    - [Dashboards](#dashboards)
+  - [🧠 AI Context \& MCP](#-ai-context--mcp)
+  - [🔍 Useful Commands](#-useful-commands)
+  - [🧪 Git \& Submodules](#-git--submodules)
+  - [🧩 WSL Enhancements](#-wsl-enhancements)
+  - [⚙️ GPU Support on WSL](#️-gpu-support-on-wsl)
+
+---
+
+## 📋 Requirements
+
+Ensure the following tools are installed before proceeding:
+
+| Tool                                                 | Version    | Notes                                                |
+| ---------------------------------------------------- | ---------- | ---------------------------------------------------- |
+| Node.js                                              | 22.15+     | [Install Node.js](https://nodejs.org/)               |
+| Python                                               | 3.12+      | [Install Python](https://www.python.org/)            |
+| Make                                                 | Latest     | GNU Make                                             |
+| Docker                                               | Latest     | [Install Docker](https://www.docker.com/)            |
+| Docker Compose                                       | Latest     | [See docs](https://docs.docker.com/compose/install/) |
+| [Minikube](https://minikube.sigs.k8s.io/docs/start/) | (Optional) | For local Kubernetes setup                           |
+| [Kompose](https://kompose.io/getting-started/)       | (Optional) | For local Kubernetes/docker-compsoe setup            |
+| [Helm](https://helm.sh/docs/intro/install/)          | 3.x+       | Required if using Minikube                           |
+| jq                                                   | Latest     | `sudo apt install -y jq`                             |
+
+---
+
+## 🌐 Domain Routing with Traefik
+
+Once services are running, you can access local domains like:
+
+```ts
+127.0.0.1 workspace.com
+127.0.0.1 dashboard.workspace.com
+127.0.0.1 n8n.workspace.com
+127.0.0.1 open-webui.workspace.com
+127.0.0.1 flowise.workspace.com
+127.0.0.1 extalia.workspace.com
+127.0.0.1 sws.workspace.com
+127.0.0.1 proxy.workspace.com
+127.0.0.1 wallos.workspace.com
+127.0.0.1 rss.workspace.com
+127.0.0.1 kuma.workspace.com
+127.0.0.1 docmost.workspace.com
+127.0.0.1 firefly.workspace.com
+127.0.0.1 homarr.workspace.com
+127.0.0.1 home.workspace.com
+127.0.0.1 wordpress.workspace.com
+127.0.0.1 phpbb.workspace.com
+127.0.0.1 grafana.workspace.com
+127.0.0.1 prometheus.workspace.com
+```
+
+> Traefik handles routing using Docker labels. See: [Traefik Docker Provider Docs](https://doc.traefik.io/traefik/routing/providers/docker/)
+
+---
+
+## 🤖 Ollama Model Pull List
+
+For local LLM inference:
+
+| Usage           | Model Name                                                   |
+| --------------- | ------------------------------------------------------------ |
+| Embedding (n8n) | `all-minilm:l6-v2`, `sentence-transformers/all-MiniLM-L6-v2` |
+| General Chat    | `qwen2.5:7b-instruct-q4_K_M`, `gemma:7b`                     |
+| Code Assistants | `deepseek-code:6.7b`                                         |
+
+---
+
+## 🐳 Docker Tips
 
 ```sh
-sudo apt update
-sudo apt install -y jq
-```
+# List images and containers
+docker images
+docker ps
 
-## Ollama
-
-- Use model `all-minilm:l6-v2` as embedding model to read qdrant vector store using n8n.
-- Ollama models to pull:
-- - `all-minilm:l6-v2` - Embedding model for n8n agents
-- - `qwen2.5:7b`
-- - `gemma:7b-instruct`
-- - `deepseek-code:6.7b`
-
-## [Install Helm](https://helm.sh/docs/intro/install/#from-script)
-
----
-
-```bash
-curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-
+# Start local Docker registry
+docker run -d -p 5000:5000 --restart=always --name registry registry:2
 ```
 
 ---
 
-## [Install minikube](https://minikube.sigs.k8s.io/docs/start/)
+## ☸️ Kubernetes & Minikube
 
-Minikube is local Kubernetes, focusing on making it easy to learn and develop for Kubernetes.
-
-All you need is [Docker](https://docs.docker.com/engine/install/ubuntu/) (or similarly compatible) container or a Virtual Machine environment, and Kubernetes is a single command away: `minikube start`
-
-What you’ll need
-
-- 2 CPUs or more
-- 2GB of free memory
-- 20GB of free disk space
-- Internet connection
-- Container or virtual machine manager, such as: Docker, QEMU, Hyperkit, Hyper-V, KVM, Parallels, Podman, VirtualBox, or VMware Fusion/Workstation
+### Install Minikube
 
 ```bash
 curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
 sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
-
-minikube version
-# minikube version: v1.35.0
-# commit: dd5d320e41b5451cdf3c01891bc4e13d189586ed-dirty
 ```
 
-> Secrets should be in _base64_ using `echo -n "your-secret-value" | base64`
+### Kompose
 
 ```bash
-# clear custom namespaces
-kubectl delete namespace $(kubectl get namespaces --no-headers | awk '$1 !~ /^(default|kube-system|kube-public|kube-node-lease)$/ {print $1}') && \
-helm list -A -q | xargs -I {} helm uninstall {} --namespace $(helm list -A | awk '{print $2}' | tail -n +2)
+curl -L https://github.com/kubernetes/kompose/releases/download/v1.34.0/kompose-linux-amd64 -o kompose
+chmod +x kompose
+sudo mv ./kompose /usr/local/bin/kompose
+```
 
-# get all namespaces
-kubectl get namespaces
+### Cleanup
 
-# list all helms
-helm list -A
+```bash
+# Delete all non-default namespaces
+kubectl delete ns $(kubectl get ns --no-headers | awk '$1 !~ /^(default|kube.*)/ {print $1}')
 
-# delete all helms
-helm list -A -q | xargs -I {} helm uninstall {} --namespace $(helm list -A | awk '{print $2}' | tail -n +2)
+# Remove all Helm releases
+helm list -A -q | xargs -n1 -I {} helm uninstall {} --namespace $(helm list -A | awk '{print $2}' | tail -n +2)
+```
 
-# manually create a namespace
-kubectl create namespace ${NAMESPACE}
+### Helm Chart Installation
 
-kubectl label namespace ${NAMESPACE} app.kubernetes.io/managed-by=Helm --overwrite
-kubectl annotate namespace ${NAMESPACE} meta.helm.sh/release-name=${HELM_RELEASE} --overwrite
-kubectl annotate namespace ${NAMESPACE} meta.helm.sh/release-namespace=${NAMESPACE} --overwrite
-
-# package helm for deployment
-helm package k8s/helm
-# install from local helm files
-helm install ${NAMESPACE} ./k8s/helm --namespace ${NAMESPACE} --create-namespace
-# or preview
-helm install ${NAMESPACE} ./k8s/helm --set namespace=${NAMESPACE} --debug --dry-run
-
-helm history ${NAMESPACE} -n ${NAMESPACE}
-
-make kbuild
-
-# after the cluster is up on k8s, run
-kubectl apply -f helm/vendors/aws-auth.yaml
+```bash
+helm package ./k8s/helm
+helm install my-app ./k8s/helm --namespace dev --create-namespace
 ```
 
 ---
 
-## Terraform
+## 🔒 TLS Certificates (mkcert)
 
-- [Terraform Account](https://app.terraform.io/app/devshell/workspaces)
-- [Organization Page](https://app.terraform.io/app/organizations)
-- [DevShell Workspace](https://app.terraform.io/app/devshell/workspaces)
+```bash
+# Install mkcert
+sudo apt install libnss3-tools -y
+curl -LO https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-amd64
+chmod +x mkcert-v1.4.4-linux-amd64
+sudo mv mkcert-v1.4.4-linux-amd64 /usr/local/bin/mkcert
+mkcert -install
 
-### Initialize state holders
+# Generate wildcard certs
+mkcert -cert-file ./traefik/certs/workspace.com.crt -key-file ./traefik/certs/workspace.com.key workspace.com '*.workspace.com'
+```
 
-```sh
-aws s3api create-bucket --bucket ${NAMESPACE}-terraform-state --region us-east-1
+---
 
-aws s3api put-bucket-versioning --bucket ${NAMESPACE}-terraform-state --versioning-configuration Status=Enabled
+## 🌿 Terraform on AWS
+
+### Create Remote State
+
+```bash
+aws s3api create-bucket --bucket my-tf-state --region us-east-1
+aws s3api put-bucket-versioning --bucket my-tf-state --versioning-configuration Status=Enabled
 
 aws dynamodb create-table \
-  --table-name ${NAMESPACE}-terraform-lock \
+  --table-name my-tf-locks \
   --attribute-definitions AttributeName=LockID,AttributeType=S \
   --key-schema AttributeName=LockID,KeyType=HASH \
   --billing-mode PAY_PER_REQUEST
+```
 
-aws ecr create-repository --repository-name ${NAMESPACE}-docker-repository
+---
 
-- name: Update kubeconfig for EKS
-  run: |
-    mkdir -p $HOME/.kube
-    aws eks update-kubeconfig --name ${{ env.CLUSTER_NAME }} --region ${{ env.AWS_REGION }} --kubeconfig $HOME/.kube/config
-    echo 'KUBE_CONFIG_DATA<<EOF' >> $GITHUB_ENV
-    echo $(cat $HOME/.kube/config | base64) >> $GITHUB_ENV
-    echo 'EOF' >> $GITHUB_ENV
-    export KUBECONFIG=$HOME/.kube/config
+## 🔐 AWS ECR Kubernetes Secret
 
-
-aws ecr get-login-password --region ${AWS_REGION} | kubectl create secret docker-registry ecr-secret \
-  --docker-server=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com \
+```bash
+aws ecr get-login-password --region us-east-1 | \
+kubectl create secret docker-registry ecr-secret \
+  --docker-server=ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com \
   --docker-username=AWS \
-  --docker-password=$(aws ecr get-login-password --region ${AWS_REGION}) \
-  --docker-email=your-email@example.com \
-  --namespace ${NAMESPACE} \
+  --docker-password=$(aws ecr get-login-password --region us-east-1) \
+  --docker-email=you@example.com \
+  --namespace dev \
   --dry-run=client -o yaml | kubectl apply -f -
-
 ```
 
 ---
 
-## Utils
+## 📈 Monitoring Stack (Local)
 
-### mkcert
+| Tool       | URL                                                                |
+| ---------- | ------------------------------------------------------------------ |
+| Grafana    | [http://grafana.workspace.com](http://grafana.workspace.com)       |
+| Prometheus | [http://prometheus.workspace.com](http://prometheus.workspace.com) |
+| Loki       | [http://loki.workspace.com](http://loki.workspace.com)             |
 
-✅ Step 1: Properly install `mkcert` in WSL (Linux)
+### Dashboards
 
-If you're in **WSL (Ubuntu or Debian)**, install it via:
+- [14057](https://grafana.com/grafana/dashboards/14057-mysql/)
+- [1860](https://grafana.com/grafana/dashboards/1860-node-exporter-full/)
+- [14314](https://grafana.com/grafana/dashboards/14314-kubernetes-nginx-ingress-controller-nextgen-devops-nirvana/)
+- [7249](https://grafana.com/grafana/dashboards/7249-kubernetes-cluster/)
+- [13577](https://grafana.com/grafana/dashboards/13577-9108-9109-nginx/)
+
+---
+
+## 🧠 AI Context & MCP
 
 ```bash
-sudo apt install libnss3-tools -y
-curl -JLO https://github.com/FiloSottile/mkcert/releases/latest/download/mkcert-v1.4.4-linux-amd64
-chmod +x mkcert-v1.4.4-linux-amd64
-sudo mv mkcert-v1.4.4-linux-amd64 /usr/local/bin/mkcert
-```
+# Generate AI Context index
+make ai-context
 
-> ✅ You can verify with:
-
-```bash
-mkcert --version
-```
-
-You should see:
-
-```
-mkcert v1.4.4
-```
-
----
-
-✅ Step 2: Generate certificates (with wildcard correctly quoted)
-
-```bash
-mkcert -cert-file traefik/certs/domain.com.crt -key-file traefik/certs/domain.com.key \
-  domain.com \
-  '*.domain.com'
-```
-
----
-
-✅ Step 3: Trust the local CA (once per system)
-
-You’ll also need to install the local root CA to your trust store:
-
-```bash
-mkcert -install
-
-cat $(mkcert -CAROOT)/rootCA.pem
-```
-
----
-
-**WSL Addons:**
-
-- [Ctop](https://github.com/bcicen/ctop)
-- [Quick Install ZSH](https://gist.github.com/n1snt/454b879b8f0b7995740ae04c5fb5b7df)
-- [zsh-auto-nvm-use](https://github.com/Sparragus/zsh-auto-nvm-use)
-- [fzf-tab](https://gist.github.com/seungjulee/d72883c193ac630aac77e0602cb18270)
-- [PowerLine Fonts](https://github.com/powerline/fonts?tab=readme-ov-file)
-
----
-
-**Docker:**
-
-- [Awesome Docker](https://github.com/veggiemonk/awesome-docker/blob/master/README.md)
-- [Lazy Docker](https://github.com/jesseduffield/lazydocker#installation)
-
----
-
-**GPU:**
-
-- [Install Cuda on WSL](https://docs.nvidia.com/cuda/wsl-user-guide/index.html#installing-docker)
-- [Nvidia Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-the-nvidia-container-toolkit)
-- Check installation and gpu compatibility on docker
-  - `docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi`
-
-```sh
-sudo apt install nvidia-container-toolkit
-sudo nvidia-ctk runtime configure --runtime=docker
-sudo systemctl restart docker
-```
-
----
-
-## MCP Servers
-
-```bash
-# automatically starts all mcp servers using docker
+# Start MCP servers
 make mcp
 ```
 
 ---
 
-## Shell Scripts
+## 🔍 Useful Commands
 
-```sh
-
-# MYSQL: Grant privileves to a user:
-GRANT ALL PRIVILEGES ON *.* TO '$MYSQL_USER$'@'%' WITH GRANT OPTION;
+```bash
+# Grant full access to MySQL user
+GRANT ALL PRIVILEGES ON *.* TO 'user'@'%' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 
-# install and enable autoenv
-curl -#fLo- 'https://raw.githubusercontent.com/hyperupcall/autoenv/main/scripts/install.sh' | sh
+# Create project folder tree
+find . -maxdepth 4 -type d -print | sed -e "s/[^-][^\/]*\// |/g" -e "s/|\([^ ]\)/|-\1/" > tree.txt
 
-# install live server and serve local build as nginx
-pnpm add -g http-server && http-server dist -P "http://localhost:4200?" -p 4200
-
-# snapshot a website
+# Snapshot an entire website
 wget --recursive --no-clobber --page-requisites --html-extension --convert-links --restrict-file-names=windows --domains domain.com --no-parent https://domain.com
 
-# generate a tree output from the root directory
-find . -maxdepth 4 -path ./.nx -prune -o -path ./dist -prune -o -path ./server -prune -o -path ./apps -prune -o -path ./node_modules -prune -o -path ./.git -prune -o -type d -print | sed -e "s/[^-][^\/]*\// |/g" -e "s/|\([^ ]\)/|-\1/" > tree.txt
+# Serve static dist folder locally
+pnpm add -g http-server
+http-server dist -P "http://localhost:4200?" -p 4200
+```
 
-# zip a folder excluding certain directories
-zip -r folder.zip folder -x "*node_modules*" "*/.next*" "*/.git"
+---
 
-# add a git submodule
-git submodule add "$url" "$path"
+## 🧪 Git & Submodules
 
-# update all git submodules
+```bash
+# Add a submodule
+git submodule add https://github.com/user/repo path/to/submodule
+
+# Initialize and update submodules
 git submodule update --init --recursive
+```
 
-# setup local docker registry
-docker run -d -p 5000:5000 --restart=always --name registry registry:2
+---
 
-# run java image
-docker run --rm --interactive --tty openjdk:7u211-jre-alpine java -v
+## 🧩 WSL Enhancements
 
-# list all docker images in a table format
-docker images --format "table {{.ID}}\t{{.Tag}}\t{{.Repository}}"
+Suggested tools:
 
-# list all docker containers in a table format
-docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Command}}\t{{.CreatedAt}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}"
+- [`ctop`](https://github.com/bcicen/ctop) — container top
+- [`autoenv`](https://github.com/hyperupcall/autoenv) — automatic `.env` loader
+- [`zsh-auto-nvm-use`](https://github.com/Sparragus/zsh-auto-nvm-use)
+- [`fzf-tab`](https://github.com/Aloxaf/fzf-tab)
+- [PowerLine Fonts](https://github.com/powerline/fonts?tab=readme-ov-file)
+- [Lazy Docker](https://github.com/jesseduffield/lazydocker#installation)
+- [Awesome Docker](https://github.com/veggiemonk/awesome-docker/blob/master/README.md)
 
-# generate AI context based on local files
-make ai-context
+---
 
-#or
-docker compose -f ./docker-compose.yml -f python/docker-compose.yml build service-name
-docker create --name tmp-container service-name
-docker cp tmp-container:/app/file.txt file.txt
-docker rm tmp-container
+## ⚙️ GPU Support on WSL
+
+```bash
+sudo apt install nvidia-container-toolkit
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker
+
+# Test with NVIDIA
+docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi
 ```
 
 ---

@@ -144,10 +144,6 @@ services:
       retries: 3
       start_period: 10s
 
-networks:
-  internal:
-    driver: bridge
-
 volumes:
   prometheus_data:
   es_data:

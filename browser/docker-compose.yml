@@ -13,8 +13,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 5s
-    expose:
-      - 3000
+    ports:
+      - 9000:3000
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
@@ -222,10 +222,6 @@ services:
     networks:
       - internal
 
-
-networks:
-  internal:
-    driver: bridge
 
 volumes:
   browserless_data:

@@ -1,4 +1,0 @@
-FROM mcp/brave-search
-
-ARG BRAVE_API_KEY
-ENV BRAVE_API_KEY=${BRAVE_API_KEY}

@@ -8,6 +8,7 @@ TARGET ?= "*" ## Target (service name) for docker compose
 
 # Compose file groups
 COMMON_FILES = -f ./docker-compose.yml \
+  -f ./browser/docker-compose.yml \
   -f ./shared/monitor.compose.yml
 
 EXTALIA_FILES = $(COMMON_FILES) \
@@ -16,12 +17,12 @@ EXTALIA_FILES = $(COMMON_FILES) \
   -f ./deployment/extalia/web/docker-compose.yml
 
 SWS_FILES = $(COMMON_FILES) \
-  -f ./browser/docker-compose.yml \
   -f ./deployment/sws/docker-compose.yml
 
 AI_FILES = $(COMMON_FILES) \
   -f ./python/docker-compose.yml \
   -f ./shared/mcp.compose.yml \
+  -f ./shared/vendors.compose.yml \
   -f ./vendors/local-ai-packaged/docker-compose.yml
 
 HOMELAB_FILES = $(COMMON_FILES) \
@@ -29,12 +30,13 @@ HOMELAB_FILES = $(COMMON_FILES) \
 
 ALL_FILES = $(COMMON_FILES) \
   $(EXTALIA_FILES) \
+  $(SWS_FILES) \
   $(AI_FILES) \
   $(HOMELAB_FILES)
 
 # Generic compose commands
 define compose_up
-	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --build --renew-anon-volumes -V -d traefik ollama-gpu $(2)
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --remove-orphans --renew-anon-volumes -V -d traefik ollama-gpu $(2)
 endef
 
 define compose_down

@@ -40,7 +40,3 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-
-networks:
-  internal:
-    driver: bridge

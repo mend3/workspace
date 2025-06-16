@@ -23,7 +23,7 @@ const handleImages = (image: LDVariant['image']): Array<{ url: string; caption?:
         caption,
       }
     })
-    .filter((img): img is { url: string; caption?: string } => !!img?.url)
+    .filter(img => !!img?.url)
 }
 
 const handleReviews = (review: LDVariant['review']) => {

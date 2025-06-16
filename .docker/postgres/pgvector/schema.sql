@@ -1,17 +1,3 @@
--- 1. Create the database
-DO $$
-BEGIN
-   IF NOT EXISTS (
-      SELECT FROM pg_database WHERE datname = 'vector_db'
-   ) THEN
-      CREATE DATABASE vector_db;
-   END IF;
-END
-$$;
-
--- 2. Connect to the new database (run the rest in the new DB)
-\c vector_db
-
 -- 3. Enable pgvector extension (if not already enabled)
 CREATE EXTENSION IF NOT EXISTS vector;
 

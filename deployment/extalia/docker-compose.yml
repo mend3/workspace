@@ -94,7 +94,3 @@ services:
         condition: service_started
       mysql:
         condition: service_healthy
-
-networks:
-  internal:
-    driver: bridge
