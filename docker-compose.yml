@@ -221,6 +221,12 @@ services:
       - PORT=3001
       - FLOWISE_USERNAME=${FLOWISE_USERNAME}
       - FLOWISE_PASSWORD=${FLOWISE_PASSWORD}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.flowise.rule=Host(`flowise.workspace.com`)"
+      - "traefik.http.routers.flowise.service=flowise"
+      - "traefik.http.routers.flowise.entrypoints=web"
+      - "traefik.http.services.flowise.loadbalancer.server.port=3001"
     volumes:
       - flowise_data:/root/.flowise
     entrypoint: /bin/sh -c "sleep 3; flowise start"

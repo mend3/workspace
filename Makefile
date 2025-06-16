@@ -33,7 +33,7 @@ ALL_FILES = $(COMMON_FILES) \
 
 # Generic compose commands
 define compose_up
-	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --renew-anon-volumes -V -d $(2)
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --renew-anon-volumes -V -d traefik $(2)
 endef
 
 define compose_down
