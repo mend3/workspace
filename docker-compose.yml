@@ -320,6 +320,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: pgvector
+    ports:
+      - "5433:5432"
     expose:
       - 5432
     networks:

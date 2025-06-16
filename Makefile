@@ -1,3 +1,7 @@
+ENV_FILE ?= .env.sh
+ENV_SOURCE = ./$(ENV_FILE) &&
+# make up ENV_FILE=.env.staging.sh
+
 CONTAINER_RUNTIME ?= docker
 PROFILE ?= gpu-nvidia
 TARGET ?= "*" ## Target (service name) for docker compose
@@ -24,26 +28,24 @@ HOMELAB_FILES = $(COMMON_FILES) \
   -f ./shared/homelab.compose.yml
 
 ALL_FILES = $(COMMON_FILES) \
-  $(EXTALIA_FILES) \
-  $(SWS_FILES) \
   $(AI_FILES) \
   $(HOMELAB_FILES)
 
 # Generic compose commands
 define compose_up
-	$(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --remove-orphans --build --force-recreate --renew-anon-volumes -V -d $(2)
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --renew-anon-volumes -V -d $(2)
 endef
 
 define compose_down
-	$(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) down -v --remove-orphans
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) down --remove-orphans
 endef
 
 define compose_stop
-	$(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) stop
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) stop
 endef
 
 define compose_build
-	$(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) build --no-cache --pull --force-rm $(2)
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) build --no-cache --pull --force-rm $(2)
 endef
 
 define compose_bridge
@@ -89,11 +91,11 @@ ai: ## Starts AI compounds
 
 .PHONY: ai-context
 ai-context: ## Starts only the AI context services
-	$(call compose_up,$(COMMON_FILES) -f ./python/docker-compose.yml,ai-context)
+	$(call compose_up,$(AI_FILES),ai-context)
 
 .PHONY: homelab
 homelab: ## Starts all homelab services
-	$(call compose_up,$(HOMELAB_FILES),$(TARGET))
+	$(call compose_up,$(ALL_FILES),$(TARGET) mcp-*)
 
 .PHONY: up
 up: ## Starts all defined services

@@ -96,9 +96,7 @@ services:
       - internal
     depends_on:
       - elasticsearch
-      - influxdb
       - loki
-      - promtail
       - cadvisor
       - prometheus
       - prometheus-node-exporter
@@ -130,32 +128,6 @@ services:
     networks:
       - internal
 
-  influxdb:
-    image: influxdb:1.8
-    restart: always
-    expose:
-      - 8086
-    environment:
-      - INFLUXDB_DB=influxdb
-      - DOCKER_INFLUXDB_INIT_USERNAME=admin
-      - DOCKER_INFLUXDB_INIT_PASSWORD=admin
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-    volumes:
-      - ./.docker/influxdb/config:/etc/influxdb2
-      - ./.tmp/influxdb/data:/var/lib/influxdb2
-    networks:
-      - internal
-
-  promtail:
-    restart: always
-    image: grafana/promtail:3.2.1
-    command: '--config.file=/mnt/config/promtail-config.yaml'
-    volumes:
-      - ./.docker/loki/promtail-config.yaml:/mnt/config/promtail-config.yaml
-      - ./.tmp/nginx/logs:/var/log/nginx
-    networks:
-      - internal
-
   logstash:
     image: docker.elastic.co/logstash/logstash:8.13.0
     volumes:
@@ -171,17 +143,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-      
-  filebeat:
-    image: docker.elastic.co/beats/filebeat:8.12.0
-    container_name: filebeat
-    user: root
-    volumes:
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./.docker/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-    networks:
-      - internal
 
 networks:
   internal:

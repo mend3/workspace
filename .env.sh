@@ -19,15 +19,14 @@ random_string() {
   echo "$result"
 }
 
-# ===== SECURITY KEYS (GENERATED) =====
-export BROWSER_TOKEN=($(random_string 20))
-export COOKIE_SECRET=($(random_string 20))
-export N8N_ENCRYPTION_KEY=$(random_string 20)
-
 ###### GLOBALS ######
 export NAMESPACE="$(basename $(pwd))"
 export CLUSTER_NAME="${CLUSTER_NAME:-homelab}"
 export HELM_RELEASE="${HELM_RELEASE:-workspace}"
+
+# ===== SECURITY KEYS (GENERATED) =====
+export BROWSER_TOKEN=($(random_string 20))
+export COOKIE_SECRET=($(random_string 20))
 
 ###### DATABASE CONNECTIONS ######
 # mysql
@@ -50,22 +49,5 @@ export AUTH_LOCAL_PASSWORD=${AUTH_LOCAL_PASSWORD}
 
 ###### N8N ######
 export N8N_LICENSE_KEY=${N8N_LICENSE_KEY}
-
-############
-# [required]
-# Langfuse credentials
-# Each of the secret keys you can set to whatever you want, just make it secure!
-# For the encryption key, use the command `openssl rand -hex 32`
-#   openssl is available by defualt on Linux/Mac
-#   For Windows, you can use the 'Git Bash' terminal installed with git
-############
-
-export CLICKHOUSE_PASSWORD="$(openssl rand -hex 32)"
-export MINIO_ROOT_PASSWORD="$(openssl rand -hex 32)"
-export LANGFUSE_SALT="$(openssl rand -hex 32)"
-export NEXTAUTH_SECRET="$(openssl rand -hex 32)"
-export ENCRYPTION_KEY="$(openssl rand -hex 32)"
-export FRONTEND_JWT_SECRET="$(openssl rand -hex 32)"
-export BACKEND_JWT_SECRET="$(openssl rand -hex 32)"
 
 echo -e "✅ Environment loaded: \n\tNamespace '${NAMESPACE}' \n\tCluster '${CLUSTER_NAME}' \n\tHelm '${HELM_RELEASE}'"
