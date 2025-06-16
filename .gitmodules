@@ -10,6 +10,9 @@
 [submodule "browser/use"]
 	path = browser/use
 	url = git@github.com:mend3/browser-use.git
+[submodule "browser/ui"]
+	path = browser/ui
+	url = git@github.com:mend3/browser-ui.git
 [submodule "deployment/extalia/java"]
 	path = deployment/extalia/java
 	url = git@github.com:mend3/extalia.git

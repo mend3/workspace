@@ -28,12 +28,13 @@ HOMELAB_FILES = $(COMMON_FILES) \
   -f ./shared/homelab.compose.yml
 
 ALL_FILES = $(COMMON_FILES) \
+  $(EXTALIA_FILES) \
   $(AI_FILES) \
   $(HOMELAB_FILES)
 
 # Generic compose commands
 define compose_up
-	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --renew-anon-volumes -V -d traefik ollama-gpu $(2)
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --build --renew-anon-volumes -V -d traefik ollama-gpu $(2)
 endef
 
 define compose_down
@@ -71,7 +72,7 @@ extalia: ## Starts Extalia compound (http + java)
 
 .PHONY: extalia-dev
 extalia-dev: ## Starts Extalia service in development mode
-	$(call compose_up,$(EXTALIA_FILES),dev-extalia-*)
+	$(call compose_up,$(EXTALIA_FILES),-d extalia-cdn dev-extalia-*)
 
 .PHONY: sws
 sws: ## Starts SWS service
