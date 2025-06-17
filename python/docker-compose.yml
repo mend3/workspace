@@ -13,10 +13,9 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
-      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
-      - EMBEDDING_PROVIDER=huggingface
-      - QDRANT_URL=${QDRANT_URL:-http://qdrant:6333} # only using Qdrant
-      # - PGVECTOR_CONNECTION_STRING=${PGVECTOR_CONNECTION_STRING:-postgresql+psycopg2://postgres:postgres@pgvector:5432/vector_db}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL}
+      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER}
+      - QDRANT_URL=${QDRANT_URL:-http://qdrant:6333}
     volumes:
       - .:/app
     networks:
@@ -29,8 +28,6 @@ services:
         max-size: '10m'
         max-file: '3'
     depends_on:
-      pgvector:
-        condition: service_healthy
       qdrant:
         condition: service_healthy
     deploy:

@@ -16,7 +16,7 @@ print_tree() {
   local dir="$1"
   local prefix="$2"
   local depth="$3"
-  local max_depth=3
+  local max_depth=2
 
   if [ "$depth" -gt "$max_depth" ]; then
     return

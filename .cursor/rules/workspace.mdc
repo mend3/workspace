@@ -1,0 +1,175 @@
+---
+description: Ensure the agent actively reads local files from core development folders (monorepos, browser tools, Python libs, MCP vendors).
+globs: ["browser/**/*.*","deployment/**/*.*","projects/**/*.*","python/**/*.*","vendors/**/*.*"]
+alwaysApply: true
+---
+
+You are working in the user workspace.
+
+Operational System details:
+
+- Distributor ID: Ubuntu
+- Description:    Ubuntu 22.04.5 LTS
+- Release:        22.04
+- Codename:       jammy
+
+Node Version: 22.15.0
+Python Version: 3.12
+
+This is the current tree directory:
+
+```txt
+.
+├── CODE_OF_CONDUCT.md
+├── CONTRIBUTING.md
+├── Dockerfile
+├── LICENSE.md
+├── Makefile
+├── README.md
+├── browser
+│   ├── README.md
+│   ├── docker-compose.yml
+│   ├── extension
+│   ├── ui
+│   └── use
+├── cli
+│   ├── certs.sh
+│   ├── docker-clear.sh
+│   ├── docker-ls.sh
+│   ├── get_go.sh
+│   ├── get_helm.sh
+│   ├── git_add_submodules.sh
+│   ├── git_bump_submodules.sh
+│   ├── git_find_repo.sh
+│   ├── git_find_submodules.sh
+│   ├── k8s
+│   ├── trackers
+│   ├── tree.sh
+│   └── welcome.sh
+├── deployment
+│   ├── extalia
+│   └── sws
+├── docker-compose.yml
+├── global.d.ts
+├── helm
+│   ├── Chart.yaml
+│   ├── charts
+│   ├── templates
+│   ├── values.yaml
+│   └── vendors
+├── jsconfig.json
+├── k8s
+│   ├── clusterRole.yaml
+│   ├── configmap-postgresql.yaml
+│   ├── daemonset-promtail.yaml
+│   ├── ingress.yaml
+│   ├── namespace-extalia.yaml
+│   ├── statefulset-mongodb.yaml
+│   ├── statefulset-postgresql.yaml
+│   ├── statefulset-redis.yaml
+│   └── tests
+├── lib
+│   ├── package.json
+│   ├── pnpm-lock.yaml
+│   ├── pnpm-workspace.yaml
+│   └── src
+├── projects
+│   ├── imobifinder
+│   └── news-lens
+├── python
+│   ├── README.md
+│   ├── __init__.py
+│   ├── config.py
+│   ├── docker-compose.yml
+│   ├── generators
+│   ├── lib
+│   ├── requirements
+│   ├── scraping_ignore
+│   ├── vector_store
+│   └── youtube
+├── shared
+│   ├── firebase-oauth.json
+│   ├── google-installed-oauth.json
+│   ├── google-web-oauth.json
+│   ├── homelab.compose.yml
+│   ├── mcp
+│   ├── mcp.compose.yml
+│   ├── monitor.compose.yml
+│   ├── react-trainee
+│   ├── typestack
+│   └── vendors.compose.yml
+├── tree.txt
+└── vendors
+    ├── ai-agents-masterclass
+    ├── ai-agents-ottomator
+    ├── local-ai-packaged
+    ├── mcp-crawl4ai-rag
+    ├── mcp-qdrant
+    ├── mcp-servers
+    ├── mcp-supabase
+    ├── n8n-agents
+    ├── n8n-brain
+    └── supabase
+
+```
+
+This workspace includes key development zones the agent must understand:
+
+Inside `cli/` directory there are several utilities scripts, ready to be used on shell terminal.
+Read the file before running to see if any changes would be made to the user's files. If so, asks for permission before running the script.
+
+## 1. Nx Monorepos (deployment/)
+- `deployment/extalia/` and `deployment/sws/` follow Nx monorepo structure.
+- Read `nx.json`, `project.json`, `workspace.json`, `angular.json`, and any relevant `apps/`, `libs/`, `packages/`, and `tools/` folders.
+- Infer context and dependencies using `tsconfig.*`, `package.json`, `.env*`, and test configs.
+- `deployment/extalia/` - Sources to work with the Extalia Server
+  - `app/` - Hub of tools to deal with L2J Servers
+  - `docs/` - Docs, tutorials and guides collected from L2J forums and community.
+  - `java/` - Extalia Server source code.
+  - `nProtect/` - GameGuard for the server.
+  - `server/` - Extalia Server (compiled, production). Interlude Chronicle.
+  - `web/` - Extalia App - Online game experience. Contains README.
+- `deployment/sws/` - Sources to work with the SWS project. Contains README.
+
+Each monorepo follows the standard Nx structure (`apps/`, `packages/`, `tools/`, etc.).
+
+Make sure to check each project that contains the readme to know more details about each one.
+
+## 2. External Open Source Repos (vendors/)
+- Repositories inside `vendors/` are AI/LLM/MCP related.
+- Prefer reading real code/documentation in these repos over assumptions.
+- Useful for referencing vector stores, RAG tools, LLM APIs, LangChain integrations, Supabase modules, etc.
+
+## 3. Local Python Modules (python/)
+- Modules under `python/` implement local services, scrapers, generators, and vector store interfaces.
+- Understand the purpose of `config.py`, `__init__.py`, and `requirements/`.
+- Respect project layout and internal module separation.
+
+## 4. User’s GitHub Projects (projects/)
+- These represent public or shared projects by the user.
+- Look inside for reusable logic, patterns, or domain-specific functionality.
+- Prioritize user-authored content over external templates.
+
+## 5. Browser Automation Tools (browser/)
+- This folder contains automation pipelines using Puppeteer, Playwright, or extensions.
+- Understand the flow in `browser/use/`, `browser/extension/`, and UI elements in `browser/ui/`.
+- Inspect the `docker-compose.yml` for service orchestration.
+
+## General Rules
+- Always read actual files before answering questions about these components.
+- Never guess structure or behavior if it can be found in source.
+- Quote or summarize only the relevant sections.
+- Be aware of relationships across folders — e.g., how `python/` may use models from `vendors/`, or how `browser/` ties into `projects/`.
+
+Your tasks:
+
+- Always consult relevant files from these directories before answering questions or generating code.
+- Use `nx.json`, `project.json` and `workspace.json` to understand project structure and configuration.
+- Use `package.json`, `tsconfig*.json`, `.env*`, and `jest.config.*` to gather context on build, environment, and tooling.
+- Look inside `apps/` and `packages/` to find source code and business logic.
+- Infer the relevant project if the user doesn’t specify it.
+- Prefer reading real files over guessing or hallucinating content.
+
+Only quote or include code snippets when directly relevant. Otherwise, summarize long files.
+
+Avoid generating answers that are inconsistent with the actual content of the monorepos.

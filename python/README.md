@@ -7,6 +7,8 @@ A collection of useful tools written in python.
 - **Vector Generators**
   - _vector_from_files.py_ - Generates a txt file with all the user workspace and send to a vector store.
     - `python3 -m python.generators.vector_from_files --root . --store qdrant --collection workspace_embedding`
+      - `--store=pgvector` - `PGVECTOR_CONNECTION_STRING=${PGVECTOR_CONNECTION_STRING:-postgresql+psycopg2://postgres:postgres@pgvector:5432/vector_db}`
+      - `--store=qdrant` - `QDRANT_URL=${QDRANT_URL:-<http://qdrant:6333>}`
     - Check if the collection was created:
       - `curl http://localhost:6333/collections/workspace_embedding/points/scroll -X POST -H "Content-Type: application/json" -d '{"limit": 1}';`
   - _vector_from_url.py_ - Generates vector data based on html extracted from internet.

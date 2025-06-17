@@ -34,7 +34,7 @@ services:
       - FUNCTION_EXTERNALS=["request","fetch"]
       - FUNCTION_ENABLE_INCOGNITO_MODE=true
       - DEFAULT_STEALTH=true
-      - OPTIONAL_LAUNCH_ARGS=["--proxy-server=proxy:8080","--proxy-auth=user:pass"]
+      - OPTIONAL_LAUNCH_ARGS=["--proxy-server=sws-proxy:8080","--proxy-auth=dXNlcjpwYXNz"]
       - DEFAULT_LAUNCH_ARGS=["--autoplay-policy=user-gesture-required","--blink-settings=imagesEnabled=true","--disable-background-logging","--disable-background-networking","--disable-background-timer-throttling","--disable-backgrounding-occluded-windows","--disable-blink-features=AutomationControlled","--disable-breakpad","--disable-client-side-phishing-detection","--disable-component-update","--disable-dev-shm-usage","--disable-domain-reliability","--disable-features=IsolateOrigins,SitePerProcess","--disable-hang-monitor","--disable-infobars","--disable-ipc-flooding-protection","--disable-offer-store-unmasked-wallet-cards","--disable-print-preview","--disable-prompt-on-repost","--disable-setuid-sandbox","--disable-speech-api","--disk-cache-size=33554432","--enable-features=Vulkan","--headless=new","--memory-pressure-off","--no-default-browser-check","--no-experiments","--no-first-run","--no-pings","--no-zygote","--password-store=basic","--use-angle=vulkan","--use-gl=egl","--ignore-gpu-blocklist"]
     networks:
       - internal

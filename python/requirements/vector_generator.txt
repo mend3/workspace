@@ -14,3 +14,4 @@ python-json-logger
 requests
 pinecone
 optimum[onnxruntime-gpu]
+PyMuPDF

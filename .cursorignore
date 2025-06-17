@@ -12,12 +12,10 @@ node_modules
 **/dump
 dist
 build
-.outputs
-extalia/java/.outputs
-extalia/java/target
-extalia/java/**/bin
-!extalia/docs/*.html
-!extalia/docs/*.md
+**/.outputs
+deployment/extalia/java/.artifacts
+deployment/extalia/java/target
+deployment/extalia/java/**/bin
 pnpm-lock.yaml
 package-lock.json
 yarn.lock
@@ -31,3 +29,8 @@ yarn.lock
 **/__pycache__/
 **/.cache/
 .cache/
+**/node_modules
+**/dist
+**/.next
+**/.nx
+**/coverage

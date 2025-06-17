@@ -26,21 +26,21 @@ AI_FILES = $(COMMON_FILES) \
   -f ./vendors/local-ai-packaged/docker-compose.yml
 
 HOMELAB_FILES = $(COMMON_FILES) \
+  $(AI_FILES) \
   -f ./shared/homelab.compose.yml
 
 ALL_FILES = $(COMMON_FILES) \
-  $(EXTALIA_FILES) \
   $(SWS_FILES) \
   $(AI_FILES) \
   $(HOMELAB_FILES)
 
 # Generic compose commands
 define compose_up
-	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --remove-orphans --renew-anon-volumes -V -d traefik ollama-gpu $(2)
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --remove-orphans --renew-anon-volumes -V traefik $(2)
 endef
 
 define compose_down
-	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) down --remove-orphans
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) down
 endef
 
 define compose_stop
@@ -74,7 +74,7 @@ extalia: ## Starts Extalia compound (http + java)
 
 .PHONY: extalia-dev
 extalia-dev: ## Starts Extalia service in development mode
-	$(call compose_up,$(EXTALIA_FILES),-d extalia-cdn dev-extalia-*)
+	$(call compose_up,$(EXTALIA_FILES),-d dev-extalia-*)
 
 .PHONY: sws
 sws: ## Starts SWS service
@@ -86,23 +86,19 @@ sws-dev: ## Starts SWS service in development mode
 
 .PHONY: mcp
 mcp: ## Starts MCP server
-	$(call compose_up,$(AI_FILES),ai-context mcp-*)
-
-.PHONY: ai
-ai: ## Starts AI compounds
-	$(call compose_up,$(AI_FILES),"*")
+	$(call compose_up,$(AI_FILES),ollama-gpu mcp-*)
 
 .PHONY: ai-context
 ai-context: ## Starts only the AI context services
-	$(call compose_up,$(AI_FILES),ai-context)
+	$(call compose_up,$(AI_FILES),ollama-gpu ai-context)
 
 .PHONY: homelab
 homelab: ## Starts all homelab services
-	$(call compose_up,$(ALL_FILES),$(TARGET) mcp-*)
+	$(call compose_up,$(ALL_FILES),ollama-gpu mcp-* $(TARGET))
 
 .PHONY: up
 up: ## Starts all defined services
-	$(call compose_up,$(ALL_FILES),$(TARGET))
+	$(call compose_up,$(ALL_FILES),ollama-gpu $(TARGET))
 
 .PHONY: down
 down: ## Stops and removes all services

@@ -49,3 +49,7 @@ deployment/extalia/docs
 .docker/**/data
 **/*.pickle
 **/*_ignore
+brain/
+**/*.hcl
+**/tfplan
+**/.terraform

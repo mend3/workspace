@@ -67,30 +67,41 @@ class ContextScanner:
                 elif entry.is_file(follow_symlinks=follow_symlinks) and entry.name.endswith(extensions):
                     if any(fnmatch.fnmatch(entry.name, pattern) for pattern in ignore_files):
                         continue
+
                     try:
-                        content = self.file_handler.read(entry.path)
+                        if entry.name.endswith(".pdf"):
+                            import fitz
+
+                            def extract_text_from_pdf(path: str):
+                                text = ""
+                                with fitz.open(path) as doc:
+                                    for page in doc:
+                                        text += page.get_text()
+                                return text
+                            content = extract_text_from_pdf(entry.path)
+                        elif entry.name.endswith(('.html', '.htm')):
+                            from bs4 import BeautifulSoup
+
+                            def extract_text_from_html(path):
+                                with open(path, 'r', encoding='utf-8') as f:
+                                    soup = BeautifulSoup(f, 'html.parser')
+                                    return clean_text(soup.get_text(separator=' ', strip=True))
+
+                            content = extract_text_from_html(entry.path)
+                        else:
+                            content = self.file_handler.read(entry.path)
                     except Exception as e:
                         logger.error(f"{e}")
+
+                    if not content:
+                        logger.debug(f"Skipping empty file {relative_path}")
                         continue
-
-                    if entry.name.endswith(('.html', '.htm')):
-                        from bs4 import BeautifulSoup
-
-                        def extract_content_from_file(path):
-                            with open(path, 'r', encoding='utf-8') as f:
-                                soup = BeautifulSoup(f, 'html.parser')
-                                return clean_text(soup.get_text(separator=' ', strip=True))
-
-                        content = extract_content_from_file(entry.path)
 
                     # context_parts.append(
                     #     f"=== File: {relative_path} ===\n"
                     #     f"{content}\n"
                     #     f"{'-'*40}\n"
                     # )
-                    if not content:
-                        logger.debug(f"Skipping empty file {relative_path}")
-                        continue
 
                     chunks = self.text_splitter.split_text(content)
                     for idx, chunk in enumerate(chunks):
@@ -123,7 +134,8 @@ class ContextScanner:
 def start(args, ignore_dir_patterns: List[str], ignore_file_patterns: List[str]):
     file_handler = UTF8FileHandler()
 
-    text_splitter = RecursiveCharacterTextSplitter(separators=["\n\n", "\n"], chunk_size=500, chunk_overlap=100)
+    text_splitter = RecursiveCharacterTextSplitter(
+        separators=["\n\n", "\n"], chunk_size=1000, chunk_overlap=100)
     directory_scanner = OsScandirDirectoryScanner()
     generator = ContextScanner(
         file_handler, directory_scanner, text_splitter)

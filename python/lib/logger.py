@@ -1,17 +1,17 @@
 import logging
-import logging.handlers
-from pythonjsonlogger import jsonlogger
+import sys
 
 logger = logging.getLogger("ai-context")
 logger.setLevel(logging.INFO)
+formatter = logging.Formatter(
+    "[%(asctime)s] %(levelname)s - %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
 
-tcp_handler = logging.handlers.SocketHandler(
-    'logstash', 5000)  # Hostname and port of Logstash
+# Console handler (stdout)
+ch = logging.StreamHandler(sys.stdout)
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
-# Use JSON formatting
-formatter = jsonlogger.JsonFormatter(
-    '%(asctime) %(levelname) %(name) %(message)')
-tcp_handler.setFormatter(formatter)
-
-logger.addHandler(tcp_handler)
+# Avoid duplicate logs
 logger.propagate = False
