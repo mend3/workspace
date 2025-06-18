@@ -114,7 +114,7 @@ build: ## Build all Docker images
 
 .PHONY: minikube
 minikube:  ## Start minikube cluster and the whole namespace (k8s)
-	./cli/k8s/minikube.sh
+	./k8s/cli/minikube.sh
 
 .PHONY: minikube-down
 minikube-down:  ## Drops minikube cluster

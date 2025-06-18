@@ -43,15 +43,46 @@ This is the current tree directory:
 │   ├── git_bump_submodules.sh
 │   ├── git_find_repo.sh
 │   ├── git_find_submodules.sh
-│   ├── k8s
 │   ├── trackers
+│   │   ├── aws.sh
+│   │   ├── openai.sh
+│   │   └── terraform.sh
 │   ├── tree.sh
 │   └── welcome.sh
+├── common-docker.yaml
 ├── deployment
 │   ├── extalia
 │   └── sws
 ├── docker-compose.yml
 ├── global.d.ts
+├── k8s
+│   ├── cli
+│   │   ├── build.sh
+│   │   ├── copilot.sh
+│   │   ├── deploy.sh
+│   │   ├── docker-build.sh
+│   │   ├── helm.sh
+│   │   ├── k6.sh
+│   │   ├── minikube.sh
+│   │   └── secrets.sh
+│   ├── clusterRole.yaml
+│   ├── configmap-postgresql.yaml
+│   ├── daemonset-promtail.yaml
+│   ├── ingress.yaml
+│   ├── statefulset-mongodb.yaml
+│   ├── statefulset-postgresql.yaml
+│   ├── statefulset-redis.yaml
+│   └── tests
+│       └── k6-deployment.yaml
+├── lib
+│   ├── package.json
+│   ├── pnpm-lock.yaml
+│   ├── pnpm-workspace.yaml
+│   └── src
+│       ├── barrel_generator.js
+│       ├── discover.ts
+│       ├── ld-render.ts
+│       └── walmart.ts
 ├── projects
 │   ├── imobifinder
 │   └── news-lens
@@ -76,7 +107,6 @@ This is the current tree directory:
 │   ├── react-trainee
 │   ├── typestack
 │   └── vendors.compose.yml
-├── tree.txt
 └── vendors
     ├── ai-agents-masterclass
     ├── ai-agents-ottomator
