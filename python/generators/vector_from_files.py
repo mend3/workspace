@@ -12,17 +12,51 @@ from ..lib.logger import logger
 from ..lib.utils import sha256_hash, clean_text
 from ..vector_store.store_handler import VectorStoreHandler
 
-extensions = tuple([
-    ".ts", ".tsx", ".js", ".jsx", ".java", ".xml", ".sql", ".py", ".md", ".txt", ".json",
-    ".yaml", ".yml", ".toml", ".css", ".scss", ".sass", ".html", ".sh", ".xsd", ".cfg", ".conf",
-    ".prisma", ".schema", ".mjs", ".prettierrc", ".eslintrc", ".eslintignore", ".mdc", ".tpl", ".tf"
-])
+extensions = tuple(
+    [
+        ".ts",
+        ".tsx",
+        ".js",
+        ".jsx",
+        ".java",
+        ".xml",
+        ".sql",
+        ".py",
+        ".md",
+        ".txt",
+        ".json",
+        ".yaml",
+        ".yml",
+        ".toml",
+        ".css",
+        ".scss",
+        ".sass",
+        ".html",
+        ".sh",
+        ".xsd",
+        ".cfg",
+        ".conf",
+        ".prisma",
+        ".schema",
+        ".mjs",
+        ".prettierrc",
+        ".eslintrc",
+        ".eslintignore",
+        ".mdc",
+        ".tpl",
+        ".tf",
+    ]
+)
 today = date.today()
 
 
 class ContextScanner:
-    def __init__(self, file_handler: FileHandler, directory_scanner: DirectoryScanner,
-                 text_splitter: RecursiveCharacterTextSplitter):
+    def __init__(
+        self,
+        file_handler: FileHandler,
+        directory_scanner: DirectoryScanner,
+        text_splitter: RecursiveCharacterTextSplitter,
+    ):
         self.file_handler = file_handler
         self.directory_scanner = directory_scanner
         self.text_splitter = text_splitter
@@ -31,12 +65,12 @@ class ContextScanner:
         self.documents: List[tuple[str, Document]] = []
 
     def scan(
-            self,
-            root_dir: str,
-            base: str = "",
-            ignore_dirs: List[str] = None,
-            ignore_files: List[str] = None,
-            follow_symlinks: bool = False,
+        self,
+        root_dir: str,
+        base: str = "",
+        ignore_dirs: List[str] = None,
+        ignore_files: List[str] = None,
+        follow_symlinks: bool = False,
     ):
         """
         Recursively traverse the project directory starting at root_dir,
@@ -51,21 +85,31 @@ class ContextScanner:
         try:
             entries = self.directory_scanner.scan(root_dir)
             for entry in sorted(entries, key=lambda el: el.name):
-                if entry.name.startswith('.'):
+                if entry.name.startswith("."):
                     continue
-                relative_path = os.path.join(
-                    base, entry.name) if base else entry.name
+                relative_path = os.path.join(base, entry.name) if base else entry.name
 
                 # Directory handling
                 if entry.is_dir(follow_symlinks=follow_symlinks):
-                    if any(fnmatch.fnmatch(entry.name, pattern) for pattern in ignore_dirs):
+                    if any(
+                        fnmatch.fnmatch(entry.name, pattern) for pattern in ignore_dirs
+                    ):
                         continue
                     # context_parts.append(f"=== Directory: {relative_path} ===\n")
-                    self.scan(entry.path, relative_path,
-                              ignore_dirs, ignore_files, follow_symlinks)
+                    self.scan(
+                        entry.path,
+                        relative_path,
+                        ignore_dirs,
+                        ignore_files,
+                        follow_symlinks,
+                    )
                 # File handling
-                elif entry.is_file(follow_symlinks=follow_symlinks) and entry.name.endswith(extensions):
-                    if any(fnmatch.fnmatch(entry.name, pattern) for pattern in ignore_files):
+                elif entry.is_file(
+                    follow_symlinks=follow_symlinks
+                ) and entry.name.endswith(extensions):
+                    if any(
+                        fnmatch.fnmatch(entry.name, pattern) for pattern in ignore_files
+                    ):
                         continue
 
                     try:
@@ -78,14 +122,17 @@ class ContextScanner:
                                     for page in doc:
                                         text += page.get_text()
                                 return text
+
                             content = extract_text_from_pdf(entry.path)
-                        elif entry.name.endswith(('.html', '.htm')):
+                        elif entry.name.endswith((".html", ".htm")):
                             from bs4 import BeautifulSoup
 
                             def extract_text_from_html(path):
-                                with open(path, 'r', encoding='utf-8') as f:
-                                    soup = BeautifulSoup(f, 'html.parser')
-                                    return clean_text(soup.get_text(separator=' ', strip=True))
+                                with open(path, "r", encoding="utf-8") as f:
+                                    soup = BeautifulSoup(f, "html.parser")
+                                    return clean_text(
+                                        soup.get_text(separator=" ", strip=True)
+                                    )
 
                             content = extract_text_from_html(entry.path)
                         else:
@@ -109,19 +156,22 @@ class ContextScanner:
                         chunk_hash = sha256_hash(chunk)
                         doc_id = sha256_hash(f"{dir_hash}-{chunk_hash}")
                         self.documents.append(
-                            (chunk_hash, Document(
-                                page_content=chunk,
-                                metadata={
-                                    "source": entry.path,
-                                    "file_name": entry.name,
-                                    "dir_hash": dir_hash,
-                                    "doc_id": doc_id,
-                                    "updated_at": today.isoformat(),
-                                    "chunk_hash": chunk_hash,
-                                    "chunk_index": str(idx),
-                                    "chunk_length": len(chunk)
-                                }
-                            ))
+                            (
+                                chunk_hash,
+                                Document(
+                                    page_content=chunk,
+                                    metadata={
+                                        "source": entry.path,
+                                        "file_name": entry.name,
+                                        "dir_hash": dir_hash,
+                                        "doc_id": doc_id,
+                                        "updated_at": today.isoformat(),
+                                        "chunk_hash": chunk_hash,
+                                        "chunk_index": str(idx),
+                                        "chunk_length": len(chunk),
+                                    },
+                                ),
+                            )
                         )
 
                     self.file_count += 1
@@ -135,10 +185,10 @@ def start(args, ignore_dir_patterns: List[str], ignore_file_patterns: List[str])
     file_handler = UTF8FileHandler()
 
     text_splitter = RecursiveCharacterTextSplitter(
-        separators=["\n\n", "\n"], chunk_size=1000, chunk_overlap=100)
+        separators=["\n\n", "\n"], chunk_size=1000, chunk_overlap=100
+    )
     directory_scanner = OsScandirDirectoryScanner()
-    generator = ContextScanner(
-        file_handler, directory_scanner, text_splitter)
+    generator = ContextScanner(file_handler, directory_scanner, text_splitter)
     generator.scan(
         args.root,
         ignore_dirs=ignore_dir_patterns,
@@ -146,15 +196,15 @@ def start(args, ignore_dir_patterns: List[str], ignore_file_patterns: List[str])
         follow_symlinks=True,
     )
     all_documents = generator.documents
-    logger.info(f"({len(all_documents)}) documents mapped",
-                extra={"context": "generator"})
+    logger.info(
+        f"({len(all_documents)}) documents mapped", extra={"context": "generator"}
+    )
 
     if args.store and len(all_documents) > 0:
-        vector_store_handler = VectorStoreHandler(
-            args.collection, store=args.store
-        )
+        vector_store_handler = VectorStoreHandler(args.collection, store=args.store)
         vector_store_handler.save(
-            context=all_documents, incremental=args.mode == "incremental")
+            context=all_documents, incremental=args.mode == "incremental"
+        )
 
 
 def main():
@@ -190,21 +240,23 @@ def main():
         type=str,
         default="incremental",
         choices=["full", "incremental"],
-        help="Ingestion mode: 'full' replaces the entire collection, 'incremental' only adds new/changed chunks."
+        help="Ingestion mode: 'full' replaces the entire collection, 'incremental' only adds new/changed chunks.",
     )
     parser.add_argument(
         "--store",
         type=str,
         default=None,
         choices=["pgvector", "qdrant", "pinecone"],
-        help="Vector store to use (pgvector, qdrant, pinecone)"
+        help="Vector store to use (pgvector, qdrant, pinecone)",
     )
 
     args = parser.parse_args()
-    ignore_dir_patterns = [pattern.strip()
-                           for pattern in args.ignore_dirs.split(",") if pattern.strip()]
-    ignore_file_patterns = [pattern.strip()
-                            for pattern in args.ignore_files.split(",") if pattern.strip()]
+    ignore_dir_patterns = [
+        pattern.strip() for pattern in args.ignore_dirs.split(",") if pattern.strip()
+    ]
+    ignore_file_patterns = [
+        pattern.strip() for pattern in args.ignore_files.split(",") if pattern.strip()
+    ]
 
     if not args.collection:
         logger.error("Collection name is required")

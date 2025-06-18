@@ -3,6 +3,7 @@
     "esbenp.prettier-vscode",
     "ms-vscode.makefile-tools",
     "ms-python.autopep8",
-    "aaravb.chrome-extension-developer-tools"
+    "aaravb.chrome-extension-developer-tools",
+    "ms-python.black-formatter"
   ]
 }

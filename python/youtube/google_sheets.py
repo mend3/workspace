@@ -6,15 +6,17 @@ import os.path
 import pickle
 
 # Define scopes needed for the APIs
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets',
-          'https://www.googleapis.com/auth/youtube.readonly']
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/youtube.readonly",
+]
 
 
 def get_credentials():
     """Get and save user credentials."""
     creds = None
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
+    if os.path.exists("token.pickle"):
+        with open("token.pickle", "rb") as token:
             creds = pickle.load(token)
 
     if not creds or not creds.valid:
@@ -22,9 +24,10 @@ def get_credentials():
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                'google-installed-oauth.json', SCOPES)
+                "google-installed-oauth.json", SCOPES
+            )
             creds = flow.run_local_server(port=5679)
-        with open('token.pickle', 'wb') as token:
+        with open("token.pickle", "wb") as token:
             pickle.dump(creds, token)
 
     return creds
@@ -33,48 +36,39 @@ def get_credentials():
 def google_sheets_create(name: str, parent_folder_id=None, sheet_name=None):
     """Creates a new Google Sheet."""
     creds = get_credentials()
-    service = build('sheets', 'v4', credentials=creds)
+    service = build("sheets", "v4", credentials=creds)
 
     # Implement the API call to create a new spreadsheet
     spreadsheet = {
-        'properties': {
-            'title': name
-        },
-        'sheets': [
-            {
-                'properties': {
-                    'title': sheet_name or 'Sheet1'
-                }
-            }
-        ]
+        "properties": {"title": name},
+        "sheets": [{"properties": {"title": sheet_name or "Sheet1"}}],
     }
 
     spreadsheet = service.spreadsheets().create(body=spreadsheet).execute()
 
     # Return the spreadsheet ID in the required format
     from python.youtube.type_definitions import GoogleSheetID
-    return GoogleSheetID(id=spreadsheet['spreadsheetId'], name=name)
+
+    return GoogleSheetID(id=spreadsheet["spreadsheetId"], name=name)
 
 
 def google_sheets_add_empty_columns(google_sheet_id, column_names, sheet_name=None):
     """Add empty named columns to a sheet."""
     creds = get_credentials()
-    service = build('sheets', 'v4', credentials=creds)
+    service = build("sheets", "v4", credentials=creds)
 
     # Implement API call to add header row with column names
     # This is a simplified implementation
     values = [column_names]
-    body = {
-        'values': values
-    }
+    body = {"values": values}
 
     range_name = f"{sheet_name or 'Sheet1'}!A1:{chr(65 + len(column_names) - 1)}1"
 
     service.spreadsheets().values().update(
         spreadsheetId=google_sheet_id.id,
         range=range_name,
-        valueInputOption='RAW',
-        body=body
+        valueInputOption="RAW",
+        body=body,
     ).execute()
 
 
@@ -88,13 +82,15 @@ def google_sheets_append_rows(google_sheet_id, rows, sheet_name=None):
         sheet_name: Optional sheet name to append to. If not provided, uses the first sheet.
     """
     creds = get_credentials()
-    service = build('sheets', 'v4', credentials=creds)
+    service = build("sheets", "v4", credentials=creds)
 
     # Get the sheet metadata to confirm sheet exists and get headers
-    sheet_metadata = service.spreadsheets().get(
-        spreadsheetId=google_sheet_id.id).execute()
-    available_sheets = [sheet['properties']['title']
-                        for sheet in sheet_metadata['sheets']]
+    sheet_metadata = (
+        service.spreadsheets().get(spreadsheetId=google_sheet_id.id).execute()
+    )
+    available_sheets = [
+        sheet["properties"]["title"] for sheet in sheet_metadata["sheets"]
+    ]
 
     # Use the first sheet if no sheet name provided
     if not sheet_name:
@@ -103,12 +99,14 @@ def google_sheets_append_rows(google_sheet_id, rows, sheet_name=None):
         raise ValueError(f"Sheet '{sheet_name}' not found in spreadsheet")
 
     # Get existing header row
-    result = service.spreadsheets().values().get(
-        spreadsheetId=google_sheet_id.id,
-        range=f"{sheet_name}!1:1"
-    ).execute()
+    result = (
+        service.spreadsheets()
+        .values()
+        .get(spreadsheetId=google_sheet_id.id, range=f"{sheet_name}!1:1")
+        .execute()
+    )
 
-    headers = result.get('values', [[]])[0]
+    headers = result.get("values", [[]])[0]
     if not headers:
         raise ValueError(f"No headers found in sheet '{sheet_name}'")
 
@@ -122,17 +120,20 @@ def google_sheets_append_rows(google_sheet_id, rows, sheet_name=None):
         values_to_append.append(row_values)
 
     # Append the rows
-    body = {
-        'values': values_to_append
-    }
+    body = {"values": values_to_append}
 
-    result = service.spreadsheets().values().append(
-        spreadsheetId=google_sheet_id.id,
-        range=f"{sheet_name}!A1",
-        valueInputOption='RAW',
-        insertDataOption='INSERT_ROWS',
-        body=body
-    ).execute()
+    result = (
+        service.spreadsheets()
+        .values()
+        .append(
+            spreadsheetId=google_sheet_id.id,
+            range=f"{sheet_name}!A1",
+            valueInputOption="RAW",
+            insertDataOption="INSERT_ROWS",
+            body=body,
+        )
+        .execute()
+    )
 
     return result
 
@@ -164,6 +165,7 @@ def google_sheets_row_processor(func):
     A decorator that turns a function into a GoogleSheetsRowProcessor.
     This is a local implementation to replace Lutra's built-in decorator.
     """
+
     class RowProcessor:
         def __init__(self, func):
             self.func = func
@@ -171,7 +173,9 @@ def google_sheets_row_processor(func):
         def __call__(self, row):
             return self.func(row)
 
-        def run_parallel(self, google_sheet_id, limit=None, start=None, sheet_name=None):
+        def run_parallel(
+            self, google_sheet_id, limit=None, start=None, sheet_name=None
+        ):
             """
             Process rows in a sheet.
 
@@ -182,16 +186,18 @@ def google_sheets_row_processor(func):
                 sheet_name: Name of the sheet to process
             """
             creds = get_credentials()
-            service = build('sheets', 'v4', credentials=creds)
+            service = build("sheets", "v4", credentials=creds)
 
             # Get the sheet data
-            sheet_name = sheet_name or 'Sheet1'
-            result = service.spreadsheets().values().get(
-                spreadsheetId=google_sheet_id.id,
-                range=f"{sheet_name}"
-            ).execute()
+            sheet_name = sheet_name or "Sheet1"
+            result = (
+                service.spreadsheets()
+                .values()
+                .get(spreadsheetId=google_sheet_id.id, range=f"{sheet_name}")
+                .execute()
+            )
 
-            values = result.get('values', [])
+            values = result.get("values", [])
             if not values:
                 print(f"No data found in sheet: {sheet_name}")
                 return
@@ -203,8 +209,7 @@ def google_sheets_row_processor(func):
             # Process each row
             # Convert to 0-indexed
             start_idx = max(1, start - 1 if start else 1)
-            end_idx = min(len(values), start_idx +
-                          limit if limit else len(values))
+            end_idx = min(len(values), start_idx + limit if limit else len(values))
 
             class RowWrapper:
                 def __init__(self, row_data, row_idx):
@@ -214,8 +219,7 @@ def google_sheets_row_processor(func):
 
                 def get_cell(self, column_name):
                     if column_name not in col_indices:
-                        raise ValueError(
-                            f"Column '{column_name}' not found in sheet")
+                        raise ValueError(f"Column '{column_name}' not found in sheet")
                     col_idx = col_indices[column_name]
                     if col_idx >= len(self.row_data):
                         return ""
@@ -223,8 +227,7 @@ def google_sheets_row_processor(func):
 
                 def set_cell(self, column_name, value):
                     if column_name not in col_indices:
-                        raise ValueError(
-                            f"Column '{column_name}' not found in sheet")
+                        raise ValueError(f"Column '{column_name}' not found in sheet")
                     self.updates[column_name] = value
 
             # Process rows sequentially (parallel processing would require additional libraries)
@@ -250,22 +253,20 @@ def google_sheets_row_processor(func):
                             row_data[col_idx] = new_value
 
                         # Add to batch update
-                        updated_rows.append({
-                            'range': f"{sheet_name}!A{i+1}:{chr(65+len(row_data)-1)}{i+1}",
-                            'values': [row_data]
-                        })
+                        updated_rows.append(
+                            {
+                                "range": f"{sheet_name}!A{i+1}:{chr(65+len(row_data)-1)}{i+1}",
+                                "values": [row_data],
+                            }
+                        )
                 except Exception as e:
                     print(f"Error processing row {i+1}: {str(e)}")
 
             # Perform batch update if there are any changes
             if updated_rows:
-                body = {
-                    'valueInputOption': 'RAW',
-                    'data': updated_rows
-                }
+                body = {"valueInputOption": "RAW", "data": updated_rows}
                 service.spreadsheets().values().batchUpdate(
-                    spreadsheetId=google_sheet_id.id,
-                    body=body
+                    spreadsheetId=google_sheet_id.id, body=body
                 ).execute()
                 print(f"Updated {len(updated_rows)} rows")
 
@@ -284,16 +285,18 @@ def google_sheets_read_spreadsheet(google_sheet_id):
     Returns:
         A GoogleSpreadsheet object with metadata and sheet data
     """
-    from python.youtube.type_definitions import GoogleSheetCell, GoogleSheetMetadata, GoogleSpreadsheet
+    from python.youtube.type_definitions import (
+        GoogleSheetCell,
+        GoogleSheetMetadata,
+        GoogleSpreadsheet,
+    )
 
     creds = get_credentials()
-    service = build('sheets', 'v4', credentials=creds)
+    service = build("sheets", "v4", credentials=creds)
 
     # Get spreadsheet metadata to get sheet names
-    spreadsheet = service.spreadsheets().get(
-        spreadsheetId=google_sheet_id.id).execute()
-    sheet_names = [sheet['properties']['title']
-                   for sheet in spreadsheet['sheets']]
+    spreadsheet = service.spreadsheets().get(spreadsheetId=google_sheet_id.id).execute()
+    sheet_names = [sheet["properties"]["title"] for sheet in spreadsheet["sheets"]]
 
     # Create metadata object
     metadata = GoogleSheetMetadata(sheet_names=sheet_names)
@@ -303,12 +306,14 @@ def google_sheets_read_spreadsheet(google_sheet_id):
 
     # For each sheet, get its data
     for sheet_name in sheet_names:
-        result = service.spreadsheets().values().get(
-            spreadsheetId=google_sheet_id.id,
-            range=sheet_name
-        ).execute()
+        result = (
+            service.spreadsheets()
+            .values()
+            .get(spreadsheetId=google_sheet_id.id, range=sheet_name)
+            .execute()
+        )
 
-        values = result.get('values', [])
+        values = result.get("values", [])
 
         # Convert to GoogleSheetCell objects
         cell_grid = []
@@ -324,6 +329,7 @@ def google_sheets_read_spreadsheet(google_sheet_id):
 
     # Create and return the GoogleSpreadsheet object
     return GoogleSpreadsheet(metadata=metadata, sheet_data=sheet_data)
+
 
 # You'll also need to implement the GoogleSheetCell class in your type_definitions.py:
 
@@ -380,17 +386,21 @@ class GoogleSpreadsheet:
 def youtube_search(query, num_pages=1, next_page_token=None):
     """Search for YouTube videos."""
     creds = get_credentials()
-    youtube = build('youtube', 'v3', credentials=creds)
+    youtube = build("youtube", "v3", credentials=creds)
 
     # Implement YouTube search API call
     # This is a simplified example
-    search_response = youtube.search().list(
-        q=query,
-        part='snippet',
-        maxResults=20,
-        type='video',
-        pageToken=next_page_token.token if next_page_token else None
-    ).execute()
+    search_response = (
+        youtube.search()
+        .list(
+            q=query,
+            part="snippet",
+            maxResults=20,
+            type="video",
+            pageToken=next_page_token.token if next_page_token else None,
+        )
+        .execute()
+    )
 
     # You'll need to implement a response structure matching what the original code expects
     # This is just a starting point

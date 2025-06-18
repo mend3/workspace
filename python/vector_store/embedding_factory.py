@@ -8,9 +8,7 @@ class FastEmbedLangchainWrapper(Embeddings):
 
     def __init__(self, model_name: str, cache_dir=None, **kwargs):
         self._embedder = SentenceTransformer(
-            model_name_or_path=model_name,
-            cache_folder=cache_dir,
-            **kwargs
+            model_name_or_path=model_name, cache_folder=cache_dir, **kwargs
         )
 
     def embed_documents(self, texts: List[str]):
@@ -36,13 +34,14 @@ class EmbeddingFactory:
             return FastEmbedLangchainWrapper(
                 model_name=model_name,
                 cache_dir=cache_dir,
-                model_kwargs={"device": "cuda" if use_gpu else "cpu"}
+                model_kwargs={"device": "cuda" if use_gpu else "cpu"},
             )
         elif provider == "huggingface":
             from langchain_huggingface import HuggingFaceEmbeddings
+
             return HuggingFaceEmbeddings(
                 model_name=model_name,
                 cache_folder=cache_dir,
-                model_kwargs={"device": "cuda" if use_gpu else "cpu"}
+                model_kwargs={"device": "cuda" if use_gpu else "cpu"},
             )
         raise ValueError(f"Unsupported embedding provider: {provider}")

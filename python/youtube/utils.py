@@ -12,7 +12,7 @@ def setup_columns(sheet_id: GoogleSheetID):
         "View Count",
         "Channel Name",
         "Channel Link",
-        "Subscriber Count"
+        "Subscriber Count",
     ]
     google_sheets_add_empty_columns(sheet_id, column_names)
 
@@ -42,8 +42,15 @@ def deduplicate_results(sheet_id: GoogleSheetID):
 
             # If this is a duplicate, mark it for deletion by clearing all cells
             if video_link in seen_links:
-                for column in ["Video Title", "Video Link", "Description", "View Count",
-                               "Channel Name", "Channel Link", "Subscriber Count"]:
+                for column in [
+                    "Video Title",
+                    "Video Link",
+                    "Description",
+                    "View Count",
+                    "Channel Name",
+                    "Channel Link",
+                    "Subscriber Count",
+                ]:
                     row.set_cell(column, "")
             else:
                 seen_links.add(video_link)
@@ -61,7 +68,11 @@ def deduplicate_results(sheet_id: GoogleSheetID):
     # Skip header row, count non-empty rows
     total_non_empty_rows = 0
     for row_idx in range(1, len(rows)):
-        if row_idx < len(rows) and len(rows[row_idx]) > 1 and rows[row_idx][1].as_str().strip():
+        if (
+            row_idx < len(rows)
+            and len(rows[row_idx]) > 1
+            and rows[row_idx][1].as_str().strip()
+        ):
             total_non_empty_rows += 1
 
     # Calculate duplicates as difference between total and unique

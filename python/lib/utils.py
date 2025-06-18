@@ -12,8 +12,8 @@ def sha256_hash(text: str):
 
 
 def clean_text(text):
-    text = re.sub(r'\s+', ' ', text)
-    text = re.sub(r'[^\w\s.,!?-]', '', text)
+    text = re.sub(r"\s+", " ", text)
+    text = re.sub(r"[^\w\s.,!?-]", "", text)
     return text.strip()
 
 
@@ -21,22 +21,31 @@ def get_git_root(path):
     """Return the git root directory for the given path, or None if not in a git repo."""
     dir_path = path if os.path.isdir(path) else os.path.dirname(path)
     try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "--show-toplevel"],
-            cwd=dir_path,
-            stderr=subprocess.DEVNULL
-        ).decode("utf-8").strip()
+        return (
+            subprocess.check_output(
+                ["git", "rev-parse", "--show-toplevel"],
+                cwd=dir_path,
+                stderr=subprocess.DEVNULL,
+            )
+            .decode("utf-8")
+            .strip()
+        )
     except Exception:
         return None
 
 
 def get_git_info(repo_path):
     """Return a dict with current git commit, branch, tag, and dirty state for the given repo path."""
+
     def run_git_cmd(args):
         try:
-            return subprocess.check_output(
-                ["git"] + args, cwd=repo_path, stderr=subprocess.DEVNULL
-            ).decode("utf-8").strip()
+            return (
+                subprocess.check_output(
+                    ["git"] + args, cwd=repo_path, stderr=subprocess.DEVNULL
+                )
+                .decode("utf-8")
+                .strip()
+            )
         except Exception:
             return None
 

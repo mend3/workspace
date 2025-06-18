@@ -1,4 +1,4 @@
-import { Page } from 'puppeteer'
+import { Frame, Page } from 'puppeteer'
 
 let $__global__$: Element | null = null
 // Let's load up a cool dashboard and screenshot it!
@@ -181,10 +181,9 @@ export default async ({ page }: { page: Page }) => {
 
   let skipped = false
 
-  const interactWithFrame = async (page, frame) => {
-    if (frame.isDetached()) throw new Error('frame.isDetached')
-    const _getElement = () => frame.waitForSelector('p', { visible: true, timeout: 3000 }).catch(() => null)
-    const element = await _getElement()
+  const interactWithFrame = async (page: Page, frame: Frame) => {
+    if (frame.detached) throw new Error('frame.isDetached')
+    const element = await frame.waitForSelector('p', { visible: true, timeout: 3000 }).catch(() => null)
     if (!element) throw new Error('holder target not found')
 
     const content = await element.evaluate(el => el.textContent)
@@ -192,6 +191,10 @@ export default async ({ page }: { page: Page }) => {
     if (!foundHolder) throw new Error('invalid holder')
 
     const box = await element.boundingBox()
+    if (!box) {
+      await checkTryAgain()
+      return
+    }
 
     await page.mouse.move(box.x, box.y)
     await element.click()
@@ -209,8 +212,7 @@ export default async ({ page }: { page: Page }) => {
     await new Promise(res => setTimeout(res, Math.random() * 1000))
     await page.mouse.click(box.x, box.y, { button: 'left', delay: duration })
 
-    await page.waitForTimeout(duration)
-    await page.mouse.up()
+    await Promise.all([page.waitForNavigation({ timeout: duration }), page.mouse.up()])
 
     skipped = await checkTryAgain()
   }
@@ -220,24 +222,25 @@ export default async ({ page }: { page: Page }) => {
   while (!skipped) {
     if (_mainFrame && !_mainFrame.detached) {
       await interactWithFrame(page, _mainFrame)
-      console.log(skipped)
+      console.log({ skipped, _mainFrame })
 
-      if (skipped) return
+      if (skipped) break
 
       // await page.reload({ waitUntil: 'networkidle0' })
-    } else
+    } else {
       for (const frame of page.frames()) {
         try {
           await interactWithFrame(page, frame)
         } catch (err) {
-          console.error(err.message)
+          console.error(err)
           continue
         }
-        console.log(skipped)
+        console.log({ skipped, frame })
 
         if (skipped) break
-
-        // await page.reload({ waitUntil: 'networkidle0' })
       }
+    }
   }
+  const cookies = await page.browserContext().cookies()
+  console.log(cookies)
 }

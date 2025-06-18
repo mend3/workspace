@@ -46,7 +46,6 @@
   "prettier.withNodeModules": true,
   "prettier.arrowParens": "avoid",
   "prettier.jsxSingleQuote": true,
-  "prettier.prettierPath": "./node_modules/prettier",
   "prettier.printWidth": 140,
   "prettier.requireConfig": true,
   "npm.runSilent": true,
@@ -57,8 +56,6 @@
   "editor.matchBrackets": "always",
   "editor.bracketPairColorization.enabled": true,
   "editor.guides.bracketPairs": "active",
-  "editor.formatOnSave": false,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.fontFamily": "'JetBrains Mono','VictorMono NF', 'Fira Code', Consolas, 'Courier New', monospace",
   "editor.fontSize": 12,
   "editor.codeLens": true,
@@ -88,7 +85,6 @@
   "typescript.suggestionActions.enabled": true,
   "typescript.suggest.completeJSDocs": true,
   "typescript.suggest.paths": true,
-  "typescript.tsdk": "./node_modules/typescript/lib",
   "debug.allowBreakpointsEverywhere": true,
   "debug.showInStatusBar": "always",
   "debug.javascript.autoAttachFilter": "onlyWithFlag",
@@ -98,29 +94,44 @@
   "js/ts.implicitProjectConfig.strictNullChecks": true,
   "css.validate": false,
   "scss.validate": false,
-  "rest-client.environmentVariables": {
-    "$shared": { "version": "v1", "protocol": "http" },
-    "production": { "host": "devshell.tech", "protocol": "https" },
-    "sandbox": { "host": "localhost:3000" }
-  },
-  "rest-client.defaultHeaders": {
-    "User-Agent": "vscode-restclient",
-    "Origin": "https://devshell.tech/",
-    "content-type": "application/json"
-  },
-  "rest-client.requestNameAsResponseTabTitle": true,
-  "rest-client.followredirect": true,
-  "rest-client.logLevel": "verbose",
-  "rest-client.previewResponsePanelTakeFocus": true,
-  "rest-client.showResponseInDifferentTab": true,
   "css.customData": [".vscode/css_custom_data.json"],
   "files.associations": {
-    "*.env": "env",
-    "*.env.*": "env",
-    "*.env.development": "env",
-    "*.env.production": "env"
+    "*.env": "shellscript",
+    "*.env.development": "shellscript",
+    "*.env.production": "shellscript"
   },
   "exportall.config.folderListener": [],
+  "prettier.tabWidth": 2,
+  "prettier.useTabs": false,
+  "prettier.semi": true,
+  "prettier.trailingComma": "es5",
+  "prettier.bracketSpacing": true,
+  "prettier.bracketSameLine": false,
+  "prettier.proseWrap": "preserve",
+  "prettier.endOfLine": "lf",
+  "git.ignoreLimitWarning": true,
+  "mcp": {
+    "inputs": [],
+    "servers": {}
+  },
+  "chat.mcp.discovery.enabled": {
+    "claude-desktop": false,
+    "windsurf": false,
+    "cursor-global": true,
+    "cursor-workspace": false
+  },
+  // "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnType": false, // required
+  "editor.formatOnPaste": true, // optional
+  "editor.formatOnSave": true, // optional
+  "editor.formatOnSaveMode": "file", // required to format on save
+  "files.autoSave": "onFocusChange", // optional but recommended
+  "vs-code-prettier-eslint.prettierLast": false, // set as "true" to run 'prettier' last not first
+  "php.validate.executablePath": "php",
+  "[dockercompose]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
   "[nginx]": {
     "editor.defaultFormatter": "ahmadalli.vscode-nginx-conf"
   },
@@ -128,7 +139,7 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[python]": {
-    "editor.defaultFormatter": "ms-python.autopep8",
+    "editor.defaultFormatter": "ms-python.black-formatter",
     "python.formatting.provider": "autopep8",
     "editor.formatOnSave": true
   },
@@ -144,38 +155,10 @@
   "[terraform]": {
     "editor.defaultFormatter": "hashicorp.terraform"
   },
-  "prettier.tabWidth": 2,
-  "prettier.useTabs": false,
-  "prettier.semi": true,
-  "prettier.trailingComma": "es5",
-  "prettier.bracketSpacing": true,
-  "prettier.bracketSameLine": false,
-  "prettier.proseWrap": "preserve",
-  "prettier.endOfLine": "lf",
-  "git.ignoreLimitWarning": true,
-  "mcp": {
-    "inputs": [],
-    "servers": {
-      "mcp-puppeteer": {
-        "type": "sse",
-        "url": "http://localhost:8000/sse"
-      }
-    }
-  },
-  "chat.mcp.discovery.enabled": {
-    "claude-desktop": false,
-    "windsurf": false,
-    "cursor-global": true,
-    "cursor-workspace": false
-  },
   "[yaml]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[php]": {
     "editor.defaultFormatter": "DEVSENSE.phptools-vscode"
-  },
-  "php.validate.executablePath": "php",
-  "[dockercompose]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
   }
 }

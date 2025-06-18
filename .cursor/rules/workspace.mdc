@@ -26,6 +26,7 @@ This is the current tree directory:
 ├── LICENSE.md
 ├── Makefile
 ├── README.md
+├── brain
 ├── browser
 │   ├── README.md
 │   ├── docker-compose.yml
@@ -51,28 +52,6 @@ This is the current tree directory:
 │   └── sws
 ├── docker-compose.yml
 ├── global.d.ts
-├── helm
-│   ├── Chart.yaml
-│   ├── charts
-│   ├── templates
-│   ├── values.yaml
-│   └── vendors
-├── jsconfig.json
-├── k8s
-│   ├── clusterRole.yaml
-│   ├── configmap-postgresql.yaml
-│   ├── daemonset-promtail.yaml
-│   ├── ingress.yaml
-│   ├── namespace-extalia.yaml
-│   ├── statefulset-mongodb.yaml
-│   ├── statefulset-postgresql.yaml
-│   ├── statefulset-redis.yaml
-│   └── tests
-├── lib
-│   ├── package.json
-│   ├── pnpm-lock.yaml
-│   ├── pnpm-workspace.yaml
-│   └── src
 ├── projects
 │   ├── imobifinder
 │   └── news-lens
@@ -84,7 +63,6 @@ This is the current tree directory:
 │   ├── generators
 │   ├── lib
 │   ├── requirements
-│   ├── scraping_ignore
 │   ├── vector_store
 │   └── youtube
 ├── shared
@@ -108,7 +86,7 @@ This is the current tree directory:
     ├── mcp-servers
     ├── mcp-supabase
     ├── n8n-agents
-    ├── n8n-brain
+    ├── sentence-transformers
     └── supabase
 
 ```
@@ -118,7 +96,12 @@ This workspace includes key development zones the agent must understand:
 Inside `cli/` directory there are several utilities scripts, ready to be used on shell terminal.
 Read the file before running to see if any changes would be made to the user's files. If so, asks for permission before running the script.
 
-## 1. Nx Monorepos (deployment/)
+## 1. Brain (brain/)
+- Useful for referencing vector stores, RAG tools, LLM APIs, LangChain integrations, Supabase modules, etc.
+- Documentations about technologies used in this workspace.
+- Ebooks about technology, devops, etc.
+
+## 2. Nx Monorepos (deployment/)
 - `deployment/extalia/` and `deployment/sws/` follow Nx monorepo structure.
 - Read `nx.json`, `project.json`, `workspace.json`, `angular.json`, and any relevant `apps/`, `libs/`, `packages/`, and `tools/` folders.
 - Infer context and dependencies using `tsconfig.*`, `package.json`, `.env*`, and test configs.
@@ -126,7 +109,7 @@ Read the file before running to see if any changes would be made to the user's f
   - `app/` - Hub of tools to deal with L2J Servers
   - `docs/` - Docs, tutorials and guides collected from L2J forums and community.
   - `java/` - Extalia Server source code.
-  - `nProtect/` - GameGuard for the server.
+  - `nProtect/` - GameGuard for the server, written in PHP.
   - `server/` - Extalia Server (compiled, production). Interlude Chronicle.
   - `web/` - Extalia App - Online game experience. Contains README.
 - `deployment/sws/` - Sources to work with the SWS project. Contains README.
@@ -135,25 +118,31 @@ Each monorepo follows the standard Nx structure (`apps/`, `packages/`, `tools/`,
 
 Make sure to check each project that contains the readme to know more details about each one.
 
-## 2. External Open Source Repos (vendors/)
+## 3. External Open Source Repos (vendors/)
 - Repositories inside `vendors/` are AI/LLM/MCP related.
 - Prefer reading real code/documentation in these repos over assumptions.
-- Useful for referencing vector stores, RAG tools, LLM APIs, LangChain integrations, Supabase modules, etc.
 
-## 3. Local Python Modules (python/)
+## 4. Local Python Modules (python/)
 - Modules under `python/` implement local services, scrapers, generators, and vector store interfaces.
 - Understand the purpose of `config.py`, `__init__.py`, and `requirements/`.
 - Respect project layout and internal module separation.
 
-## 4. User’s GitHub Projects (projects/)
+## 5. User’s GitHub Projects (projects/)
 - These represent public or shared projects by the user.
 - Look inside for reusable logic, patterns, or domain-specific functionality.
 - Prioritize user-authored content over external templates.
 
-## 5. Browser Automation Tools (browser/)
+## 6. Browser Automation Tools (browser/)
 - This folder contains automation pipelines using Puppeteer, Playwright, or extensions.
 - Understand the flow in `browser/use/`, `browser/extension/`, and UI elements in `browser/ui/`.
 - Inspect the `docker-compose.yml` for service orchestration.
+
+## 7. Shared Projects (shared/)
+- This folder contains open source projects created by the user, public on github.
+- Contains shared docker-compose files, that also acts as templates.
+  - MCP (Model Context Protocol Servers - mysql, puppeteer, etc)
+  - Homelab (Homarr, Firefly, Home Assistant, etc)
+  - Monitoring (Grafana, Prometheus, etc)
 
 ## General Rules
 - Always read actual files before answering questions about these components.

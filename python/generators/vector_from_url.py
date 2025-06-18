@@ -20,18 +20,18 @@ def extract_url_content(url):
             "Accept-Language": "en-US,en;q=0.5",
             "Accept-Encoding": "identity",
             "Connection": "keep-alive",
-            "Upgrade-Insecure-Requests": "1"
+            "Upgrade-Insecure-Requests": "1",
         }
         response = requests.get(url, headers=headers)
         response.raise_for_status()
 
-        soup = BeautifulSoup(response.text, 'html.parser')
+        soup = BeautifulSoup(response.text, "html.parser")
 
-        body = soup.find('body')
+        body = soup.find("body")
         if not body:
             return None
 
-        content = body.get_text(separator=' ', strip=True)
+        content = body.get_text(separator=" ", strip=True)
         return clean_text(content)
 
     except Exception as e:
@@ -39,50 +39,48 @@ def extract_url_content(url):
         return None
 
 
-all_documents: List[tuple[str, Document]] = []
-today = date.today()
-file_handler = UTF8FileHandler()
-text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000, chunk_overlap=200)
-
-
-def process_url(url: str, line_number: int):
-    print(f"Line {line_number}, URL: {url}")
-    try:
-
-        content = extract_url_content(url)
-        if content:
-            chunks = text_splitter.split_text(content)
-            for idx, chunk in enumerate(chunks):
-                chunk_hash = sha256_hash(chunk)
-                url_hash = sha256_hash(url)
-                all_documents.append(
-                    (chunk_hash, Document(
-                        page_content=chunk,
-                        metadata={
-                            "source": url,
-                            "doc_id": url_hash,
-                            "updated_at": today.isoformat(),
-                            "chunk_hash": chunk_hash,
-                            "chunk_index": str(idx),
-                            "chunk_length": len(chunk)
-                        }
-                    ))
-                )
-        time.sleep(1)
-    except Exception as e:
-        logger.error(f"Error processing {url}: {str(e)}")
-
-
 def start(args):
+
+    all_documents: List[tuple[str, Document]] = []
+    today = date.today()
+    file_handler = UTF8FileHandler()
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+
+    def process_url(url: str, line_number: int):
+        print(f"Line {line_number}, URL: {url}")
+        try:
+            content = extract_url_content(url)
+            if content:
+                chunks = text_splitter.split_text(content)
+                for idx, chunk in enumerate(chunks):
+                    chunk_hash = sha256_hash(chunk)
+                    url_hash = sha256_hash(url)
+                    all_documents.append(
+                        (
+                            chunk_hash,
+                            Document(
+                                page_content=chunk,
+                                metadata={
+                                    "source": url,
+                                    "doc_id": url_hash,
+                                    "updated_at": today.isoformat(),
+                                    "chunk_hash": chunk_hash,
+                                    "chunk_index": str(idx),
+                                    "chunk_length": len(chunk),
+                                },
+                            ),
+                        )
+                    )
+            time.sleep(1)
+        except Exception as e:
+            logger.error(f"Error processing {url}: {str(e)}")
 
     file_handler.read(args.file, callback=process_url)
 
     if args.store and len(all_documents) > 0:
-        VectorStoreHandler(
-            args.collection, store=args.store
-        ).save(
-            context=all_documents, incremental=args.mode == "incremental")
+        VectorStoreHandler(args.collection, store=args.store).save(
+            context=all_documents, incremental=args.mode == "incremental"
+        )
 
 
 def main():
@@ -106,7 +104,7 @@ def main():
         type=str,
         default="qdrant",
         choices=["pgvector", "qdrant", "pinecone"],
-        help="Vector store to use (pgvector, qdrant, pinecone). Default is qdrant."
+        help="Vector store to use (pgvector, qdrant, pinecone). Default is qdrant.",
     )
     parser.add_argument(
         "--mode",

@@ -5,7 +5,12 @@ from python.youtube.type_definitions import *
 from python.youtube.utils import *
 
 
-def research_youtube_videos_improved(search_query: str, destination_sheet: Optional[GoogleSheetID] = None, num_pages: int = 1, pagination_token: Optional[str] = None):
+def research_youtube_videos_improved(
+    search_query: str,
+    destination_sheet: Optional[GoogleSheetID] = None,
+    num_pages: int = 1,
+    pagination_token: Optional[str] = None,
+):
     """
     Search YouTube for videos on a specific topic and save detailed information to a Google Sheet.
     Creates a new spreadsheet automatically if none is provided, uses parallelization for faster performance,
@@ -24,7 +29,9 @@ def research_youtube_videos_improved(search_query: str, destination_sheet: Optio
     # Create a new sheet if none provided
     if destination_sheet is None:
         # Create a name based on search query and timestamp
-        sheet_name: str = f"YouTube Research - {search_query} - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        sheet_name: str = (
+            f"YouTube Research - {search_query} - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        )
         destination_sheet = google_sheets_create(sheet_name)
         print(f"Created new spreadsheet: {sheet_name}")
 
@@ -43,7 +50,8 @@ def research_youtube_videos_improved(search_query: str, destination_sheet: Optio
     for page in range(num_pages):
         # Search for videos
         search_response = youtube_search(
-            query=search_query, num_pages=1, next_page_token=next_token)
+            query=search_query, num_pages=1, next_page_token=next_token
+        )
         videos = search_response.videos
         total_videos += len(videos)
 
@@ -63,8 +71,7 @@ def research_youtube_videos_improved(search_query: str, destination_sheet: Optio
                 channel_details = channel_result.channels[0]
                 if channel_details.youtube_channel_extended_details:
                     subs = channel_details.youtube_channel_extended_details.subscribers
-                    subscriber_count = str(
-                        subs) if subs is not None else "Unknown"
+                    subscriber_count = str(subs) if subs is not None else "Unknown"
 
             # Prepare row data
             return {
@@ -74,7 +81,7 @@ def research_youtube_videos_improved(search_query: str, destination_sheet: Optio
                 "View Count": str(video.views if video.views else 0),
                 "Channel Name": video.channel.name,
                 "Channel Link": video.channel.link,
-                "Subscriber Count": subscriber_count
+                "Subscriber Count": subscriber_count,
             }
 
         # Process videos in parallel
@@ -97,8 +104,7 @@ def research_youtube_videos_improved(search_query: str, destination_sheet: Optio
 
         # Deduplicate results after all videos have been added
         duplicates_removed: int = deduplicate_results(destination_sheet)
-        print(
-            f"Found and removed {duplicates_removed} duplicate video entries")
+        print(f"Found and removed {duplicates_removed} duplicate video entries")
 
     # Return the pagination token for continuation and the sheet ID
     return (next_token.token if next_token else None, destination_sheet)
@@ -107,5 +113,9 @@ def research_youtube_videos_improved(search_query: str, destination_sheet: Optio
 # Implement other required functions in a similar way
 if __name__ == "__main__":
     result = research_youtube_videos_improved(
-        search_query='MCP Tools, AI Agents', destination_sheet=None, num_pages=1, pagination_token=None)
+        search_query="MCP Tools, AI Agents",
+        destination_sheet=None,
+        num_pages=1,
+        pagination_token=None,
+    )
     print(result)

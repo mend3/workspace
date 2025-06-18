@@ -5,8 +5,8 @@ from typing import Callable, Optional, Protocol
 @dataclass
 class GoogleSheetID:
     id: str
-    name: str = ''
-    mime_type: str = 'application/vnd.google-apps.spreadsheet'
+    name: str = ""
+    mime_type: str = "application/vnd.google-apps.spreadsheet"
 
 
 @dataclass

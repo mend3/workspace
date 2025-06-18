@@ -5,12 +5,7 @@ from .client_base import VectorStoreClient
 
 class PineconeVectorStore(VectorStoreClient):
     def __init__(
-        self,
-        collection_name,
-        embeddings,
-        api_key,
-        environment,
-        dimension=384
+        self, collection_name, embeddings, api_key, environment, dimension=384
     ):
         super().__init__(collection_name, embeddings)
         self.api_key = api_key
