@@ -18,12 +18,6 @@ tls:
         - default
       domains:
         - main: "workspace.com"
-          sans:
-            - "extalia.workspace.com"
-            - "extalia-api.workspace.com"
-            - "extalia-gameserver.workspace.com"
-            - "sws.workspace.com"
-            - "dashboard.workspace.com"
 
 providers:
   docker:

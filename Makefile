@@ -22,8 +22,7 @@ SWS_FILES = $(COMMON_FILES) \
 AI_FILES = $(COMMON_FILES) \
   -f ./python/docker-compose.yml \
   -f ./shared/mcp.compose.yml \
-  -f ./shared/vendors.compose.yml \
-  -f ./vendors/local-ai-packaged/docker-compose.yml
+  -f ./shared/vendors.compose.yml
 
 HOMELAB_FILES = $(COMMON_FILES) \
   $(AI_FILES) \
@@ -36,11 +35,11 @@ ALL_FILES = $(COMMON_FILES) \
 
 # Generic compose commands
 define compose_up
-	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --remove-orphans --renew-anon-volumes -V traefik $(2)
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --remove-orphans --renew-anon-volumes -V -d traefik $(2)
 endef
 
 define compose_down
-	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) down
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) down -v
 endef
 
 define compose_stop
@@ -86,11 +85,15 @@ sws-dev: ## Starts SWS service in development mode
 
 .PHONY: mcp
 mcp: ## Starts MCP server
-	$(call compose_up,$(AI_FILES),ollama-gpu mcp-*)
+	$(call compose_up,$(AI_FILES),mcp-*)
 
 .PHONY: ai-context
 ai-context: ## Starts only the AI context services
 	$(call compose_up,$(AI_FILES),ollama-gpu ai-context)
+
+.PHONY: local-ai
+local-ai: ## Starts local ai stack (n8n, supabase, ollama, etc)
+	$(call compose_up,$(AI_FILES),ollama-gpu n8n studio open-webui langfuse-web)
 
 .PHONY: homelab
 homelab: ## Starts all homelab services
@@ -98,7 +101,7 @@ homelab: ## Starts all homelab services
 
 .PHONY: up
 up: ## Starts all defined services
-	$(call compose_up,$(ALL_FILES),ollama-gpu $(TARGET))
+	$(call compose_up,$(ALL_FILES),$(TARGET))
 
 .PHONY: down
 down: ## Stops and removes all services
