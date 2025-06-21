@@ -1,5 +1,8 @@
 name: ${NAMESPACE:-$USER}
 
+include:
+- ./shared/mcp/docker-compose.yml
+
 services:
   traefik:
     image: traefik

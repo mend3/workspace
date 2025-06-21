@@ -21,7 +21,6 @@ SWS_FILES = $(COMMON_FILES) \
 
 AI_FILES = $(COMMON_FILES) \
   -f ./python/docker-compose.yml \
-  -f ./shared/mcp.compose.yml \
   -f ./vendors/docker-compose.yml
 
 HOMELAB_FILES = $(COMMON_FILES) \
@@ -120,8 +119,8 @@ stop: ## Stops and removes all services
 build: ## Build all Docker images
 	$(call compose_build,$(ALL_FILES),$(TARGET))
 
-.PHONY: config
-config: ## Show the docker compose config
+.PHONY: graph
+graph: ## Show the docker compose graph
 	$(call compose_graph,$(ALL_FILES))
 
 .PHONY: minikube
