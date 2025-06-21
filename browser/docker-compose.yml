@@ -13,8 +13,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 5s
-    ports:
-      - 9000:3000
+    expose:
+      - 3000
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
@@ -97,11 +97,11 @@ services:
       dockerfile: Dockerfile
       args:
         - TARGETPLATFORM=linux/amd64
-    ports:
-      - '7788:7788'
-      - '6080:6080'
-      - '5901:5901'
-      - '9222:9222'
+    expose:
+      - 7788
+      - 6080
+      - 5901
+      - 9222
     environment:
       # LLM API Keys & Endpoints
       - OPENAI_ENDPOINT=${OPENAI_ENDPOINT:-https://api.openai.com/v1}

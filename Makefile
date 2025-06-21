@@ -19,23 +19,16 @@ EXTALIA_FILES = $(COMMON_FILES) \
 SWS_FILES = $(COMMON_FILES) \
   -f ./deployment/sws/docker-compose.yml
 
-AI_FILES = $(COMMON_FILES) \
-  -f ./python/docker-compose.yml \
-  -f ./vendors/docker-compose.yml
-
 HOMELAB_FILES = $(COMMON_FILES) \
-  $(AI_FILES) \
   -f ./shared/homelab.compose.yml
 
 ALL_FILES = $(COMMON_FILES) \
-  $(SWS_FILES) \
-  $(AI_FILES) \
   $(HOMELAB_FILES)
 
 # Generic compose commands
 define compose_graph
-	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) config > compose.yaml
-	docker run --rm -it -v $(pwd):/in wst24365888/compose-viz compose.yaml
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) config > compose.yaml && \
+	docker run --rm -it -v .:/in wst24365888/compose-viz --simple --no-ports --legend compose.yaml
 endef
 
 define compose_up

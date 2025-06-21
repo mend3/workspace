@@ -2,8 +2,6 @@ services:
   wallos:
     container_name: wallos
     image: bellamy/wallos:latest
-    expose:
-      - 80
     environment:
       TZ: 'America/Sao_Paulo'
     volumes:
@@ -36,8 +34,6 @@ services:
       - LLM_PROVIDER=ollama
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
       - LLM_MODEL="qwen2.5:7b-instruct-q4_K_M"
-    expose:
-      - 80
     volumes:
       - ./.docker/precis/configs:/config
       - ./.docker/precis/data:/data
@@ -51,8 +47,6 @@ services:
     image: louislam/uptime-kuma:1
     container_name: kuma
     restart: always
-    expose:
-      - 3001
     volumes:
       - kuma-data:/app/data
     labels:
@@ -73,8 +67,6 @@ services:
       APP_SECRET: 'a783b2t4983274b92834tf73246tf327'
       DATABASE_URL: 'postgresql://postgres:postgres@postgres:5432/docmost?schema=public'
       REDIS_URL: 'redis://redis:6379'
-    expose:
-      - 3000
     restart: unless-stopped
     volumes:
       - docmost_data:/app/data/storage
@@ -106,8 +98,6 @@ services:
     volumes:
       - firefly_iii_upload:/var/www/html/storage/upload
     env_file: ./.docker/firefly/.env
-    expose:
-      - 8080
     depends_on:
       - mysql
     links:
@@ -131,8 +121,6 @@ services:
       - ./.tmp/homarr/appdata:/appdata
     environment:
       - SECRET_ENCRYPTION_KEY=492bceee14479019b56ce491c1247d2a2a7c6ef17efeb988dad572645df5df8d
-    expose:
-      - 7575
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.homarr.rule=Host(`homarr.workspace.com`)"
@@ -149,8 +137,6 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
     restart: unless-stopped
-    expose:
-      - 8123
     privileged: true
     labels:
       - "traefik.enable=true"
@@ -163,8 +149,6 @@ services:
   wordpress:
     image: wordpress:latest
     restart: always
-    expose:
-      - 80
     environment:
       WORDPRESS_DB_HOST: 'mysql:3306'
       WORDPRESS_DB_USER: ${MYSQL_USER}
@@ -189,8 +173,6 @@ services:
       context: .
       dockerfile: ./.docker/php/Dockerfile
       target: phpbb
-    expose:
-      - 80
     volumes:
       - phpbb-data:/var/www/html
     labels:
