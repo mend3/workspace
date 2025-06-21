@@ -107,7 +107,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./.tmp/homarr/appdata:/appdata
     environment:
-      - SECRET_ENCRYPTION_KEY=${JWT_SECRET}
+      - SECRET_ENCRYPTION_KEY=${SECRET_ENCRYPTION_KEY}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.homarr.rule=Host(`homarr.workspace.com`)"
@@ -119,6 +119,7 @@ services:
     image: "ghcr.io/home-assistant/home-assistant:stable"
     volumes:
       - ./.tmp/homeassistant:/config
+      - ./.docker/homeassistant/config.yaml:/config/configuration.yaml
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
     restart: unless-stopped

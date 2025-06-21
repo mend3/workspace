@@ -62,8 +62,6 @@ Once services are running, you can access local domains like:
 127.0.0.1 selenoid.workspace.com
 127.0.0.1 brightdata.workspace.com
 127.0.0.1 scrapoxy.workspace.com
-127.0.0.1 cdn.workspace.com
-127.0.0.1 nprotect.workspace.com
 127.0.0.1 wallos.workspace.com
 127.0.0.1 rss.workspace.com
 127.0.0.1 docmost.workspace.com
