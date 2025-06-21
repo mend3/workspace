@@ -1,3 +1,6 @@
+include:
+- browser/ui/docker-compose.yml
+
 services:
   browserless:
     platform: linux/amd64
@@ -19,7 +22,6 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       # - TOKEN=${BROWSER_TOKEN}
-      # - PROXY_URL=http://proxy:8080
       - ALLOW_FILE_PROTOCOL=true
       - TZ=America/Sao_Paulo
       - PREBOOT_CHROME=true
@@ -35,13 +37,16 @@ services:
       - FUNCTION_EXTERNALS=["request","fetch"]
       - FUNCTION_ENABLE_INCOGNITO_MODE=true
       - DEFAULT_STEALTH=true
-      - OPTIONAL_LAUNCH_ARGS=["--proxy-server=sws-proxy:8080","--proxy-auth=dXNlcjpwYXNz"]
       - USE_CHROME_STABLE=true
       - DEFAULT_LAUNCH_ARGS=["--user-agent=${USER_AGENT}","--window-size=1920,1080","--autoplay-policy=user-gesture-required","--blink-settings=imagesEnabled=true","--disable-background-logging","--disable-background-networking","--disable-background-timer-throttling","--disable-backgrounding-occluded-windows","--disable-blink-features=AutomationControlled","--disable-breakpad","--disable-client-side-phishing-detection","--disable-component-update","--disable-dev-shm-usage","--disable-domain-reliability","--disable-features=IsolateOrigins,SitePerProcess","--disable-hang-monitor","--disable-infobars","--disable-ipc-flooding-protection","--disable-offer-store-unmasked-wallet-cards","--disable-print-preview","--disable-prompt-on-repost","--disable-setuid-sandbox","--disable-speech-api","--disk-cache-size=33554432","--enable-features=Vulkan","--headless=new","--memory-pressure-off","--no-default-browser-check","--no-experiments","--no-first-run","--no-pings","--no-zygote","--password-store=basic","--use-angle=vulkan","--use-gl=egl","--ignore-gpu-blocklist"]
-    networks:
-      - internal
     volumes:
       - browserless_data:/usr/src/app/workspace
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.browserless.rule=Host(`browserless.workspace.com`)"
+      - "traefik.http.routers.browserless.entrypoints=websecure"
+      - "traefik.http.routers.browserless.tls=true"
+      - "traefik.http.services.browserless.loadbalancer.server.port=3000"
     shm_size: 2gb
     deploy:
       resources:
@@ -58,9 +63,13 @@ services:
     command: /bin/sh -c "npx -y playwright@1.52.0 run-server --port 3000 --host 0.0.0.0"
     expose:
       - 3000
-    networks:
-      - internal
-  browser-agent:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.playwright.rule=Host(`playwright.workspace.com`)"
+      - "traefik.http.routers.playwright.entrypoints=websecure"
+      - "traefik.http.routers.playwright.tls=true"
+      - "traefik.http.services.playwright.loadbalancer.server.port=3000"
+  browser-use:
     platform: linux/amd64
     build:
       context: browser/use
@@ -88,78 +97,16 @@ services:
     command: --cdp-url http://playwright:3000 # /app/agent/examples/use-cases/captcha.py
     depends_on:
       - playwright
-    networks:
-      - internal
-  browser-agent-ui:
-    platform: linux/amd64
-    build:
-      context: browser/ui
-      dockerfile: Dockerfile
-      args:
-        - TARGETPLATFORM=linux/amd64
-    expose:
-      - 7788
-      - 6080
-      - 5901
-      - 9222
-    environment:
-      # LLM API Keys & Endpoints
-      - OPENAI_ENDPOINT=${OPENAI_ENDPOINT:-https://api.openai.com/v1}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - OLLAMA_ENDPOINT=http://ollama:11434
-      - OLLAMA_API_BASE_URL=http://ollama:11434
-      - OLLAMA_BASE_URL=http://ollama:11434
-      - DEFAULT_LLM=ollama
-
-      # Application Settings
-      - ANONYMIZED_TELEMETRY=${ANONYMIZED_TELEMETRY:-false}
-      - BROWSER_USE_LOGGING_LEVEL=${BROWSER_USE_LOGGING_LEVEL:-info}
-
-      # Browser Settings
-      - BROWSER_PATH=
-      - BROWSER_USER_DATA=
-      - BROWSER_DEBUGGING_PORT=${BROWSER_DEBUGGING_PORT:-9222}
-      - BROWSER_DEBUGGING_HOST=playwright
-      - USE_OWN_BROWSER=false
-      - KEEP_BROWSER_OPEN=true
-      - BROWSER_CDP=${BROWSER_CDP:-http://playwright:9222} # e.g., http://localhost:9222
-
-      # Display Settings
-      - DISPLAY=:99
-      # This ENV is used by the Dockerfile during build time if Patchright respects it.
-      # It's not strictly needed at runtime by docker-compose unless your app or scripts also read it.
-      - PLAYWRIGHT_BROWSERS_PATH=/ms-browsers # Matches Dockerfile ENV
-      - RESOLUTION=${RESOLUTION:-1920x1080x24}
-      - RESOLUTION_WIDTH=${RESOLUTION_WIDTH:-1920}
-      - RESOLUTION_HEIGHT=${RESOLUTION_HEIGHT:-1080}
-
-      # VNC Settings
-      - VNC_PASSWORD=${VNC_PASSWORD}
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
-    restart: unless-stopped
-    shm_size: '2gb'
-    cap_add:
-      - SYS_ADMIN
-    tmpfs:
-      - /tmp
-    healthcheck:
-      test: ['CMD', 'nc', '-z', 'localhost', '5901'] # VNC port
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    networks:
-      - internal
   selenoid:
     network_mode: bridge
     image: aerokube/selenoid:latest-release
-    expose:
-      - 4444
     volumes:
       - ./.docker/selenoid/config:/etc/selenoid
       - /var/run/docker.sock:/var/run/docker.sock
     command: -conf /etc/selenoid/browsers.json -limit 20 -retry-count 1000 -timeout 5m0s
     restart: always
+    expose:
+      - 4444
   selenoid-ui:
     image: aerokube/selenoid-ui
     network_mode: bridge
@@ -170,6 +117,12 @@ services:
     expose:
       - 8080
     command: [--selenoid-uri, http://selenoid:4444]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.selenoid.rule=Host(`selenoid.workspace.com`)"
+      - "traefik.http.routers.selenoid.entrypoints=websecure"
+      - "traefik.http.routers.selenoid.tls=true"
+      - "traefik.http.services.selenoid.loadbalancer.server.port=8080"
   flaresolverr:
     restart: always
     image: ghcr.io/flaresolverr/flaresolverr:latest
@@ -179,7 +132,6 @@ services:
       - PROMETHEUS_PORT=8000
     expose:
       - 8191
-      - 8000
     healthcheck:
       test:
         - CMD
@@ -190,8 +142,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 5s
-    networks:
-      - internal
   brightdata:
     restart: always
     platform: linux/amd64
@@ -212,8 +162,12 @@ services:
       start_period: 5s
     volumes:
       - ./.docker/brightdata:/root/proxy_manager
-    networks:
-      - internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.brightdata.rule=Host(`brightdata.workspace.com`)"
+      - "traefik.http.routers.brightdata.entrypoints=websecure"
+      - "traefik.http.routers.brightdata.tls=true"
+      - "traefik.http.services.brightdata.loadbalancer.server.port=24000"
   scrapoxy:
     restart: always
     image: scrapoxy/scrapoxy
@@ -228,8 +182,12 @@ services:
       - 8890
     volumes:
       - scrapoxy_data:/cfg
-    networks:
-      - internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.scrapoxy.rule=Host(`scrapoxy.workspace.com`)"
+      - "traefik.http.routers.scrapoxy.entrypoints=websecure"
+      - "traefik.http.routers.scrapoxy.tls=true"
+      - "traefik.http.services.scrapoxy.loadbalancer.server.port=8890"
 
 volumes:
   browserless_data:

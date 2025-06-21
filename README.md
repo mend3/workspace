@@ -25,6 +25,10 @@ A complete local development environment powered by Docker, Kubernetes, AI tooli
   - [🧪 Git \& Submodules](#-git--submodules)
   - [🧩 WSL Enhancements](#-wsl-enhancements)
   - [⚙️ GPU Support on WSL](#️-gpu-support-on-wsl)
+  - [Submodules](#submodules)
+    - [Self Owned](#self-owned)
+    - [Brain](#brain)
+    - [Third Party Repositories](#third-party-repositories)
 
 ---
 
@@ -51,25 +55,28 @@ Ensure the following tools are installed before proceeding:
 Once services are running, you can access local domains like:
 
 ```ts
-127.0.0.1 workspace.com
 127.0.0.1 dashboard.workspace.com
-127.0.0.1 n8n.workspace.com
-127.0.0.1 open-webui.workspace.com
-127.0.0.1 flowise.workspace.com
-127.0.0.1 extalia.workspace.com
-127.0.0.1 sws.workspace.com
-127.0.0.1 proxy.workspace.com
+127.0.0.1 graphiti.workspace.com
+127.0.0.1 supabase.workspace.com
+127.0.0.1 browserless.workspace.com
+127.0.0.1 selenoid.workspace.com
+127.0.0.1 brightdata.workspace.com
+127.0.0.1 scrapoxy.workspace.com
+127.0.0.1 cdn.workspace.com
+127.0.0.1 nprotect.workspace.com
 127.0.0.1 wallos.workspace.com
 127.0.0.1 rss.workspace.com
-127.0.0.1 kuma.workspace.com
 127.0.0.1 docmost.workspace.com
 127.0.0.1 firefly.workspace.com
 127.0.0.1 homarr.workspace.com
 127.0.0.1 home.workspace.com
 127.0.0.1 wordpress.workspace.com
 127.0.0.1 phpbb.workspace.com
-127.0.0.1 grafana.workspace.com
 127.0.0.1 prometheus.workspace.com
+127.0.0.1 grafana.workspace.com
+127.0.0.1 n8n.workspace.com
+127.0.0.1 langfuse.workspace.com
+127.0.0.1 minio.workspace.com
 ```
 
 > Traefik handles routing using Docker labels. See: [Traefik Docker Provider Docs](https://doc.traefik.io/traefik/routing/providers/docker/)
@@ -271,6 +278,46 @@ sudo systemctl restart docker
 # Test with NVIDIA
 docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi
 ```
+
+---
+
+## Submodules
+
+### Self Owned
+
+This are repositories are submodules and may be private to others users.
+
+- [./shared/mcp](git@github.com:mend3/mcp.git)
+- [./shared/react-trainee](git@github.com:mend3/react-trainee.git)
+- [./shared/typestack](git@github.com:mend3/typestack.git)
+- [./browser/use](git@github.com:mend3/browser-use.git)
+- [./browser/ui](git@github.com:mend3/browser-ui.git)
+- [./deployment/extalia/web](git@github.com:mend3/l2-web.git)
+- [./deployment/extalia/java](git@github.com:mend3/extalia.git)
+- [./deployment/sws](git@github.com:mendshell/sws.git)
+
+### Brain
+
+This contains lots of documents, link, files and templates.
+
+- [./brain/system-prompts-and-models-of-ai-tools](https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools.git)
+- [./brain/ebooks](https://github.com/sandeep10rana/DevOps.git)
+
+### Third Party Repositories
+
+- [compose-viz/compose-viz](https://github.com/compose-viz/compose-viz)
+  - Tool to generate graph for docker-compose services
+- [./vendors/mcp-servers](https://github.com/modelcontextprotocol/servers.git)
+- [./vendors/sentence-transformers](https://github.com/UKPLab/sentence-transformers.git)
+- [./brain/ai-agents-masterclass](https://github.com/coleam00/ai-agents-masterclass)
+- [./brain/ai-agents-ottomator](https://github.com/coleam00/ottomator-agents.git)
+- [./vendors/local-ai-packaged](https://github.com/coleam00/local-ai-packaged.git)
+- [./vendors/Archon](https://github.com/coleam00/Archon.git)
+- [./vendors/mcp-crawl4ai-rag](https://github.com/coleam00/mcp-crawl4ai-rag.git)
+- [./vendors/mcp-qdrant](https://github.com/qdrant/mcp-server-qdrant.git)
+- [./vendors/supabase](https://github.com/supabase/supabase)
+- [./vendors/mcp-supabase](https://github.com/supabase-community/supabase-mcp.git)
+- [./vendors/graphiti](https://github.com/getzep/graphiti.git)
 
 ---
 

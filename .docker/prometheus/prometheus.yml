@@ -16,7 +16,7 @@ scrape_configs:
     static_configs:
       - targets: ['flaresolverr:8000']
       - targets: ['sws-api:80']
-      - targets: ['sws-proxy:9090']
+      - targets: ['sws-proxy:80']
       - targets: ['sws-downloader:80']
     tls_config:
       insecure_skip_verify: true

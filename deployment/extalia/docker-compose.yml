@@ -6,11 +6,17 @@ services:
     volumes:
       - ./.docker/nginx/cdn.conf:/etc/nginx/nginx.conf:ro
       - ./.docker/nginx/cdn:/usr/share/nginx/cdn:ro
+    expose:
+      - 80
     ports:
       - '9999:80'
-    networks:
-      - internal
-  l2j-nprotect:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cdn.rule=Host(`cdn.workspace.com`)"
+      - "traefik.http.routers.cdn.entrypoints=websecure"
+      - "traefik.http.routers.cdn.tls=true"
+      - "traefik.http.services.cdn.loadbalancer.server.port=80"
+  nprotect:
     container_name: nprotect
     build:
       context: .
@@ -28,8 +34,12 @@ services:
       DB_NAME: nProtect
     depends_on:
       - mysql
-    networks:
-      - internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nprotect.rule=Host(`nprotect.workspace.com`)"
+      - "traefik.http.routers.nprotect.entrypoints=websecure"
+      - "traefik.http.routers.nprotect.tls=true"
+      - "traefik.http.services.nprotect.loadbalancer.server.port=80"
   l2j-server:
     build:
       context: .
@@ -41,17 +51,23 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=extalia
       - GAME_SERVER_LOGIN_HOST=localhost
-    ports:
-      - 7777:7777
-      - 2106:2106
-      - 9014:9014
-    networks:
-      - internal
+    expose:
+      - 7777
+      - 2106
+      - 9014
     volumes:
       - ./deployment/extalia/server:/app
+    links:
+      - nprotect
     depends_on:
       mysql:
         condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.l2j.rule=Host(`l2j.workspace.com`)"
+      - "traefik.http.routers.l2j.entrypoints=websecure"
+      - "traefik.http.routers.l2j.tls=true"
+      - "traefik.http.services.l2j.loadbalancer.server.port=80"
   loginserver:
     build:
       context: .
@@ -65,8 +81,6 @@ services:
     expose:
       - 2106
       - 9014
-    networks:
-      - internal
     volumes:
       - ./deployment/extalia/server:/app
     depends_on:
@@ -85,8 +99,6 @@ services:
       - GAME_SERVER_LOGIN_HOST=loginserver
     expose:
       - 7777
-    networks:
-      - internal
     volumes:
       - ./deployment/extalia/server:/app
     depends_on:

@@ -21,12 +21,8 @@ random_string() {
 
 ###### GLOBALS ######
 export NAMESPACE="$(basename $(pwd))"
-export CLUSTER_NAME="${CLUSTER_NAME:-homelab}"
-export HELM_RELEASE="${HELM_RELEASE:-workspace}"
-
-# ===== SECURITY KEYS (GENERATED) =====
-export BROWSER_TOKEN=($(random_string 20))
-export COOKIE_SECRET=($(random_string 20))
+export CLUSTER_NAME="${CLUSTER_NAME:-workspace}"
+export HELM_RELEASE="${HELM_RELEASE:-homelab}"
 
 ###### DATABASE CONNECTIONS ######
 # mysql
@@ -38,16 +34,5 @@ export POSTGRES_CONNECTION_STRING="postgresql://${POSTGRES_USER}:${POSTGRES_PASS
 # pgvector
 export PGVECTOR_CONNECTION_STRING="postgresql+psycopg2://${PGVECTOR_USER}:${PGVECTOR_PASSWORD}@${PGVECTOR_HOST}:${PGVECTOR_PORT}/${PGVECTOR_DATABASE}"
 
-###### BROWSER ######
-export VNC_PASSWORD="${VNC_PASSWORD}"
-export BROWSER_BASE_API_KEY="${BROWSER_BASE_API_KEY}"
-export BROWSER_BASE_PROJECT_ID="${BROWSER_BASE_PROJECT_ID}"
-
-###### SCRAPOXY ######
-export AUTH_LOCAL_USERNAME=${AUTH_LOCAL_USERNAME}
-export AUTH_LOCAL_PASSWORD=${AUTH_LOCAL_PASSWORD}
-
-###### N8N ######
-export N8N_LICENSE_KEY=${N8N_LICENSE_KEY}
 
 echo -e "✅ Environment loaded: \n\tNamespace '${NAMESPACE}' \n\tCluster '${CLUSTER_NAME}' \n\tHelm '${HELM_RELEASE}'"

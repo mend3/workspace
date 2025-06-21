@@ -10,15 +10,13 @@ services:
       context: mcp-crawl4ai-rag
       dockerfile: Dockerfile
     container_name: mcp-crawl4ai-rag
-    ports:
-      - 8003:8051
     expose:
-      - 8051
+      - 8000
     environment:
       USE_AGENTIC_RAG: False
       USE_HYBRID_SEARCH: True
       USE_RERANKING: True
-      SUPABASE_URL: ${SUPABASE_PROJECT_URL}
+      SUPABASE_URL: http://kong:8000
       SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
       TRANSPORT: sse
       USE_KNOWLEDGE_GRAPH: true
@@ -27,16 +25,12 @@ services:
       NEO4J_PASSWORD: ${NEO4J_PASSWORD}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       HOST: 0.0.0.0
-      PORT: 8051
-    networks:
-      - internal
+      PORT: 8000
   mcp-qdrant:
     build:
       context: mcp-qdrant
       dockerfile: Dockerfile
     container_name: mcp-qdrant
-    ports:
-      - 8004:8000
     expose:
       - 8000
     environment:
@@ -48,8 +42,6 @@ services:
       QDRANT_VERIFY_SSL: False
     depends_on:
       - qdrant
-    networks:
-      - internal
   mcp-filesystem:
     build:
       context: mcp-servers
@@ -72,6 +64,8 @@ services:
     env_file:
       - path: .env
         required: false
+    expose:
+      - 8000
     depends_on:
       neo4j:
         condition: service_started
@@ -82,6 +76,4 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - MODEL_NAME=${MODEL_NAME:-gpt-4o-mini}
       - PATH=/root/.local/bin:${PATH}
-    ports:
-      - "8005:8000"
     command: ["uv", "run", "graphiti_mcp_server.py", "--transport", "sse"]

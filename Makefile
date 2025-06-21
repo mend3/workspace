@@ -13,8 +13,7 @@ COMMON_FILES = -f ./docker-compose.yml \
 
 EXTALIA_FILES = $(COMMON_FILES) \
   -f ./deployment/extalia/docker-compose.yml \
-  -f ./deployment/extalia/web/prod.compose.yml \
-  -f ./deployment/extalia/web/docker-compose.yml
+  -f ./deployment/extalia/web/prod.compose.yml
 
 SWS_FILES = $(COMMON_FILES) \
   -f ./deployment/sws/docker-compose.yml
@@ -25,14 +24,13 @@ HOMELAB_FILES = $(COMMON_FILES) \
 ALL_FILES = $(COMMON_FILES) \
   $(HOMELAB_FILES)
 
-# Generic compose commands
 define compose_graph
 	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) config > compose.yaml && \
 	docker run --rm -it -v .:/in wst24365888/compose-viz --simple --no-ports --legend compose.yaml
 endef
 
 define compose_up
-	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --remove-orphans --renew-anon-volumes -V $(2)
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --remove-orphans --renew-anon-volumes -V -d $(2)
 endef
 
 define compose_down
@@ -68,33 +66,25 @@ clean: ## Clean cache folders
 extalia: ## Starts Extalia compound (http + java)
 	$(call compose_up,$(EXTALIA_FILES),-d extalia-*)
 
-.PHONY: extalia-dev
-extalia-dev: ## Starts Extalia service in development mode
-	$(call compose_up,$(EXTALIA_FILES),-d dev-extalia-*)
-
 .PHONY: sws
 sws: ## Starts SWS service
 	$(call compose_up,$(SWS_FILES),-d sws-*)
-
-.PHONY: sws-dev
-sws-dev: ## Starts SWS service in development mode
-	$(call compose_up,$(SWS_FILES),-d dev-sws-*)
 
 .PHONY: mcp
 mcp: ## Starts MCP server
 	$(call compose_up,$(AI_FILES),mcp-*)
 
 .PHONY: ai-context
-ai-context: ## Starts only the AI context services
+ai-context: ## Starts the workspace context generation
 	$(call compose_up,$(AI_FILES),ollama-gpu ai-context)
 
 .PHONY: ai-local
 ai-local: ## Starts local ai stack (n8n, supabase, ollama, etc)
-	$(call compose_up,$(AI_FILES),ollama-gpu n8n studio open-webui langfuse-web graphiti)
+	$(call compose_up,$(AI_FILES),ollama-gpu n8n studio open-webui langfuse-web flowise)
 
 .PHONY: homelab
 homelab: ## Starts all homelab services
-	$(call compose_up,$(ALL_FILES),ollama-gpu mcp-* $(TARGET))
+	$(call compose_up,$(ALL_FILES),ollama-gpu $(TARGET))
 
 .PHONY: up
 up: ## Starts all defined services

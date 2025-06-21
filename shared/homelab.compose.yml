@@ -12,8 +12,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.wallos.rule=Host(`wallos.workspace.com`)"
       - "traefik.http.routers.wallos.entrypoints=web"
-    networks:
-      - internal
   rss:
     image: ghcr.io/leozqin/precis:latest
     environment:
@@ -41,8 +39,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.rss.rule=Host(`rss.workspace.com`)"
       - "traefik.http.routers.rss.entrypoints=web"
-    networks:
-      - internal
   kuma:
     image: louislam/uptime-kuma:1
     container_name: kuma
@@ -55,8 +51,6 @@ services:
       - "traefik.http.routers.kuma.service=kuma"
       - "traefik.http.routers.kuma.entrypoints=web"
       - "traefik.http.services.kuma.loadbalancer.server.port=3001"
-    networks:
-      - internal
   docmost:
     image: docmost/docmost:latest
     depends_on:
@@ -76,8 +70,6 @@ services:
       - "traefik.http.routers.docmost.service=docmost"
       - "traefik.http.routers.docmost.entrypoints=web"
       - "traefik.http.services.docmost.loadbalancer.server.port=3000"
-    networks:
-      - internal
   cron:
     #
     # To make this work, set STATIC_CRON_TOKEN in your .env file or as an environment variable and replace PLEASE_REPLACE_WITH_32_CHAR_CODE below
@@ -88,8 +80,6 @@ services:
     container_name: firefly-cron
     env_file: ./.docker/firefly/.env
     command: sh -c " apk add tzdata && ln -s /usr/share/zoneinfo/${TZ} /etc/localtime | echo \"0 3 * * * wget -qO- http://firefly:8080/api/v1/cron/LlaqcTixcFFlN4XWUSVdWGxXzdHHLIuL;echo\" | crontab - && crond -f -L /dev/stdout"
-    networks:
-      - internal
   firefly:
     image: fireflyiii/core:latest
     hostname: app
@@ -98,11 +88,10 @@ services:
     volumes:
       - firefly_iii_upload:/var/www/html/storage/upload
     env_file: ./.docker/firefly/.env
-    depends_on:
-      - mysql
     links:
       - redis
       - mysql
+      - postgres
       - cron
     labels:
       - "traefik.enable=true"
@@ -110,25 +99,21 @@ services:
       - "traefik.http.routers.firefly.service=firefly"
       - "traefik.http.routers.firefly.entrypoints=web"
       - "traefik.http.services.firefly.loadbalancer.server.port=8080"
-    networks:
-      - internal
   homarr:
     container_name: homarr
     image: ghcr.io/homarr-labs/homarr:latest
     restart: unless-stopped
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # Optional, only if you want docker integration
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./.tmp/homarr/appdata:/appdata
     environment:
-      - SECRET_ENCRYPTION_KEY=492bceee14479019b56ce491c1247d2a2a7c6ef17efeb988dad572645df5df8d
+      - SECRET_ENCRYPTION_KEY=${JWT_SECRET}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.homarr.rule=Host(`homarr.workspace.com`)"
       - "traefik.http.routers.homarr.service=homarr"
       - "traefik.http.routers.homarr.entrypoints=web"
       - "traefik.http.services.homarr.loadbalancer.server.port=7575"
-    networks:
-      - internal
   homeassistant:
     container_name: homeassistant
     image: "ghcr.io/home-assistant/home-assistant:stable"
@@ -144,8 +129,6 @@ services:
       - "traefik.http.routers.home.service=home"
       - "traefik.http.routers.home.entrypoints=web"
       - "traefik.http.services.home.loadbalancer.server.port=8123"
-    networks:
-      - internal
   wordpress:
     image: wordpress:latest
     restart: always
@@ -156,6 +139,8 @@ services:
       WORDPRESS_DB_NAME: wordpress
     volumes:
       - wordpress-data:/var/www/html
+    expose:
+      - 80
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.wordpress-http.rule=Host(`wordpress.workspace.com`)"
@@ -163,8 +148,6 @@ services:
       - "traefik.http.routers.wordpress-https.rule=Host(`wordpress.workspace.com`)"
       - "traefik.http.routers.wordpress-https.entrypoints=websecure"
       - "traefik.http.routers.wordpress-https.tls=true"
-    networks:
-      - internal
     depends_on:
       - mysql
   phpbb:
@@ -175,6 +158,8 @@ services:
       target: phpbb
     volumes:
       - phpbb-data:/var/www/html
+    expose:
+      - 80
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.phpbb-http.rule=Host(`phpbb.workspace.com`)"
@@ -182,8 +167,6 @@ services:
       - "traefik.http.routers.phpbb-https.rule=Host(`phpbb.workspace.com`)"
       - "traefik.http.routers.phpbb-https.entrypoints=websecure"
       - "traefik.http.routers.phpbb-https.tls=true"
-    networks:
-      - internal
     depends_on:
       - mysql
 

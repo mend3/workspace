@@ -15,6 +15,8 @@ services:
       timeout: 10s
       interval: 5s
       retries: 3
+    # expose:
+    #   - 3000
     depends_on:
       analytics:
         condition: service_healthy
@@ -24,8 +26,6 @@ services:
       - "traefik.http.routers.supabase.service=supabase"
       - "traefik.http.routers.supabase.entrypoints=web"
       - "traefik.http.services.supabase.loadbalancer.server.port=3000"
-    networks:
-      - internal
     environment:
       STUDIO_PG_META_URL: http://meta:8080
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -49,17 +49,15 @@ services:
     container_name: supabase-kong
     image: kong:2.8.1
     restart: unless-stopped
-    expose:
-      - 8000/tcp
-      - 8443/tcp
+    # expose:
+    #   - 8000
+    #   - 8443
     volumes:
       # https://github.com/supabase/supabase/issues/12661
       - ./volumes/api/kong.yml:/home/kong/temp.yml:ro,z
     depends_on:
       analytics:
         condition: service_healthy
-    networks:
-      - internal
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
@@ -92,8 +90,8 @@ services:
       timeout: 5s
       interval: 5s
       retries: 3
-    networks:
-      - internal
+    # expose:
+    #   - 9999
     depends_on:
       db:
         # Disable this if you are using an external Postgres database
@@ -194,8 +192,6 @@ services:
         condition: service_healthy
       analytics:
         condition: service_healthy
-    networks:
-      - internal
     healthcheck:
       test:
         [
@@ -212,6 +208,8 @@ services:
       timeout: 5s
       interval: 5s
       retries: 3
+    # expose:
+    #   - 4000
     environment:
       PORT: 4000
       DB_HOST: db
@@ -237,8 +235,6 @@ services:
     restart: unless-stopped
     volumes:
       - ./volumes/storage:/var/lib/storage:z
-    networks:
-      - internal
     healthcheck:
       test:
         [
@@ -344,8 +340,8 @@ services:
     container_name: supabase-analytics
     image: supabase/logflare:1.14.2
     restart: unless-stopped
-    ports:
-      - 4000:4000
+    # expose:
+    #   - 4000
     # Uncomment to use Big Query backend for analytics
     # volumes:
     #   - type: bind
@@ -362,8 +358,6 @@ services:
       timeout: 5s
       interval: 5s
       retries: 10
-    networks:
-      - internal
     depends_on:
       db:
         # Disable this if you are using an external Postgres database
@@ -395,8 +389,6 @@ services:
     container_name: supabase-db
     image: supabase/postgres:15.8.1.060
     restart: unless-stopped
-    networks:
-      - internal
     volumes:
       - ./volumes/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:Z
       # Must be superuser to create event trigger
@@ -454,13 +446,11 @@ services:
     container_name: supabase-vector
     image: timberio/vector:0.28.1-alpine
     restart: unless-stopped
-    expose:
-      - 9001
+    # expose:
+    #   - 9001
     volumes:
       - ./volumes/logs/vector.yml:/etc/vector/vector.yml:ro,z
       - ${DOCKER_SOCKET_LOCATION}:/var/run/docker.sock:ro,z
-    networks:
-      - internal
     healthcheck:
       test:
         [
@@ -487,13 +477,12 @@ services:
     container_name: supabase-pooler
     image: supabase/supavisor:2.5.1
     restart: unless-stopped
-    ports:
-      - ${POSTGRES_PORT}:5432
-      - ${POOLER_PROXY_PORT_TRANSACTION}:6543
+    expose:
+      - 5432
+      - 4000
+      - 6543
     volumes:
       - ./volumes/pooler/pooler.exs:/etc/pooler/pooler.exs:ro,z
-    networks:
-      - internal
     healthcheck:
       test:
         [

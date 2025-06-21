@@ -36,8 +36,6 @@ x-n8n: &service-n8n
     - "traefik.http.routers.n8n.service=n8n"
     - "traefik.http.routers.n8n.entrypoints=web"
     - "traefik.http.services.n8n.loadbalancer.server.port=5678"
-  networks:
-    - internal
   depends_on:
     postgres:
       condition: service_healthy
@@ -46,10 +44,8 @@ x-ollama: &service-ollama
   image: ollama/ollama:latest
   container_name: ollama
   restart: unless-stopped
-  networks:
-    - internal
   expose:
-    - 11434/tcp
+    - 11434
   environment:
     - OLLAMA_CONTEXT_LENGTH=8192
     - OLLAMA_FLASH_ATTENTION=1
@@ -64,8 +60,6 @@ x-init-ollama: &init-ollama
   volumes:
     - ollama_storage:/root/.ollama
   entrypoint: /bin/sh
-  networks:
-    - internal
   command:
     - '-c'
     - >
@@ -81,7 +75,7 @@ services:
     restart: unless-stopped
     container_name: flowise
     expose:
-      - 3001/tcp
+      - 3001
     environment:
         - PORT=3001
         - FLOWISE_USERNAME=${FLOWISE_USERNAME}
@@ -97,7 +91,7 @@ services:
     restart: unless-stopped
     container_name: open-webui
     expose:
-      - 8080/tcp
+      - 8080
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -117,10 +111,8 @@ services:
     <<: *service-n8n
     container_name: n8n
     restart: unless-stopped
-    ports:
-      - 5678:5678
     expose:
-      - 5678/tcp
+      - 5678
     volumes:
       - n8n_storage:/home/node/.n8n
       - ./local-ai-packaged/n8n/backup:/backup
@@ -134,9 +126,9 @@ services:
     volumes:
       - neo4j_data:/data
     expose:
-      - 7473/tcp
-      - 7474/tcp
-      - 7687/tcp
+      - 7473
+      - 7474
+      - 7687
     environment:
         - NEO4J_AUTH=${NEO4J_AUTH}
     restart: always
@@ -154,7 +146,7 @@ services:
       clickhouse:
         condition: service_healthy
     expose:
-     - 3030/tcp
+     - 3030
     environment: &langfuse-worker-env
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/langfuse
       SALT: ${LANGFUSE_SALT}
@@ -198,17 +190,13 @@ services:
       REDIS_TLS_CA: ${REDIS_TLS_CA:-/certs/ca.crt}
       REDIS_TLS_CERT: ${REDIS_TLS_CERT:-/certs/redis.crt}
       REDIS_TLS_KEY: ${REDIS_TLS_KEY:-/certs/redis.key}
-    networks:
-      - internal
 
   langfuse-web:
     image: langfuse/langfuse:3
     restart: unless-stopped
     depends_on: *langfuse-depends-on
-    networks:
-      - internal
     expose:
-      - 3000/tcp
+      - 3000
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.langfuse.rule=Host(`langfuse.workspace.com`)"
@@ -235,15 +223,13 @@ services:
     restart: always
     user: "101:101"
     expose:
-      - 8123/tcp
-      - 9000/tcp
-      - 9009/tcp
+      - 8123
+      - 9000
+      - 9009
     environment:
       CLICKHOUSE_DB: default
       CLICKHOUSE_USER: clickhouse
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
-    networks:
-      - internal
     volumes:
       - langfuse_clickhouse_data:/var/lib/clickhouse
       - langfuse_clickhouse_logs:/var/log/clickhouse-server
@@ -258,13 +244,11 @@ services:
     image: minio/minio
     restart: always
     entrypoint: sh
-    ports:
-      - 9101:9001
     # create the 'langfuse' bucket before starting the service
     command: -c 'mkdir -p /data/langfuse && minio server --address ":9000" --console-address ":9001" /data'
     expose:
-      - 9000/tcp
-      - 9001/tcp
+      - 9000
+      - 9001
     environment:
       MINIO_ROOT_USER: minio
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
@@ -276,6 +260,11 @@ services:
       timeout: 5s
       retries: 5
       start_period: 1s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio.rule=Host(`minio.workspace.com`)"
+      - "traefik.http.routers.minio.entrypoints=web"
+      - "traefik.http.services.minio.loadbalancer.server.port=9001"
 
   ollama-cpu:
     profiles: ["cpu"]

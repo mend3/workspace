@@ -18,8 +18,6 @@ services:
       - QDRANT_URL=${QDRANT_URL:-http://qdrant:6333}
     volumes:
       - .:/app
-    networks:
-      - internal
     labels:
       logging: 'enabled'
     logging:
