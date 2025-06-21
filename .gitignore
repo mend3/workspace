@@ -37,8 +37,6 @@ tmp/
 !**/.env.sh
 *-oauth.*
 projects/
-vendors/
-!vendors/**/*.yml
 knowledge/
 **/public/system
 **/migrations

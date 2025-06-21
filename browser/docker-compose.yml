@@ -24,6 +24,7 @@ services:
       - TZ=America/Sao_Paulo
       - PREBOOT_CHROME=true
       - KEEP_ALIVE=true
+      - CONNECTION_TIMEOUT=86400000
       - MAX_CONCURRENT_SESSIONS=1
       - QUEUE_LENGTH=4
       - ENABLE_CORS=true
@@ -35,12 +36,13 @@ services:
       - FUNCTION_ENABLE_INCOGNITO_MODE=true
       - DEFAULT_STEALTH=true
       - OPTIONAL_LAUNCH_ARGS=["--proxy-server=sws-proxy:8080","--proxy-auth=dXNlcjpwYXNz"]
-      - DEFAULT_LAUNCH_ARGS=["--autoplay-policy=user-gesture-required","--blink-settings=imagesEnabled=true","--disable-background-logging","--disable-background-networking","--disable-background-timer-throttling","--disable-backgrounding-occluded-windows","--disable-blink-features=AutomationControlled","--disable-breakpad","--disable-client-side-phishing-detection","--disable-component-update","--disable-dev-shm-usage","--disable-domain-reliability","--disable-features=IsolateOrigins,SitePerProcess","--disable-hang-monitor","--disable-infobars","--disable-ipc-flooding-protection","--disable-offer-store-unmasked-wallet-cards","--disable-print-preview","--disable-prompt-on-repost","--disable-setuid-sandbox","--disable-speech-api","--disk-cache-size=33554432","--enable-features=Vulkan","--headless=new","--memory-pressure-off","--no-default-browser-check","--no-experiments","--no-first-run","--no-pings","--no-zygote","--password-store=basic","--use-angle=vulkan","--use-gl=egl","--ignore-gpu-blocklist"]
+      - USE_CHROME_STABLE=true
+      - DEFAULT_LAUNCH_ARGS=["--user-agent=${USER_AGENT}","--window-size=1920,1080","--autoplay-policy=user-gesture-required","--blink-settings=imagesEnabled=true","--disable-background-logging","--disable-background-networking","--disable-background-timer-throttling","--disable-backgrounding-occluded-windows","--disable-blink-features=AutomationControlled","--disable-breakpad","--disable-client-side-phishing-detection","--disable-component-update","--disable-dev-shm-usage","--disable-domain-reliability","--disable-features=IsolateOrigins,SitePerProcess","--disable-hang-monitor","--disable-infobars","--disable-ipc-flooding-protection","--disable-offer-store-unmasked-wallet-cards","--disable-print-preview","--disable-prompt-on-repost","--disable-setuid-sandbox","--disable-speech-api","--disk-cache-size=33554432","--enable-features=Vulkan","--headless=new","--memory-pressure-off","--no-default-browser-check","--no-experiments","--no-first-run","--no-pings","--no-zygote","--password-store=basic","--use-angle=vulkan","--use-gl=egl","--ignore-gpu-blocklist"]
     networks:
       - internal
     volumes:
-      - browserless_data:/workspace
-      - /dev/shm:/dev/shm
+      - browserless_data:/usr/src/app/workspace
+    shm_size: 2gb
     deploy:
       resources:
         limits:
@@ -96,10 +98,10 @@ services:
       args:
         - TARGETPLATFORM=linux/amd64
     ports:
-      - "7788:7788"
-      - "6080:6080"
-      - "5901:5901"
-      - "9222:9222"
+      - '7788:7788'
+      - '6080:6080'
+      - '5901:5901'
+      - '9222:9222'
     environment:
       # LLM API Keys & Endpoints
       - OPENAI_ENDPOINT=${OPENAI_ENDPOINT:-https://api.openai.com/v1}
@@ -142,7 +144,7 @@ services:
     tmpfs:
       - /tmp
     healthcheck:
-      test: [ "CMD", "nc", "-z", "localhost", "5901" ] # VNC port
+      test: ['CMD', 'nc', '-z', 'localhost', '5901'] # VNC port
       interval: 10s
       timeout: 5s
       retries: 3
@@ -177,6 +179,7 @@ services:
       - PROMETHEUS_PORT=8000
     expose:
       - 8191
+      - 8000
     healthcheck:
       test:
         - CMD
@@ -194,6 +197,9 @@ services:
     platform: linux/amd64
     image: luminati/luminati-proxy
     command: proxy-manager
+    expose:
+      - 22999
+      - 24000
     healthcheck:
       test:
         - CMD
@@ -217,11 +223,13 @@ services:
       - BACKEND_JWT_SECRET=${BACKEND_JWT_SECRET}
       - FRONTEND_JWT_SECRET=${FRONTEND_JWT_SECRET}
       - STORAGE_FILE_FILENAME=/cfg/scrapoxy.json
+    expose:
+      - 8888
+      - 8890
     volumes:
       - scrapoxy_data:/cfg
     networks:
       - internal
-
 
 volumes:
   browserless_data:

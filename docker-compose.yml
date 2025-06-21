@@ -52,12 +52,10 @@ services:
       interval: 2s
       timeout: 5s
       retries: 10
-    networks:
-      - internal
     expose:
       - 5432/tcp
-    ports:
-      - 5432:5432
+    networks:
+      - internal
     volumes:
       - postgres_data:/var/lib/postgresql/data
   redis:
@@ -132,10 +130,8 @@ services:
       POSTGRES_USER: ${PGVECTOR_USER}
       POSTGRES_PASSWORD: ${PGVECTOR_PASSWORD}
       POSTGRES_DB: ${PGVECTOR_DATABASE}
-    ports:
-      - "5433:5432"
     expose:
-      - 5432
+      - 5432/tcp
     networks:
       - internal
     healthcheck:
@@ -217,10 +213,6 @@ networks:
     driver: bridge
 
 volumes:
-  n8n_data:
-  ollama_storage:
-  flowise_data:
-  openwebui_data:
   postgres_data:
   redis_data:
   pgvector_data:

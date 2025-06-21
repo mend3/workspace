@@ -22,7 +22,7 @@ SWS_FILES = $(COMMON_FILES) \
 AI_FILES = $(COMMON_FILES) \
   -f ./python/docker-compose.yml \
   -f ./shared/mcp.compose.yml \
-  -f ./shared/vendors.compose.yml
+  -f ./vendors/docker-compose.yml
 
 HOMELAB_FILES = $(COMMON_FILES) \
   $(AI_FILES) \
@@ -34,8 +34,13 @@ ALL_FILES = $(COMMON_FILES) \
   $(HOMELAB_FILES)
 
 # Generic compose commands
+define compose_graph
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) config > compose.yaml
+	docker run --rm -it -v $(pwd):/in wst24365888/compose-viz compose.yaml
+endef
+
 define compose_up
-	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --remove-orphans --renew-anon-volumes -V -d traefik $(2)
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --remove-orphans --renew-anon-volumes -V $(2)
 endef
 
 define compose_down
@@ -91,9 +96,9 @@ mcp: ## Starts MCP server
 ai-context: ## Starts only the AI context services
 	$(call compose_up,$(AI_FILES),ollama-gpu ai-context)
 
-.PHONY: local-ai
-local-ai: ## Starts local ai stack (n8n, supabase, ollama, etc)
-	$(call compose_up,$(AI_FILES),ollama-gpu n8n studio open-webui langfuse-web)
+.PHONY: ai-local
+ai-local: ## Starts local ai stack (n8n, supabase, ollama, etc)
+	$(call compose_up,$(AI_FILES),ollama-gpu n8n studio open-webui langfuse-web graphiti)
 
 .PHONY: homelab
 homelab: ## Starts all homelab services
@@ -114,6 +119,10 @@ stop: ## Stops and removes all services
 .PHONY: build
 build: ## Build all Docker images
 	$(call compose_build,$(ALL_FILES),$(TARGET))
+
+.PHONY: config
+config: ## Show the docker compose config
+	$(call compose_graph,$(ALL_FILES))
 
 .PHONY: minikube
 minikube:  ## Start minikube cluster and the whole namespace (k8s)

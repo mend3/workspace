@@ -19,10 +19,10 @@ services:
       timeout: 10s
       retries: 3
     environment:
-      BROWSER_HOST: ws://browserless:3000/
+      BROWSER_HOST: ws://browserless:3000
       ALLOW_DANGEROUS: 'true'
-      PUPPETEER_LAUNCH_OPTIONS: '{"args": ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]}'
       USER_AGENT: ${USER_AGENT:-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.6167.85 Safari/537.36}
+      PUPPETEER_LAUNCH_OPTIONS: '{"executablePath": "/usr/bin/google-chrome", "slowMo": 120}'
     depends_on:
       - browserless
     networks:
