@@ -167,7 +167,7 @@ services:
       - "traefik.http.routers.brightdata.rule=Host(`brightdata.workspace.com`)"
       - "traefik.http.routers.brightdata.entrypoints=websecure"
       - "traefik.http.routers.brightdata.tls=true"
-      - "traefik.http.services.brightdata.loadbalancer.server.port=24000"
+      - "traefik.http.services.brightdata.loadbalancer.server.port=22999"
   scrapoxy:
     restart: always
     image: scrapoxy/scrapoxy
