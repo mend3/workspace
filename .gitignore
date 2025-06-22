@@ -37,7 +37,8 @@ tmp/
 !**/.env.sh
 *-oauth.*
 *-credentials.*
-projects/
+projects/imobifinder
+projects/news-lens
 knowledge/
 **/public/system
 **/migrations
