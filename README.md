@@ -298,24 +298,25 @@ This are repositories are submodules and may be private to others users.
 
 This contains lots of documents, link, files and templates.
 
+- [./brain/ai-agents-masterclass](https://github.com/coleam00/ai-agents-masterclass)
+- [./brain/ai-agents-ottomator](https://github.com/coleam00/ottomator-agents.git)
 - [./brain/system-prompts-and-models-of-ai-tools](https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools.git)
 - [./brain/ebooks](https://github.com/sandeep10rana/DevOps.git)
 
 ### Third Party Repositories
 
-- [compose-viz/compose-viz](https://github.com/compose-viz/compose-viz)
-  - Tool to generate graph for docker-compose services
 - [./vendors/mcp-servers](https://github.com/modelcontextprotocol/servers.git)
 - [./vendors/sentence-transformers](https://github.com/UKPLab/sentence-transformers.git)
-- [./brain/ai-agents-masterclass](https://github.com/coleam00/ai-agents-masterclass)
-- [./brain/ai-agents-ottomator](https://github.com/coleam00/ottomator-agents.git)
 - [./vendors/local-ai-packaged](https://github.com/coleam00/local-ai-packaged.git)
 - [./vendors/Archon](https://github.com/coleam00/Archon.git)
+- [./vendors/mcp-filesystem](https://github.com/ysthink/Filesystem-MCP-Server-SSE.git)
 - [./vendors/mcp-crawl4ai-rag](https://github.com/coleam00/mcp-crawl4ai-rag.git)
 - [./vendors/mcp-qdrant](https://github.com/qdrant/mcp-server-qdrant.git)
 - [./vendors/supabase](https://github.com/supabase/supabase)
 - [./vendors/mcp-supabase](https://github.com/supabase-community/supabase-mcp.git)
 - [./vendors/graphiti](https://github.com/getzep/graphiti.git)
+- [compose-viz/compose-viz](https://github.com/compose-viz/compose-viz)
+  - Tool to generate graph for docker-compose services
 
 ---
 

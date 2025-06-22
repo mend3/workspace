@@ -44,9 +44,14 @@ services:
       - qdrant
   mcp-filesystem:
     build:
-      context: mcp-servers
-      dockerfile: src/filesystem/Dockerfile
+      context: mcp-filesystem
+      dockerfile: Dockerfile
       target: release
+    command: /projects
+    ports:
+      - 8006:3001
+    volumes:
+      - .:/projects:ro
   mcp-sequentialthinking:
     build:
       context: mcp-servers

@@ -19,6 +19,7 @@ SWS_FILES = $(COMMON_FILES) \
   -f ./deployment/sws/docker-compose.yml
 
 HOMELAB_FILES = $(COMMON_FILES) \
+  -f ./python/docker-compose.yml \
   -f ./shared/homelab.compose.yml
 
 ALL_FILES = $(COMMON_FILES) \
@@ -72,15 +73,15 @@ sws: ## Starts SWS service
 
 .PHONY: mcp
 mcp: ## Starts MCP server
-	$(call compose_up,$(AI_FILES),mcp-*)
+	$(call compose_up,$(ALL_FILES),mcp-*)
 
 .PHONY: ai-context
 ai-context: ## Starts the workspace context generation
-	$(call compose_up,$(AI_FILES),ollama-gpu ai-context)
+	$(call compose_up,$(ALL_FILES),ollama-gpu ai-context)
 
 .PHONY: ai-local
 ai-local: ## Starts local ai stack (n8n, supabase, ollama, etc)
-	$(call compose_up,$(AI_FILES),ollama-gpu n8n studio open-webui langfuse-web flowise)
+	$(call compose_up,$(ALL_FILES),ollama-gpu n8n open-webui redis browserless postgres mcp-* studio langfuse-web flowise)
 
 .PHONY: homelab
 homelab: ## Starts all homelab services

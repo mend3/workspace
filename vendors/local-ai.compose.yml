@@ -92,6 +92,12 @@ services:
     container_name: open-webui
     expose:
       - 8080
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ai.rule=Host(`ai.workspace.com`)"
+      - "traefik.http.routers.ai.service=ai"
+      - "traefik.http.routers.ai.entrypoints=web"
+      - "traefik.http.services.ai.loadbalancer.server.port=8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

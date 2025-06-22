@@ -36,6 +36,7 @@ tmp/
 **/*.env.*
 !**/.env.sh
 *-oauth.*
+*-credentials.*
 projects/
 knowledge/
 **/public/system
