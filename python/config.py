@@ -13,3 +13,4 @@ PGVECTOR_CONNECTION_STRING = os.environ.get("PGVECTOR_CONNECTION_STRING")
 CACHE_FOLDER = os.environ.get(
     "HF_HOME", os.path.join(os.path.dirname(__file__), ".cache/hf")
 )
+os.makedirs(CACHE_FOLDER, exist_ok=True)
