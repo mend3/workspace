@@ -64,6 +64,7 @@ Once services are running, you can access local domains like:
 127.0.0.1 scrapoxy.workspace.com
 127.0.0.1 wallos.workspace.com
 127.0.0.1 rss.workspace.com
+127.0.0.1 qdrant.workspace.com
 127.0.0.1 docmost.workspace.com
 127.0.0.1 firefly.workspace.com
 127.0.0.1 homarr.workspace.com

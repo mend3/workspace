@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     libpq-dev gcc \
     && rm -rf /var/lib/apt/lists/*
 
-COPY "./python/requirements/${VECTOR_TOOL}.txt" ./requirements.txt
+COPY "./shared/python/requirements/${VECTOR_TOOL}.txt" ./requirements.txt
 
 RUN pip config set global.cache-dir "/app/.cache/pip"
 

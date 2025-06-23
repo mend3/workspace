@@ -1,27 +1,48 @@
 services:
-  wallos:
-    container_name: wallos
-    image: bellamy/wallos:latest
+  ai-context:
+    platform: linux/amd64
+    container_name: ai-context
+    working_dir: /app
+    build:
+      context: .
+      dockerfile: .docker/python3/Dockerfile
+      args:
+        - VECTOR_TOOL=vector_generator
+    command: python -m shared.python.generators.vector_from_files --root ${AI_ROOT_DIR:-.} --store qdrant --collection workspace_embedding --ignore-dirs "vendors,dist,build,.artifacts,tmp,__pycache__,node_modules,tests,__tests__,*_ignore" --ignore-files "package-lock.json,yarn.lock,pnpm-lock.yaml"
     environment:
-      TZ: 'America/Sao_Paulo'
+      - NVIDIA_VISIBLE_DEVICES=all
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL}
+      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER}
+      - QDRANT_URL=${QDRANT_URL:-http://qdrant:6333}
     volumes:
-      - './.tmp/wallos/db:/var/www/html/db'
-      - './.tmp/wallos/logos:/var/www/html/images/uploads/logos'
-    restart: unless-stopped
+      - .:/app
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.wallos.rule=Host(`wallos.workspace.com`)"
-      - "traefik.http.routers.wallos.entrypoints=web"
+      logging: 'enabled'
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
   rss:
+    container_name: homelab-rss
     image: ghcr.io/leozqin/precis:latest
     environment:
-      # make sure these match with where you're mounting volumes
       - CONFIG_DIR=/config
       - DATA_DIR=/data
       - RSS_BASE_URL=${RSS_BASE_URL-http://localhost:80}
       - PRECIS_STORAGE_HANDLER=${PRECIS_STORAGE_HANDLER-tinydb}
-      # these variables depend on the handler(s) you want to use
-      # you can also configure these through the UI if you want
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - SLACK_API_TOKEN=${SLACK_API_TOKEN}
       - JIRA_API_TOKEN=${JIRA_API_TOKEN}
@@ -33,15 +54,14 @@ services:
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
       - LLM_MODEL="qwen2.5:7b-instruct-q4_K_M"
     volumes:
-      - ./.docker/precis/configs:/config
       - ./.docker/precis/data:/data
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.rss.rule=Host(`rss.workspace.com`)"
       - "traefik.http.routers.rss.entrypoints=web"
   kuma:
+    container_name: homelab-kuma
     image: louislam/uptime-kuma:1
-    container_name: kuma
     restart: always
     volumes:
       - kuma-data:/app/data
@@ -52,6 +72,7 @@ services:
       - "traefik.http.routers.kuma.entrypoints=web"
       - "traefik.http.services.kuma.loadbalancer.server.port=3001"
   docmost:
+    container_name: homelab-docmost
     image: docmost/docmost:latest
     depends_on:
       - postgres
@@ -71,19 +92,19 @@ services:
       - "traefik.http.routers.docmost.entrypoints=web"
       - "traefik.http.services.docmost.loadbalancer.server.port=3000"
   cron:
+    container_name: homelab-firefly-cron
+    image: alpine
+    restart: always
     #
     # To make this work, set STATIC_CRON_TOKEN in your .env file or as an environment variable and replace PLEASE_REPLACE_WITH_32_CHAR_CODE below
     # The STATIC_CRON_TOKEN must be *exactly* 32 characters long
     #
-    image: alpine
-    restart: always
-    container_name: firefly-cron
     env_file: ./.docker/firefly/.env
     command: sh -c " apk add tzdata && ln -s /usr/share/zoneinfo/${TZ} /etc/localtime | echo \"0 3 * * * wget -qO- http://firefly:8080/api/v1/cron/LlaqcTixcFFlN4XWUSVdWGxXzdHHLIuL;echo\" | crontab - && crond -f -L /dev/stdout"
   firefly:
+    container_name: homelab-firefly
     image: fireflyiii/core:latest
     hostname: app
-    container_name: firefly
     restart: always
     volumes:
       - firefly_iii_upload:/var/www/html/storage/upload
@@ -100,7 +121,7 @@ services:
       - "traefik.http.routers.firefly.entrypoints=web"
       - "traefik.http.services.firefly.loadbalancer.server.port=8080"
   homarr:
-    container_name: homarr
+    container_name: homelab-homarr
     image: ghcr.io/homarr-labs/homarr:latest
     restart: unless-stopped
     volumes:
@@ -115,7 +136,7 @@ services:
       - "traefik.http.routers.homarr.entrypoints=web"
       - "traefik.http.services.homarr.loadbalancer.server.port=7575"
   homeassistant:
-    container_name: homeassistant
+    container_name: homelab-homeassistant
     image: "ghcr.io/home-assistant/home-assistant:stable"
     volumes:
       - ./.tmp/homeassistant:/config
@@ -131,6 +152,7 @@ services:
       - "traefik.http.routers.home.entrypoints=web"
       - "traefik.http.services.home.loadbalancer.server.port=8123"
   wordpress:
+    container_name: homelab-wordpress
     image: wordpress:latest
     restart: always
     environment:

@@ -7,23 +7,21 @@ PROFILE ?= gpu-nvidia
 TARGET ?= "*" ## Target (service name) for docker compose
 
 # Compose file groups
-COMMON_FILES = -f ./docker-compose.yml \
-  -f ./browser/docker-compose.yml \
-  -f ./shared/monitor.compose.yml
+COMMON_FILES = -f docker-compose.yml \
+  -f browser/docker-compose.yml \
+  -f shared/monitor.compose.yml \
+  -f shared/homelab.compose.yml
 
 EXTALIA_FILES = $(COMMON_FILES) \
-  -f ./deployment/extalia/docker-compose.yml \
-  -f ./deployment/extalia/web/prod.compose.yml
+  -f deployment/extalia/docker-compose.yml \
+  -f deployment/extalia/web/prod.compose.yml
+
+BROWSER_FILES = $(COMMON_FILES) \
+  -f browser/ui/docker-compose.yml \
+  -f browser/use/docker-compose.yml
 
 SWS_FILES = $(COMMON_FILES) \
-  -f ./deployment/sws/docker-compose.yml
-
-HOMELAB_FILES = $(COMMON_FILES) \
-  -f ./python/docker-compose.yml \
-  -f ./shared/homelab.compose.yml
-
-ALL_FILES = $(COMMON_FILES) \
-  $(HOMELAB_FILES)
+  -f deployment/sws/docker-compose.yml
 
 define compose_graph
 	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) config > compose.yaml && \
@@ -35,7 +33,7 @@ define compose_up
 endef
 
 define compose_down
-	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) down -v
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) down
 endef
 
 define compose_stop
@@ -43,7 +41,7 @@ define compose_stop
 endef
 
 define compose_build
-	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) build --no-cache --pull --force-rm $(2)
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) build --pull --force-rm $(2)
 endef
 
 define compose_bridge
@@ -73,39 +71,39 @@ sws: ## Starts SWS service
 
 .PHONY: mcp
 mcp: ## Starts MCP server
-	$(call compose_up,$(ALL_FILES),mcp-*)
+	$(call compose_up,$(COMMON_FILES),mcp-*)
 
 .PHONY: ai-context
 ai-context: ## Starts the workspace context generation
-	$(call compose_up,$(ALL_FILES),ollama-gpu ai-context)
+	$(call compose_up,$(COMMON_FILES),ollama-gpu ai-context)
 
 .PHONY: ai-local
 ai-local: ## Starts local ai stack (n8n, supabase, ollama, etc)
-	$(call compose_up,$(ALL_FILES),ollama-gpu n8n open-webui redis browserless postgres mcp-* studio langfuse-web flowise)
+	$(call compose_up,$(COMMON_FILES),ollama-gpu n8n open-webui redis browserless postgres mcp-* studio)
 
 .PHONY: homelab
 homelab: ## Starts all homelab services
-	$(call compose_up,$(ALL_FILES),ollama-gpu $(TARGET))
+	$(call compose_up,$(COMMON_FILES),ollama-gpu $(TARGET))
 
 .PHONY: up
 up: ## Starts all defined services
-	$(call compose_up,$(ALL_FILES),$(TARGET))
+	$(call compose_up,$(COMMON_FILES),$(TARGET))
 
 .PHONY: down
 down: ## Stops and removes all services
-	$(call compose_down,$(ALL_FILES))
+	$(call compose_down,$(COMMON_FILES))
 
 .PHONY: stop
 stop: ## Stops and removes all services
-	$(call compose_stop,$(ALL_FILES))
+	$(call compose_stop,$(COMMON_FILES))
 
 .PHONY: build
 build: ## Build all Docker images
-	$(call compose_build,$(ALL_FILES),$(TARGET))
+	$(call compose_build,$(COMMON_FILES),$(TARGET))
 
 .PHONY: graph
 graph: ## Show the docker compose graph
-	$(call compose_graph,$(ALL_FILES))
+	$(call compose_graph,$(COMMON_FILES))
 
 .PHONY: minikube
 minikube:  ## Start minikube cluster and the whole namespace (k8s)
@@ -121,8 +119,8 @@ dashboard:  ## Open minikube dashboard (k8s)
 
 .PHONY: konvert
 konvert:  ## Convert docker-compose files to k8s deployments using konvert (k8s)
-	$(call konvert,$(ALL_FILES))
+	$(call konvert,$(COMMON_FILES))
 
 .PHONY: convert
 convert:  ## Convert docker-compose files to k8s deployments using docker compose-bridge plugin (k8s)
-	$(call compose_bridge,$(ALL_FILES))
+	$(call compose_bridge,$(COMMON_FILES))

@@ -1,3 +1,4 @@
+auth/
 .k8s
 .cache
 browserless_data
@@ -37,9 +38,9 @@ tmp/
 !**/.env.sh
 *-oauth.*
 *-credentials.*
-projects/imobifinder
-projects/news-lens
-knowledge/
+deployment/imobifinder
+deployment/news-lens
+brain/
 **/public/system
 **/migrations
 deployment/extalia/server

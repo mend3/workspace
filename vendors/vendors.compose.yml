@@ -1,11 +1,5 @@
 services:
-  mcp-bravesearch:
-    image: mcp/brave-search
-    environment:
-      - BRAVE_API_KEY=${BRAVE_API_KEY}
-    container_name: mcp-bravesearch
-    tty: true
-  mcp-crawl4ai-rag:
+  crawl4ai-rag:
     build:
       context: mcp-crawl4ai-rag
       dockerfile: Dockerfile
@@ -26,7 +20,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       HOST: 0.0.0.0
       PORT: 8000
-  mcp-qdrant:
+  qdrant-mcp:
     build:
       context: mcp-qdrant
       dockerfile: Dockerfile
@@ -42,27 +36,7 @@ services:
       QDRANT_VERIFY_SSL: False
     depends_on:
       - qdrant
-  mcp-filesystem:
-    build:
-      context: mcp-filesystem
-      dockerfile: Dockerfile
-      target: release
-    command: /projects
-    ports:
-      - 8006:3001
-    volumes:
-      - .:/projects:ro
-  mcp-sequentialthinking:
-    build:
-      context: mcp-servers
-      dockerfile: src/sequentialthinking/Dockerfile
-      target: release
-  mcp-memory:
-    build:
-      context: mcp-servers
-      dockerfile: src/memory/Dockerfile
-      target: release
-  mcp-graphiti:
+  graphiti-mcp:
     build:
       context: graphiti/mcp_server
       dockerfile: Dockerfile
