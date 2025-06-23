@@ -51,6 +51,7 @@ x-ollama: &service-ollama
     - OLLAMA_FLASH_ATTENTION=1
     - OLLAMA_KV_CACHE_TYPE=q8_0
     - OLLAMA_MAX_LOADED_MODELS=2
+    - OLLAMA_ORIGINS=chrome-extension://*
   volumes:
     - ollama_storage:/root/.ollama
 
@@ -279,6 +280,8 @@ services:
   ollama-gpu:
     profiles: ["gpu-nvidia"]
     <<: *service-ollama
+    ports:
+      - 11434:11434
     deploy:
       resources:
         reservations:
