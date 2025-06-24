@@ -13,12 +13,15 @@
 [submodule "browser/ui"]
 	path = browser/ui
 	url = git@github.com:mend3/browser-ui.git
-[submodule "deployment/extalia/java"]
+[submodule "extalia/java"]
 	path = deployment/extalia/java
 	url = git@github.com:mend3/extalia.git
-[submodule "deployment/extalia/web"]
+[submodule "extalia/web"]
 	path = deployment/extalia/web
 	url = git@github.com:mend3/l2-web.git
 [submodule "sws"]
 	path = deployment/sws
 	url = git@github.com:mendshell/sws.git
+[submodule "news-lens"]
+	path = deployment/news-lens
+	url = github.com:mendshell/News-Lens.git

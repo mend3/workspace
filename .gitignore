@@ -39,7 +39,6 @@ tmp/
 *-oauth.*
 *-credentials.*
 deployment/imobifinder
-deployment/news-lens
 brain/
 **/public/system
 **/migrations
