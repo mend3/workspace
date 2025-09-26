@@ -42,6 +42,7 @@ deployment/imobifinder
 brain/
 **/public/system
 **/migrations
+deployment/leadgen
 deployment/extalia/server
 deployment/extalia/app
 deployment/extalia/docs
@@ -53,3 +54,7 @@ brain/
 **/*.hcl
 **/tfplan
 **/.terraform
+!vendors/*.yml
+vendors/*
+.docker/*/media/*
+.docker/*/sessions/*

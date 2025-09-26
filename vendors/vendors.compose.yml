@@ -20,7 +20,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       HOST: 0.0.0.0
       PORT: 8000
-  qdrant-mcp:
+  mcp-qdrant:
     build:
       context: mcp-qdrant
       dockerfile: Dockerfile
@@ -36,7 +36,7 @@ services:
       QDRANT_VERIFY_SSL: False
     depends_on:
       - qdrant
-  graphiti-mcp:
+  mcp-graphiti:
     build:
       context: graphiti/mcp_server
       dockerfile: Dockerfile

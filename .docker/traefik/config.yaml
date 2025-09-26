@@ -19,10 +19,6 @@ tls:
       domains:
         - main: "workspace.com"
 
-providers:
-  docker:
-    exposedByDefault: false
-
 api:
   dashboard: true
 
@@ -32,3 +28,12 @@ http:
       redirectScheme:
         scheme: https
         permanent: true
+
+providers:
+  file:
+    filename: /etc/traefik/tls.yml
+  docker:
+    endpoint: unix:///var/run/docker.sock
+    watch: true
+    exposedByDefault: true
+    defaultRule: "HostRegexp(`{{ index .Labels \"com.docker.compose.service\"}}.workspace.com`)"

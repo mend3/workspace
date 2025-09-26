@@ -63,15 +63,15 @@ clean: ## Clean cache folders
 
 .PHONY: extalia
 extalia: ## Starts Extalia compound (http + java)
-	$(call compose_up,$(EXTALIA_FILES),-d extalia-*)
+	$(call compose_up,$(EXTALIA_FILES),traefik extalia-*)
 
 .PHONY: sws
 sws: ## Starts SWS service
-	$(call compose_up,$(SWS_FILES),-d sws-*)
+	$(call compose_up,$(SWS_FILES),traefik sws-*)
 
 .PHONY: mcp
 mcp: ## Starts MCP server
-	$(call compose_up,$(COMMON_FILES),mcp-*)
+	$(call compose_up,$(COMMON_FILES),traefik mcp-*)
 
 .PHONY: ai-context
 ai-context: ## Starts the workspace context generation
@@ -79,15 +79,15 @@ ai-context: ## Starts the workspace context generation
 
 .PHONY: ai-local
 ai-local: ## Starts local ai stack (n8n, supabase, ollama, etc)
-	$(call compose_up,$(COMMON_FILES),ollama-gpu n8n open-webui redis browserless postgres mcp-* studio)
+	$(call compose_up,$(COMMON_FILES),traefik ollama-gpu n8n open-webui redis postgres mcp-* studio)
 
 .PHONY: homelab
 homelab: ## Starts all homelab services
-	$(call compose_up,$(COMMON_FILES),ollama-gpu $(TARGET))
+	$(call compose_up,$(COMMON_FILES),traefik ollama-gpu $(TARGET))
 
 .PHONY: up
 up: ## Starts all defined services
-	$(call compose_up,$(COMMON_FILES),$(TARGET))
+	$(call compose_up,$(COMMON_FILES),traefik $(TARGET))
 
 .PHONY: down
 down: ## Stops and removes all services

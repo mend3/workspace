@@ -35,6 +35,35 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+  waha:
+    restart: always
+    # https://waha.devlike.pro/docs/how-to/engines/#docker-images
+    # https://portal.devlike.pro/docker-image
+    image: devlikeapro/waha:latest
+    # Add "dns" if you have a problem with resolving "web.whatsapp.com"
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    env_file:
+      - .docker/waha/.env
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '10'
+    expose:
+      - 3000
+    volumes:
+      # Store sessions in the .sessions folder (comment it if you're using MongoDB)
+      - '.docker/waha/sessions:/app/.sessions'
+      # Save media files
+      # https://waha.devlike.pro/docs/how-to/storages/#save-media-files-between-the-container-restarts
+      - '.docker/waha/media:/app/.media'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.waha.rule=Host(`waha.workspace.com`)"
+      - "traefik.http.routers.waha.entrypoints=web"
+      - "traefik.http.services.waha.loadbalancer.server.port=3000"
   rss:
     container_name: homelab-rss
     image: ghcr.io/leozqin/precis:latest
@@ -166,11 +195,11 @@ services:
       - 80
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.wordpress-http.rule=Host(`wordpress.workspace.com`)"
-      - "traefik.http.routers.wordpress-http.entrypoints=web"
-      - "traefik.http.routers.wordpress-https.rule=Host(`wordpress.workspace.com`)"
-      - "traefik.http.routers.wordpress-https.entrypoints=websecure"
-      - "traefik.http.routers.wordpress-https.tls=true"
+      - "traefik.http.routers.wordpress.rule=Host(`wordpress.workspace.com`)"
+      - "traefik.http.routers.wordpress.service=wordpress"
+      - "traefik.http.routers.wordpress.entrypoints=websecure"
+      - "traefik.http.routers.wordpress.tls=true"
+      - "traefik.http.services.wordpress.loadbalancer.server.port=80"
     depends_on:
       - mysql
   phpbb:

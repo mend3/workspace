@@ -76,6 +76,8 @@ Once services are running, you can access local domains like:
 127.0.0.1 n8n.workspace.com
 127.0.0.1 langfuse.workspace.com
 127.0.0.1 minio.workspace.com
+127.0.0.1 open-webui.workspace.com
+127.0.0.1 waha.workspace.com
 ```
 
 > Traefik handles routing using Docker labels. See: [Traefik Docker Provider Docs](https://doc.traefik.io/traefik/routing/providers/docker/)
