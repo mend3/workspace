@@ -228,7 +228,7 @@ make mcp
 
 ```bash
 # Grant full access to MySQL user
-GRANT ALL PRIVILEGES ON *.* TO 'user'@'%' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'api'@'%' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 
 # Create project folder tree

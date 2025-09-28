@@ -1,0 +1,29 @@
+services:
+  browser-use:
+    platform: linux/amd64
+    build:
+      context: browser/use
+      dockerfile: Dockerfile
+      args:
+        - TARGETPLATFORM=linux/amd64
+        - NODE_VERSION=${NODE_VERSION}
+    expose:
+      - 7860
+    working_dir: /app
+    tty: true
+    environment:
+      - PYTHON_ENV=production
+      - ANONYMIZED_TELEMETRY=false
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - BROWSER_HOST=ws://playwright:3000
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - USER_AGENT=${USER_AGENT}
+      - OLLAMA_BASE_URL="http://ollama:11434"
+      - LLM_PROVIDER=ollama
+      - LLM_MODEL="qwen2.5:7b-instruct-q4_K_M"
+      - LLM_API=http://ollama:11434
+      - BROWSER_MODE=remote
+      - BROWSER_WS_ENDPOINT=ws://playwright:3000
+    command: --cdp-url http://playwright:3000 # /app/agent/examples/use-cases/captcha.py
+    depends_on:
+      - playwright
