@@ -87,7 +87,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.rss.rule=Host(`rss.workspace.com`)"
-      - "traefik.http.routers.rss.entrypoints=web"
+      - "traefik.http.routers.rss.entrypoints=websecure"
+      - "traefik.http.routers.rss.tls=true"
+      - "traefik.http.services.rss.loadbalancer.server.port=80"
   kuma:
     container_name: homelab-kuma
     image: louislam/uptime-kuma:1
@@ -97,8 +99,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.kuma.rule=Host(`kuma.workspace.com`)"
-      - "traefik.http.routers.kuma.service=kuma"
-      - "traefik.http.routers.kuma.entrypoints=web"
+      - "traefik.http.routers.kuma.entrypoints=websecure"
+      - "traefik.http.routers.kuma.tls=true"
       - "traefik.http.services.kuma.loadbalancer.server.port=3001"
   docmost:
     container_name: homelab-docmost
@@ -117,8 +119,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.docmost.rule=Host(`docmost.workspace.com`)"
-      - "traefik.http.routers.docmost.service=docmost"
-      - "traefik.http.routers.docmost.entrypoints=web"
+      - "traefik.http.routers.docmost.entrypoints=websecure"
+      - "traefik.http.routers.docmost.tls=true"
       - "traefik.http.services.docmost.loadbalancer.server.port=3000"
   cron:
     container_name: homelab-firefly-cron
@@ -146,8 +148,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.firefly.rule=Host(`firefly.workspace.com`)"
-      - "traefik.http.routers.firefly.service=firefly"
-      - "traefik.http.routers.firefly.entrypoints=web"
+      - "traefik.http.routers.firefly.entrypoints=websecure"
+      - "traefik.http.routers.firefly.tls=true"
       - "traefik.http.services.firefly.loadbalancer.server.port=8080"
   homarr:
     container_name: homelab-homarr
@@ -161,8 +163,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.homarr.rule=Host(`homarr.workspace.com`)"
-      - "traefik.http.routers.homarr.service=homarr"
-      - "traefik.http.routers.homarr.entrypoints=web"
+      - "traefik.http.routers.homarr.entrypoints=websecure"
+      - "traefik.http.routers.homarr.tls=true"
       - "traefik.http.services.homarr.loadbalancer.server.port=7575"
   homeassistant:
     container_name: homelab-homeassistant
@@ -177,8 +179,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.home.rule=Host(`home.workspace.com`)"
-      - "traefik.http.routers.home.service=home"
-      - "traefik.http.routers.home.entrypoints=web"
+      - "traefik.http.routers.home.entrypoints=websecure"
+      - "traefik.http.routers.home.tls=true"
       - "traefik.http.services.home.loadbalancer.server.port=8123"
   wordpress:
     container_name: homelab-wordpress
@@ -196,7 +198,6 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.wordpress.rule=Host(`wordpress.workspace.com`)"
-      - "traefik.http.routers.wordpress.service=wordpress"
       - "traefik.http.routers.wordpress.entrypoints=websecure"
       - "traefik.http.routers.wordpress.tls=true"
       - "traefik.http.services.wordpress.loadbalancer.server.port=80"
@@ -214,11 +215,10 @@ services:
       - 80
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.phpbb-http.rule=Host(`phpbb.workspace.com`)"
-      - "traefik.http.routers.phpbb-http.entrypoints=web"
-      - "traefik.http.routers.phpbb-https.rule=Host(`phpbb.workspace.com`)"
-      - "traefik.http.routers.phpbb-https.entrypoints=websecure"
-      - "traefik.http.routers.phpbb-https.tls=true"
+      - "traefik.http.routers.phpbb.rule=Host(`phpbb.workspace.com`)"
+      - "traefik.http.routers.phpbb.entrypoints=websecure"
+      - "traefik.http.routers.phpbb.tls=true"
+      - "traefik.http.services.phpbb.loadbalancer.server.port=80"
     depends_on:
       - mysql
 

@@ -1,11 +1,11 @@
 name: ${NAMESPACE:-}
 
 include:
+- profile.compose.yml
 - .docker/supabase/docker-compose.yml
-- shared/mcp/docker-compose.yml
-- vendors/docker-compose.yml
 - vendors/local-ai.compose.yml
-- vendors/vendors.compose.yml
+- shared/mcp/docker-compose.yml
+- vendors/mcp.compose.yml
 
 services:
   traefik:
@@ -144,18 +144,6 @@ services:
     volumes:
       - pgvector_data:/var/lib/postgresql/data
       - ./.docker/postgres/pgvector/:/docker-entrypoint-initdb.d/:ro
-  pinecone:
-    image: ghcr.io/pinecone-io/pinecone-local:latest
-    container_name: pinecone
-    expose:
-      - 5081
-    environment:
-      - PORT=5081
-      - PINECONE_HOST=${PINECONE_HOST:-localhost}
-      - PINECONE_API_KEY=${PINECONE_API_KEY:-apilocal}
-      - PINECONE_ENVIRONMENT=${PINECONE_ENVIRONMENT:-us-east1-gcp}
-    volumes:
-      - pinecone_data:/root/.pinecone
   qdrant:
     image: qdrant/qdrant
     container_name: qdrant
@@ -189,31 +177,9 @@ services:
               count: all
               capabilities: [gpu]
 
-  localstack:
-    image: localstack/localstack:3.2.0
-    environment:
-      - SERVICES=s3
-      - PERSISTENCE=/tmp/localstack/data
-      - DOCKER_HOST=unix:///var/run/docker.sock
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    expose:
-      - 4566
-    healthcheck:
-      test:
-        - CMD
-        - curl
-        - '-s'
-        - localhost:4566/_localstack/init
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-
 volumes:
   postgres_data:
   redis_data:
   pgvector_data:
-  pinecone_data:
   qdrant_data:
   mongodb_data:

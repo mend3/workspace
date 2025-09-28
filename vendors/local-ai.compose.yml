@@ -3,7 +3,6 @@ volumes:
   flowise_data:
   n8n_storage:
   ollama_storage:
-  qdrant_storage:
   open-webui:
   flowise:
   langfuse_clickhouse_data:
@@ -42,38 +41,28 @@ x-n8n: &service-n8n
     postgres:
       condition: service_healthy
 
-x-ollama: &service-ollama
-  image: ollama/ollama:latest
-  container_name: ollama
-  restart: unless-stopped
-  expose:
-    - 11434
-  environment:
-    - OLLAMA_CONTEXT_LENGTH=8192
-    - OLLAMA_FLASH_ATTENTION=1
-    - OLLAMA_KV_CACHE_TYPE=q8_0
-    - OLLAMA_MAX_LOADED_MODELS=2
-    - OLLAMA_ORIGINS=chrome-extension://*
-  volumes:
-    - ollama_storage:/root/.ollama
-
-x-init-ollama: &init-ollama
-  image: ollama/ollama:latest
-  container_name: ollama-pull
-  volumes:
-    - ollama_storage:/root/.ollama
-  entrypoint: /bin/sh
-  command:
-    - '-c'
-    - >
-      set -e;
-      sleep 3;
-      OLLAMA_HOST=ollama:11434 ollama pull all-minilm:l6-v2 &&
-      OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text &&
-      OLLAMA_HOST=ollama:11434 ollama pull MFDoom/deepseek-r1-tool-calling:14b &&
-      OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:7b-instruct-q4_K_M
-
 services:
+  n8n-migrations:
+    <<: *service-n8n
+    container_name: n8n-migrations
+    entrypoint: /bin/sh
+    command:
+      - "-c"
+      - "n8n import:credentials --separate --input=/backup/credentials && n8n import:workflow --separate --input=/backup/workflows"
+    volumes:
+      - ./local-ai-packaged/n8n/backup:/backup
+
+  n8n:
+    <<: *service-n8n
+    container_name: n8n
+    restart: unless-stopped
+    expose:
+      - 5678
+    volumes:
+      - n8n_storage:/home/node/.n8n
+      - ./local-ai-packaged/n8n/backup:/backup
+      - ./local-ai-packaged/shared:/data/shared
+
   flowise:
     image: flowiseai/flowise
     restart: unless-stopped
@@ -109,27 +98,6 @@ services:
       - "traefik.http.services.open-webui.loadbalancer.server.port=8080"
     volumes:
       - open-webui:/app/backend/data
-
-  n8n-migrations:
-    <<: *service-n8n
-    container_name: n8n-migrations
-    entrypoint: /bin/sh
-    command:
-      - "-c"
-      - "n8n import:credentials --separate --input=/backup/credentials && n8n import:workflow --separate --input=/backup/workflows"
-    volumes:
-      - ./local-ai-packaged/n8n/backup:/backup
-
-  n8n:
-    <<: *service-n8n
-    container_name: n8n
-    restart: unless-stopped
-    expose:
-      - 5678
-    volumes:
-      - n8n_storage:/home/node/.n8n
-      - ./local-ai-packaged/n8n/backup:/backup
-      - ./local-ai-packaged/shared:/data/shared
 
   neo4j:
     image: neo4j:latest
@@ -283,46 +251,80 @@ services:
       - "traefik.http.routers.minio.entrypoints=web"
       - "traefik.http.services.minio.loadbalancer.server.port=9001"
 
-  ollama-cpu:
-    profiles: ["cpu"]
-    <<: *service-ollama
-
-  ollama-gpu:
-    profiles: ["gpu-nvidia"]
-    <<: *service-ollama
-    ports:
-      - 11434:11434
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-
-  ollama-gpu-amd:
-    profiles: ["gpu-amd"]
-    <<: *service-ollama
-    image: ollama/ollama:rocm
-    devices:
-      - "/dev/kfd"
-      - "/dev/dri"
-
-  ollama-pull-cpu:
-    profiles: ["cpu"]
-    <<: *init-ollama
+  archon:
+    build:
+      context: Archon
+      dockerfile: Dockerfile
+    environment:
+      - BASE_URL=http://ollama:11434
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SUPABASE_URL=http://kong:8000
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+    expose:
+      - 8100
+      - 8501
+  graphiti:
+    build:
+      context: graphiti
+    expose:
+      - 8000
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:80/healthcheck')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     depends_on:
-      - ollama-cpu
-
-  ollama-pull-gpu:
-    profiles: ["gpu-nvidia"]
-    <<: *init-ollama
+      neo4j:
+        condition: service_started
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=${NEO4J_USER}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD}
+      - PORT=8000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.graphiti.rule=Host(`graphiti.workspace.com`)"
+      - "traefik.http.routers.graphiti.service=graphiti"
+      - "traefik.http.routers.graphiti.entrypoints=websecure"
+      - "traefik.http.routers.graphiti.tls=true"
+      - "traefik.http.services.graphiti.loadbalancer.server.port=8000"
+  crawl4ai-rag:
+    build:
+      context: mcp-crawl4ai-rag
+      dockerfile: Dockerfile
+    container_name: mcp-crawl4ai-rag
+    expose:
+      - 8000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.rag.rule=Host(`rag.workspace.com`)"
+      - "traefik.http.routers.rag.service=rag"
+      - "traefik.http.routers.rag.entrypoints=websecure"
+      - "traefik.http.routers.rag.tls=true"
+      - "traefik.http.services.rag.loadbalancer.server.port=8000"
+    environment:
+      USE_AGENTIC_RAG: False
+      USE_HYBRID_SEARCH: True
+      USE_RERANKING: True
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      TRANSPORT: sse
+      USE_KNOWLEDGE_GRAPH: true
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: ${NEO4J_USER}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      HOST: 0.0.0.0
+      PORT: 8000
     depends_on:
-      - ollama-gpu
-
-  ollama-pull-gpu-amd:
-    profiles: [gpu-amd]
-    <<: *init-ollama
-    image: ollama/ollama:rocm
-    depends_on:
-     - ollama-gpu-amd
+      kong:
+        condition: service_started
+      neo4j:
+        condition: service_started

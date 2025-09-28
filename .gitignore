@@ -1,4 +1,3 @@
-auth/
 .k8s
 .cache
 browserless_data
@@ -38,18 +37,12 @@ tmp/
 !**/.env.sh
 *-oauth.*
 *-credentials.*
-deployment/imobifinder
 brain/
 **/public/system
 **/migrations
-deployment/leadgen
-deployment/extalia/server
-deployment/extalia/app
-deployment/extalia/docs
 .docker/precis/**
 .docker/**/data
 **/*.pickle
-**/*_ignore
 brain/
 **/*.hcl
 **/tfplan

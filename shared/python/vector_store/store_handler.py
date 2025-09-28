@@ -18,7 +18,7 @@ class VectorStoreHandler:
         store: Literal["pgvector", "qdrant", "pinecone"] = "pgvector",
     ):
         self.collectionName = colletion_name
-        self.store = store
+        self.store: Literal["pgvector", "qdrant", "pinecone"] = store
         self.namespace = f"{store}/{colletion_name}"
 
         if self.store == "pgvector" and not PGVECTOR_CONNECTION_STRING:

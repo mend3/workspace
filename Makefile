@@ -9,19 +9,13 @@ TARGET ?= "*" ## Target (service name) for docker compose
 # Compose file groups
 COMMON_FILES = -f docker-compose.yml \
   -f browser/docker-compose.yml \
+  -f browser/proxy.compose.yml \
   -f shared/monitor.compose.yml \
   -f shared/homelab.compose.yml
-
-EXTALIA_FILES = $(COMMON_FILES) \
-  -f deployment/extalia/docker-compose.yml \
-  -f deployment/extalia/web/prod.compose.yml
 
 BROWSER_FILES = $(COMMON_FILES) \
   -f browser/ui/docker-compose.yml \
   -f browser/use/docker-compose.yml
-
-SWS_FILES = $(COMMON_FILES) \
-  -f deployment/sws/docker-compose.yml
 
 define compose_graph
 	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) config > compose.yaml && \
@@ -60,14 +54,6 @@ help: ## Display help for each make command
 .PHONY: clean
 clean: ## Clean cache folders
 	sudo rm -rf .cache && mkdir -p .cache
-
-.PHONY: extalia
-extalia: ## Starts Extalia compound (http + java)
-	$(call compose_up,$(EXTALIA_FILES),traefik extalia-*)
-
-.PHONY: sws
-sws: ## Starts SWS service
-	$(call compose_up,$(SWS_FILES),traefik sws-*)
 
 .PHONY: mcp
 mcp: ## Starts MCP server
