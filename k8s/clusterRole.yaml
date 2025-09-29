@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: extalia-account-service
-  namespace: extalia
+  name: account-service
+  namespace: workspace
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: prometheus
-  namespace: extalia
+  namespace: workspace
   labels:
     app: prometheus
 rules:
@@ -32,7 +32,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: prometheus
-  namespace: extalia
+  namespace: workspace
   labels:
     app: prometheus
 roleRef:
@@ -41,5 +41,5 @@ roleRef:
   name: prometheus
 subjects:
   - kind: ServiceAccount
-    name: extalia-account-service
-    namespace: extalia
+    name: account-service
+    namespace: workspace
