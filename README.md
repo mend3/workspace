@@ -290,13 +290,8 @@ docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi
 This are repositories are submodules and may be private to others users.
 
 - [./shared/mcp](git@github.com:mend3/mcp.git)
-- [./shared/react-trainee](git@github.com:mend3/react-trainee.git)
-- [./shared/typestack](git@github.com:mend3/typestack.git)
 - [./browser/use](git@github.com:mend3/browser-use.git)
 - [./browser/ui](git@github.com:mend3/browser-ui.git)
-- [./deployment/extalia/web](git@github.com:mend3/l2-web.git)
-- [./deployment/extalia/java](git@github.com:mend3/extalia.git)
-- [./deployment/sws](git@github.com:mendshell/sws.git)
 
 ### Brain
 
@@ -304,21 +299,21 @@ This contains lots of documents, link, files and templates.
 
 - [./brain/ai-agents-masterclass](https://github.com/coleam00/ai-agents-masterclass)
 - [./brain/ai-agents-ottomator](https://github.com/coleam00/ottomator-agents.git)
-- [./brain/system-prompts-and-models-of-ai-tools](https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools.git)
-- [./brain/ebooks](https://github.com/sandeep10rana/DevOps.git)
+- [./brain/ai-prompts-models](https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools.git)
+- [./brain/.ebooks](https://github.com/sandeep10rana/DevOps.git)
 
 ### Third Party Repositories
 
-- [./vendors/mcp-servers](https://github.com/modelcontextprotocol/servers.git)
-- [./vendors/sentence-transformers](https://github.com/UKPLab/sentence-transformers.git)
-- [./vendors/local-ai-packaged](https://github.com/coleam00/local-ai-packaged.git)
 - [./vendors/Archon](https://github.com/coleam00/Archon.git)
+- [./vendors/graphiti](https://github.com/getzep/graphiti.git)
+- [./vendors/local-ai-packaged](https://github.com/coleam00/local-ai-packaged.git)
 - [./vendors/mcp-filesystem](https://github.com/ysthink/Filesystem-MCP-Server-SSE.git)
 - [./vendors/mcp-crawl4ai-rag](https://github.com/coleam00/mcp-crawl4ai-rag.git)
 - [./vendors/mcp-qdrant](https://github.com/qdrant/mcp-server-qdrant.git)
-- [./vendors/supabase](https://github.com/supabase/supabase)
+- [./vendors/mcp-servers](https://github.com/modelcontextprotocol/servers.git)
 - [./vendors/mcp-supabase](https://github.com/supabase-community/supabase-mcp.git)
-- [./vendors/graphiti](https://github.com/getzep/graphiti.git)
+- [./vendors/sentence-transformers](https://github.com/UKPLab/sentence-transformers.git)
+- [./vendors/supabase](https://github.com/supabase/supabase)
 - [compose-viz/compose-viz](https://github.com/compose-viz/compose-viz)
   - Tool to generate graph for docker-compose services
 

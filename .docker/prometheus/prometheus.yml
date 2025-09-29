@@ -26,8 +26,6 @@ scrape_configs:
         - 'localhost:9090'
         - 'cadvisor:8080'
         - 'prometheus-node-exporter:9100'
-        - 'sws-nginx-exporter:9113'
-        - 'extalia-nginx-exporter:9113'
         - 'loki:3100'
   - job_name: 'traefik'
     # Override the global default and scrape targets from this job every 5 seconds.

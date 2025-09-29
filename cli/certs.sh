@@ -5,10 +5,6 @@ set -euo pipefail
 CERT_DIR=".docker/traefik/certs"
 DOMAINS=(
   "workspace.com"
-  "extalia.workspace.com"
-  "extalia-api.workspace.com"
-  "extalia-gameserver.workspace.com"
-  "sws.workspace.com"
 )
 
 # Check mkcert is installed
