@@ -3,15 +3,12 @@ ENV_SOURCE = ./$(ENV_FILE) &&
 # make up ENV_FILE=.env.staging.sh
 
 CONTAINER_RUNTIME ?= docker
-PROFILE ?= gpu-nvidia
+PROFILE ?= nvidia
 TARGET ?= "*" ## Target (service name) for docker compose
 
 # Compose file groups
 COMMON_FILES = -f docker-compose.yml \
   -f browser/docker-compose.yml \
-  -f browser/proxy.compose.yml \
-  -f shared/monitor.compose.yml \
-  -f shared/homelab.compose.yml
 
 BROWSER_FILES = $(COMMON_FILES) \
   -f browser/ui/docker-compose.yml \
@@ -23,7 +20,7 @@ define compose_graph
 endef
 
 define compose_up
-	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --remove-orphans --renew-anon-volumes -V -d $(2)
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --renew-anon-volumes -V -d --force-recreate --build $(2)
 endef
 
 define compose_down
@@ -42,10 +39,6 @@ define compose_bridge
 	compose-bridge convert $(1)
 endef
 
-define kompose
-	kompose convert $(1)
-endef
-
 .PHONY: help
 help: ## Display help for each make command
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
@@ -61,15 +54,11 @@ mcp: ## Starts MCP server
 
 .PHONY: ai-context
 ai-context: ## Starts the workspace context generation
-	$(call compose_up,$(COMMON_FILES),ollama-gpu ai-context)
+	$(call compose_up,$(COMMON_FILES),ai-context)
 
 .PHONY: ai-local
 ai-local: ## Starts local ai stack (n8n, supabase, ollama, etc)
-	$(call compose_up,$(COMMON_FILES),traefik ollama-gpu n8n open-webui redis postgres mcp-* studio)
-
-.PHONY: homelab
-homelab: ## Starts all homelab services
-	$(call compose_up,$(COMMON_FILES),traefik ollama-gpu $(TARGET))
+	$(call compose_up,$(COMMON_FILES),traefik n8n redis postgres mcp-*)
 
 .PHONY: up
 up: ## Starts all defined services
@@ -102,11 +91,3 @@ minikube-down:  ## Drops minikube cluster
 .PHONY: dashboard
 dashboard:  ## Open minikube dashboard (k8s)
 	minikube dashboard
-
-.PHONY: konvert
-konvert:  ## Convert docker-compose files to k8s deployments using konvert (k8s)
-	$(call konvert,$(COMMON_FILES))
-
-.PHONY: convert
-convert:  ## Convert docker-compose files to k8s deployments using docker compose-bridge plugin (k8s)
-	$(call compose_bridge,$(COMMON_FILES))

@@ -1,6 +1,7 @@
 FROM python:3.12-slim
 
 ARG VECTOR_TOOL
+ENV HF_HOME="/app/.cache/huggingface"
 
 WORKDIR /app
 
@@ -15,9 +16,8 @@ COPY "./shared/python/requirements/${VECTOR_TOOL}.txt" ./requirements.txt
 
 RUN pip config set global.cache-dir "/app/.cache/pip"
 
-RUN pip install -r requirements.txt
-# RUN pip install onnxruntime-gpu --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
+RUN pip install --upgrade pip
 
-ENV HF_HOME="/app/.cache/huggingface"
+RUN pip install -r requirements.txt
 
 CMD ["python3", "-v"]

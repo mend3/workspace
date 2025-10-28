@@ -1,6 +1,6 @@
 ---
 description: Ensure the agent actively reads local files from core development folders (monorepos, browser tools, Python libs, MCP vendors).
-globs: ["browser/**/*.*","deployment/**/*.*","projects/**/*.*","python/**/*.*","vendors/**/*.*"]
+globs: ["browser/**/*.*","projects/**/*.*","python/**/*.*","vendors/**/*.*"]
 alwaysApply: true
 ---
 
@@ -21,30 +21,19 @@ This workspace includes key development zones the agent must understand:
 Inside `cli/` directory there are several utilities scripts, ready to be used on shell terminal.
 Read the file before running to see if any changes would be made to the user's files. If so, asks for permission before running the script.
 
+When in need of using MCP servers or connect to docker services, look for the main docker-compose, it already includes nested fiels that mount the entire services cluster.
+
+Always start by calling the `sequential-thinking` MCP server to help understanding what to do.
+
+Always check for running docker composes to find out if a service is already available to use.
+
 ## 1. Brain (brain/)
 - Useful for referencing vector stores, RAG tools, LLM APIs, LangChain integrations, Supabase modules, etc.
 - Documentations about technologies used in this workspace.
 - Ebooks about technology, devops, etc.
 - AI Agent templates for n8n.
 
-## 2. Nx Monorepos (deployment/)
-- `deployment/extalia/` and `deployment/sws/` follow Nx monorepo structure.
-- Read `nx.json`, `project.json`, `workspace.json`, `angular.json`, and any relevant `apps/`, `libs/`, `packages/`, and `tools/` folders.
-- Infer context and dependencies using `tsconfig.*`, `package.json`, `.env*`, and test configs.
-- `deployment/extalia/` - Sources to work with the Extalia Server
-  - `app/` - Hub of tools to deal with L2J Servers
-  - `docs/` - Docs, tutorials and guides collected from L2J forums and community.
-  - `java/` - Extalia Server source code.
-  - `nProtect/` - GameGuard for the server, written in PHP.
-  - `server/` - Extalia Server (compiled, production). Interlude Chronicle.
-  - `web/` - Extalia App - Online game experience. Contains README.
-- `deployment/sws/` - Sources to work with the SWS project. Contains README.
-
-Each monorepo follows the standard Nx structure (`apps/`, `packages/`, `tools/`, etc.).
-
-Make sure to check each project that contains the readme to know more details about each one.
-
-## 3. External Open Source Repos (vendors/)
+## 2. External Open Source Repos (vendors/)
 - Repositories inside `vendors/` are AI/LLM/MCP related.
 - Prefer reading real code/documentation in these repos over assumptions.
 
@@ -65,7 +54,6 @@ Make sure to check each project that contains the readme to know more details ab
   - Homelab (Homarr, Firefly, Home Assistant, etc)
   - Monitoring (Grafana, Prometheus, etc)
   - Modules under `python/` implement local services, scrapers, generators, and vector store interfaces.
-  - Understand the purpose of `config.py`, `__init__.py`, and `requirements/`.
   - Respect project layout and internal module separation.
 
 ## General Rules

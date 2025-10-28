@@ -3,7 +3,6 @@
 .cache/
 **/mysql/data/
 **/dump/
-**/nginx/cdn/
 .tmp/
 node_modules/
 *.log
@@ -20,9 +19,7 @@ yarn.lock
 **/build/
 **/.artifacts/
 **/coverage/
-**/nginx/cdn
 **/.outputs/
-**/public/
 *.tar.gz
 **/log/
 **/.terraform/
@@ -30,3 +27,4 @@ yarn.lock
 **/__pycache__
 .cache
 **/*.tf
+.ignore/

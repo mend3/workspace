@@ -15,3 +15,4 @@ requests
 pinecone
 optimum[onnxruntime-gpu]
 PyMuPDF
+langchain-text-splitters

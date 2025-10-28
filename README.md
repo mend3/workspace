@@ -11,7 +11,6 @@ A complete local development environment powered by Docker, Kubernetes, AI tooli
   - [🐳 Docker Tips](#-docker-tips)
   - [☸️ Kubernetes \& Minikube](#️-kubernetes--minikube)
     - [Install Minikube](#install-minikube)
-    - [Kompose](#kompose)
     - [Cleanup](#cleanup)
     - [Helm Chart Installation](#helm-chart-installation)
   - [🔒 TLS Certificates (mkcert)](#-tls-certificates-mkcert)
@@ -29,6 +28,7 @@ A complete local development environment powered by Docker, Kubernetes, AI tooli
     - [Self Owned](#self-owned)
     - [Brain](#brain)
     - [Third Party Repositories](#third-party-repositories)
+  - [MCP Servers](#mcp-servers)
 
 ---
 
@@ -44,7 +44,6 @@ Ensure the following tools are installed before proceeding:
 | Docker                                               | Latest     | [Install Docker](https://www.docker.com/)            |
 | Docker Compose                                       | Latest     | [See docs](https://docs.docker.com/compose/install/) |
 | [Minikube](https://minikube.sigs.k8s.io/docs/start/) | (Optional) | For local Kubernetes setup                           |
-| [Kompose](https://kompose.io/getting-started/)       | (Optional) | For local Kubernetes/docker-compsoe setup            |
 | [Helm](https://helm.sh/docs/intro/install/)          | 3.x+       | Required if using Minikube                           |
 | jq                                                   | Latest     | `sudo apt install -y jq`                             |
 
@@ -58,11 +57,6 @@ Once services are running, you can access local domains like:
 127.0.0.1 dashboard.workspace.com
 127.0.0.1 graphiti.workspace.com
 127.0.0.1 supabase.workspace.com
-127.0.0.1 browserless.workspace.com
-127.0.0.1 selenoid.workspace.com
-127.0.0.1 brightdata.workspace.com
-127.0.0.1 scrapoxy.workspace.com
-127.0.0.1 flaresolverr.workspace.com
 127.0.0.1 wallos.workspace.com
 127.0.0.1 rss.workspace.com
 127.0.0.1 qdrant.workspace.com
@@ -77,9 +71,36 @@ Once services are running, you can access local domains like:
 127.0.0.1 n8n.workspace.com
 127.0.0.1 langfuse.workspace.com
 127.0.0.1 minio.workspace.com
-127.0.0.1 open-webui.workspace.com
 127.0.0.1 waha.workspace.com
 ```
+
+### MCP Servers (Model Context Protocol)
+
+- mcp-graphiti-neo4j - Knowledge Graph MCP service (port 8013)
+- mcp-filesystem - Filesystem MCP server (port 8006) ✓ healthy
+- mcp-puppeteer - Browser automation MCP server (port 8001) ✓ healthy
+- mcp-mysql - MySQL MCP server (port 8003) ✓ healthy
+- mcp-crawl4ai-rag - RAG service (port 8014)
+- mcp-qdrant - Vector database MCP server (port 8012)
+- mcp-pgvector - PGVector MCP server (port 8002) ✓ healthy
+- mcp-sequentialthinking - Sequential thinking MCP server (port 8004) ✓ healthy
+- mcp-memory - Memory MCP server (port 8005) ✓ healthy
+- mcp-bravesearch - Brave Search MCP server (port 8007)
+
+### Infrastructure & Services
+
+- traefik - Reverse proxy on 80/443
+- supabase-vector - Vector service ✓
+- supabase-kong - Kong API gateway ✓
+- supabase-db - PostgreSQL ✓
+- supabase-analytics - Analytics ✓
+
+### Databases
+
+- pgvector - PostgreSQL with pgvector (port 5432) ✓
+- mysql - MySQL 8.0.20 (port 3306) ✓
+- neo4j - Neo4j 5.26.0 (ports 7474, 7687) ✓
+- qdrant - Qdrant (ports 6333-6334) ✓
 
 > Traefik handles routing using Docker labels. See: [Traefik Docker Provider Docs](https://doc.traefik.io/traefik/routing/providers/docker/)
 
@@ -117,14 +138,6 @@ docker run -d -p 5000:5000 --restart=always --name registry registry:2
 ```bash
 curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
 sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
-```
-
-### Kompose
-
-```bash
-curl -L https://github.com/kubernetes/kompose/releases/download/v1.34.0/kompose-linux-amd64 -o kompose
-chmod +x kompose
-sudo mv ./kompose /usr/local/bin/kompose
 ```
 
 ### Cleanup
@@ -307,7 +320,6 @@ This contains lots of documents, link, files and templates.
 - [./vendors/Archon](https://github.com/coleam00/Archon.git)
 - [./vendors/graphiti](https://github.com/getzep/graphiti.git)
 - [./vendors/local-ai-packaged](https://github.com/coleam00/local-ai-packaged.git)
-- [./vendors/mcp-filesystem](https://github.com/ysthink/Filesystem-MCP-Server-SSE.git)
 - [./vendors/mcp-crawl4ai-rag](https://github.com/coleam00/mcp-crawl4ai-rag.git)
 - [./vendors/mcp-qdrant](https://github.com/qdrant/mcp-server-qdrant.git)
 - [./vendors/mcp-servers](https://github.com/modelcontextprotocol/servers.git)
@@ -316,6 +328,51 @@ This contains lots of documents, link, files and templates.
 - [./vendors/supabase](https://github.com/supabase/supabase)
 - [compose-viz/compose-viz](https://github.com/compose-viz/compose-viz)
   - Tool to generate graph for docker-compose services
+
+---
+
+
+## MCP Servers
+
+```json
+{
+  "mcpServers": {
+    "puppeteer": {
+      "url": "http://localhost:8001/sse"
+    },
+    "pgvector": {
+      "url": "http://localhost:8002/sse"
+    },
+    "mysql": {
+      "url": "http://localhost:8003/sse"
+    },
+    "bravesearch": {
+      "url": "http://localhost:8004/sse"
+    },
+    "everything": {
+      "url": "http://localhost:8005/sse"
+    },
+    "fetch": {
+      "url": "http://localhost:8006/"
+    },
+    "filesystem": {
+      "url": "http://localhost:8007/"
+    },
+    "git": {
+      "url": "http://localhost:8008/"
+    },
+    "memory": {
+      "url": "http://localhost:8009/"
+    },
+    "sequentialthinking": {
+      "url": "http://localhost:8010/"
+    },
+    "time": {
+      "url": "http://localhost:8011/"
+    },
+  }
+}
+```
 
 ---
 

@@ -21,8 +21,6 @@ random_string() {
 
 ###### GLOBALS ######
 export NAMESPACE="$(basename $(pwd))"
-export CLUSTER_NAME="${CLUSTER_NAME:-workspace}"
-export HELM_RELEASE="${HELM_RELEASE:-homelab}"
 
 ###### DATABASE CONNECTIONS ######
 # mysql
@@ -35,4 +33,4 @@ export POSTGRES_CONNECTION_STRING="postgresql://${POSTGRES_USER}:${POSTGRES_PASS
 export PGVECTOR_CONNECTION_STRING="postgresql+psycopg2://${PGVECTOR_USER}:${PGVECTOR_PASSWORD}@${PGVECTOR_HOST}:${PGVECTOR_PORT}/${PGVECTOR_DATABASE}"
 
 
-echo -e "✅ Environment loaded: \n\tNamespace '${NAMESPACE}' \n\tCluster '${CLUSTER_NAME}' \n\tHelm '${HELM_RELEASE}'"
+echo -e "✅ Namespace '${NAMESPACE}'"
