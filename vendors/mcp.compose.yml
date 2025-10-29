@@ -10,13 +10,6 @@ services:
       - 8014:8000
     expose:
       - 8000
-    labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.rag.rule=Host(`rag.workspace.com`)'
-      - 'traefik.http.routers.rag.service=rag'
-      - 'traefik.http.routers.rag.entrypoints=websecure'
-      - 'traefik.http.routers.rag.tls=true'
-      - 'traefik.http.services.rag.loadbalancer.server.port=8000'
     environment:
       USE_AGENTIC_RAG: False
       USE_HYBRID_SEARCH: True

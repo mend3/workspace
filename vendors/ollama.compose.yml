@@ -2,6 +2,8 @@ x-ollama: &service-ollama
   image: ollama/ollama:latest
   container_name: ollama
   restart: unless-stopped
+  ports:
+    - 11434:11434
   expose:
     - 11434/tcp
   environment:

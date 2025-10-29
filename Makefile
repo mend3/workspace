@@ -8,11 +8,7 @@ TARGET ?= "*" ## Target (service name) for docker compose
 
 # Compose file groups
 COMMON_FILES = -f docker-compose.yml \
-  -f browser/docker-compose.yml \
-
-BROWSER_FILES = $(COMMON_FILES) \
-  -f browser/ui/docker-compose.yml \
-  -f browser/use/docker-compose.yml
+  -f browser/docker-compose.yml
 
 define compose_graph
 	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) config > compose.yaml && \
@@ -49,7 +45,7 @@ clean: ## Clean cache folders
 	sudo rm -rf .cache && mkdir -p .cache
 
 .PHONY: mcp
-mcp: ## Starts MCP server
+mcp: ## Starts MCP servers
 	$(call compose_up,$(COMMON_FILES),mcp-*)
 
 .PHONY: ai-context
@@ -57,31 +53,31 @@ ai-context: ## Starts the workspace context generation
 	$(call compose_up,$(COMMON_FILES),ai-context)
 
 .PHONY: ai-local
-ai-local: ## Starts local ai stack (n8n, supabase, ollama, etc)
-	$(call compose_up,$(COMMON_FILES),n8n redis postgres mcp-*)
+ai-local: ## Starts local ai stack, including n8n and supabase
+	$(call compose_up,$(COMMON_FILES),n8n studio)
 
 .PHONY: homelab
 homelab: ## Starts homelab services
 	$(call compose_up,$(COMMON_FILES),wordpress firefly docmost precis waha)
 
 .PHONY: up
-up: ## Starts all defined services
+up: ## Starts defined services
 	$(call compose_up,$(COMMON_FILES),$(TARGET))
 
 .PHONY: down
-down: ## Stops and removes all services
+down: ## Removes and stops defined services
 	$(call compose_down,$(COMMON_FILES),$(TARGET))
 
 .PHONY: stop
-stop: ## Stops and removes all services
+stop: ## Stops defined services
 	$(call compose_stop,$(COMMON_FILES))
 
 .PHONY: build
-build: ## Build all Docker images
+build: ## Build Docker images for defined services
 	$(call compose_build,$(COMMON_FILES),$(TARGET))
 
 .PHONY: graph
-graph: ## Show the docker compose graph
+graph: ## Show the docker compose graph for defined services
 	$(call compose_graph,$(COMMON_FILES))
 
 .PHONY: minikube
