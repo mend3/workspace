@@ -41,3 +41,60 @@ services:
       - "traefik.http.routers.selenoid.entrypoints=websecure"
       - "traefik.http.routers.selenoid.tls=true"
       - "traefik.http.services.selenoid.loadbalancer.server.port=8080"
+  browserless:
+    platform: linux/amd64
+    restart: always
+    image: browserless/chrome
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - '-f'
+        - http://localhost:3000/
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    expose:
+      - 3000
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      # - TOKEN=${BROWSER_TOKEN}
+      - ALLOW_FILE_PROTOCOL=true
+      - TZ=America/Sao_Paulo
+      - PREBOOT_CHROME=true
+      - KEEP_ALIVE=true
+      - CONNECTION_TIMEOUT=86400000
+      - MAX_CONCURRENT_SESSIONS=1
+      - QUEUE_LENGTH=4
+      - ENABLE_CORS=true
+      - ENABLE_DEBUGGER=true
+      - DEFAULT_IGNORE_HTTPS_ERRORS=true
+      - EXIT_ON_HEALTH_FAILURE=true
+      - FUNCTION_BUILT_INS=["crypto"]
+      - FUNCTION_EXTERNALS=["request","fetch"]
+      - FUNCTION_ENABLE_INCOGNITO_MODE=true
+      - DEFAULT_STEALTH=true
+      - USE_CHROME_STABLE=true
+      # - PROXY_HOST=scrapoxy:8888
+      # - PROXY_AUTH=${PROXY_AUTH}
+      - DEFAULT_LAUNCH_ARGS=["--user-agent=${USER_AGENT}","--window-size=1920,1080","--autoplay-policy=user-gesture-required","--blink-settings=imagesEnabled=true","--disable-background-logging","--disable-background-networking","--disable-background-timer-throttling","--disable-backgrounding-occluded-windows","--disable-blink-features=AutomationControlled","--disable-breakpad","--disable-client-side-phishing-detection","--disable-component-update","--disable-dev-shm-usage","--disable-domain-reliability","--disable-features=IsolateOrigins,SitePerProcess","--disable-hang-monitor","--disable-infobars","--disable-ipc-flooding-protection","--disable-offer-store-unmasked-wallet-cards","--disable-print-preview","--disable-prompt-on-repost","--disable-setuid-sandbox","--disable-speech-api","--disk-cache-size=33554432","--enable-features=Vulkan","--headless=new","--memory-pressure-off","--no-default-browser-check","--no-experiments","--no-first-run","--no-pings","--no-zygote","--password-store=basic","--use-angle=vulkan","--use-gl=egl","--ignore-gpu-blocklist"]
+      # "--proxy-server=http://${PROXY_HOST}","--proxy-auth=${PROXY_AUTH}"
+    volumes:
+      - browserless_data:/usr/src/app/workspace
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.browserless.rule=Host(`browserless.workspace.com`)"
+      - "traefik.http.routers.browserless.entrypoints=websecure"
+      - "traefik.http.routers.browserless.tls=true"
+      - "traefik.http.services.browserless.loadbalancer.server.port=3000"
+    shm_size: 2gb
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+
+volumes:
+  browserless_data:
