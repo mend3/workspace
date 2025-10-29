@@ -9,7 +9,7 @@ services:
       - 1.1.1.1
       - 8.8.8.8
     env_file:
-      - .docker/waha/.env
+      - ./config/waha/.env
     logging:
       driver: 'json-file'
       options:
@@ -19,17 +19,16 @@ services:
       - 3000
     volumes:
       # Store sessions in the .sessions folder (comment it if you're using MongoDB)
-      - '.docker/waha/sessions:/app/.sessions'
+      - './config/waha/sessions:/app/.sessions'
       # Save media files
       # https://waha.devlike.pro/docs/how-to/storages/#save-media-files-between-the-container-restarts
-      - '.docker/waha/media:/app/.media'
+      - './config/waha/media:/app/.media'
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.waha.rule=Host(`waha.workspace.com`)'
       - 'traefik.http.routers.waha.entrypoints=web'
       - 'traefik.http.services.waha.loadbalancer.server.port=3000'
-  rss:
-    container_name: homelab-rss
+  precis:
     image: ghcr.io/leozqin/precis:latest
     environment:
       - CONFIG_DIR=/config
@@ -47,15 +46,16 @@ services:
       - OLLAMA_BASE_URL=http://ollama:11434
       - LLM_MODEL="qwen2.5:7b-instruct-q4_K_M"
     volumes:
-      - ./.docker/precis/data:/data
+      - ./config/precis/data:/data
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.rss.rule=Host(`rss.workspace.com`)'
-      - 'traefik.http.routers.rss.entrypoints=websecure'
-      - 'traefik.http.routers.rss.tls=true'
+      - 'traefik.http.routers.rss.entrypoints=web'
+      - 'traefik.http.routers.rss.tls=false'
       - 'traefik.http.services.rss.loadbalancer.server.port=80'
+    depends_on:
+      - ollama
   kuma:
-    container_name: homelab-kuma
     image: louislam/uptime-kuma:1
     restart: always
     volumes:
@@ -63,11 +63,10 @@ services:
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.kuma.rule=Host(`kuma.workspace.com`)'
-      - 'traefik.http.routers.kuma.entrypoints=websecure'
-      - 'traefik.http.routers.kuma.tls=true'
+      - 'traefik.http.routers.kuma.entrypoints=web'
+      - 'traefik.http.routers.kuma.tls=false'
       - 'traefik.http.services.kuma.loadbalancer.server.port=3001'
   docmost:
-    container_name: homelab-docmost
     image: docmost/docmost:latest
     depends_on:
       - postgres
@@ -75,7 +74,7 @@ services:
     environment:
       APP_URL: 'http://localhost:3000'
       APP_SECRET: 'a783b2t4983274b92834tf73246tf327'
-      DATABASE_URL: 'postgresql://postgres:postgres@postgres:5432/docmost?schema=public'
+      DATABASE_URL: 'postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/docmost?schema=public'
       REDIS_URL: 'redis://redis:6379'
     restart: unless-stopped
     volumes:
@@ -83,27 +82,30 @@ services:
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.docmost.rule=Host(`docmost.workspace.com`)'
-      - 'traefik.http.routers.docmost.entrypoints=websecure'
-      - 'traefik.http.routers.docmost.tls=true'
+      - 'traefik.http.routers.docmost.entrypoints=web'
+      - 'traefik.http.routers.docmost.tls=false'
       - 'traefik.http.services.docmost.loadbalancer.server.port=3000'
   cron:
-    container_name: homelab-firefly-cron
     image: alpine
     restart: always
     #
     # To make this work, set STATIC_CRON_TOKEN in your .env file or as an environment variable and replace PLEASE_REPLACE_WITH_32_CHAR_CODE below
     # The STATIC_CRON_TOKEN must be *exactly* 32 characters long
     #
-    env_file: ./.docker/firefly/.env
-    command: sh -c " apk add tzdata && ln -s /usr/share/zoneinfo/${TZ} /etc/localtime | echo \"0 3 * * * wget -qO- http://firefly:8080/api/v1/cron/LlaqcTixcFFlN4XWUSVdWGxXzdHHLIuL;echo\" | crontab - && crond -f -L /dev/stdout"
+    env_file: ./config/firefly/.env
+    command: sh -c "
+      apk add tzdata && \
+      (ln -s /usr/share/zoneinfo/$$TZ /etc/localtime || true) && \
+      echo \"0 3 * * * wget -qO- http://firefly:8080/api/v1/cron/$$STATIC_CRON_TOKEN;echo\"
+      | crontab - && \
+      crond -f -L /dev/stdout"
   firefly:
-    container_name: homelab-firefly
     image: fireflyiii/core:latest
     hostname: app
     restart: always
     volumes:
       - firefly_iii_upload:/var/www/html/storage/upload
-    env_file: ./.docker/firefly/.env
+    env_file: ./config/firefly/.env
     links:
       - redis
       - mysql
@@ -112,42 +114,10 @@ services:
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.firefly.rule=Host(`firefly.workspace.com`)'
-      - 'traefik.http.routers.firefly.entrypoints=websecure'
-      - 'traefik.http.routers.firefly.tls=true'
+      - 'traefik.http.routers.firefly.entrypoints=web'
+      - 'traefik.http.routers.firefly.tls=false'
       - 'traefik.http.services.firefly.loadbalancer.server.port=8080'
-  homarr:
-    container_name: homelab-homarr
-    image: ghcr.io/homarr-labs/homarr:latest
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./.tmp/homarr/appdata:/appdata
-    environment:
-      - SECRET_ENCRYPTION_KEY=${SECRET_ENCRYPTION_KEY}
-    labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.homarr.rule=Host(`homarr.workspace.com`)'
-      - 'traefik.http.routers.homarr.entrypoints=websecure'
-      - 'traefik.http.routers.homarr.tls=true'
-      - 'traefik.http.services.homarr.loadbalancer.server.port=7575'
-  homeassistant:
-    container_name: homelab-homeassistant
-    image: 'ghcr.io/home-assistant/home-assistant:stable'
-    volumes:
-      - ./.tmp/homeassistant:/config
-      - ./.docker/homeassistant/config.yaml:/config/configuration.yaml
-      - /etc/localtime:/etc/localtime:ro
-      - /run/dbus:/run/dbus:ro
-    restart: unless-stopped
-    privileged: true
-    labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.home.rule=Host(`home.workspace.com`)'
-      - 'traefik.http.routers.home.entrypoints=websecure'
-      - 'traefik.http.routers.home.tls=true'
-      - 'traefik.http.services.home.loadbalancer.server.port=8123'
   wordpress:
-    container_name: homelab-wordpress
     image: wordpress:latest
     restart: always
     environment:
@@ -162,27 +132,9 @@ services:
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.wordpress.rule=Host(`wordpress.workspace.com`)'
-      - 'traefik.http.routers.wordpress.entrypoints=websecure'
-      - 'traefik.http.routers.wordpress.tls=true'
+      - 'traefik.http.routers.wordpress.entrypoints=web'
+      - 'traefik.http.routers.wordpress.tls=false'
       - 'traefik.http.services.wordpress.loadbalancer.server.port=80'
-    depends_on:
-      - mysql
-  phpbb:
-    restart: always
-    build:
-      context: .
-      dockerfile: ./.docker/php/Dockerfile
-      target: phpbb
-    volumes:
-      - phpbb-data:/var/www/html
-    expose:
-      - 80
-    labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.phpbb.rule=Host(`phpbb.workspace.com`)'
-      - 'traefik.http.routers.phpbb.entrypoints=websecure'
-      - 'traefik.http.routers.phpbb.tls=true'
-      - 'traefik.http.services.phpbb.loadbalancer.server.port=80'
     depends_on:
       - mysql
 

@@ -1,0 +1,29 @@
+services:
+  homarr:
+    image: ghcr.io/homarr-labs/homarr:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # - ../.tmp/homarr/appdata:/appdata
+    environment:
+      - SECRET_ENCRYPTION_KEY=${SECRET_ENCRYPTION_KEY}
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.homarr.rule=Host(`homarr.workspace.com`)'
+      - 'traefik.http.routers.homarr.entrypoints=websecure'
+      - 'traefik.http.routers.homarr.tls=true'
+      - 'traefik.http.services.homarr.loadbalancer.server.port=7575'
+  homeassistant:
+    image: 'ghcr.io/home-assistant/home-assistant:stable'
+    volumes:
+      - ./config/homeassistant/config.yaml:/config/configuration.yaml
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+    restart: unless-stopped
+    privileged: true
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.home.rule=Host(`home.workspace.com`)'
+      - 'traefik.http.routers.home.entrypoints=websecure'
+      - 'traefik.http.routers.home.tls=true'
+      - 'traefik.http.services.home.loadbalancer.server.port=8123'

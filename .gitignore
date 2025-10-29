@@ -41,14 +41,13 @@ brain/
 **/migrations
 .docker/n8n/**
 !.docker/n8n/.gitkeep
-.docker/precis/**
-!.docker/precis/.gitkeep
 .docker/**/data
 **/*.pickle
 **/*.hcl
 **/tfplan
 **/.terraform
-vendors/*
 !vendors/*.yml
 .docker/waha/*
 .ignore/
+**/precis/data/
+**/waha/sessions/

@@ -20,7 +20,7 @@ define compose_graph
 endef
 
 define compose_up
-	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --renew-anon-volumes -V -d --force-recreate --build $(2)
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --renew-anon-volumes --remove-orphans -V -d --force-recreate --build traefik $(2)
 endef
 
 define compose_down
@@ -50,7 +50,7 @@ clean: ## Clean cache folders
 
 .PHONY: mcp
 mcp: ## Starts MCP server
-	$(call compose_up,$(COMMON_FILES),traefik mcp-*)
+	$(call compose_up,$(COMMON_FILES),mcp-*)
 
 .PHONY: ai-context
 ai-context: ## Starts the workspace context generation
@@ -58,15 +58,19 @@ ai-context: ## Starts the workspace context generation
 
 .PHONY: ai-local
 ai-local: ## Starts local ai stack (n8n, supabase, ollama, etc)
-	$(call compose_up,$(COMMON_FILES),traefik n8n redis postgres mcp-*)
+	$(call compose_up,$(COMMON_FILES),n8n redis postgres mcp-*)
+
+.PHONY: homelab
+homelab: ## Starts homelab services
+	$(call compose_up,$(COMMON_FILES),wordpress firefly docmost precis waha)
 
 .PHONY: up
 up: ## Starts all defined services
-	$(call compose_up,$(COMMON_FILES),traefik $(TARGET))
+	$(call compose_up,$(COMMON_FILES),$(TARGET))
 
 .PHONY: down
 down: ## Stops and removes all services
-	$(call compose_down,$(COMMON_FILES))
+	$(call compose_down,$(COMMON_FILES),$(TARGET))
 
 .PHONY: stop
 stop: ## Stops and removes all services
