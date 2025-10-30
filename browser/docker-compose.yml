@@ -1,7 +1,3 @@
-include:
-  - browser/ui/docker-compose.yml
-  - browser/use/docker-compose.yml
-
 services:
   playwright:
     platform: linux/amd64
