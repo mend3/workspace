@@ -3,7 +3,7 @@ from langchain.indexes import SQLRecordManager, index
 from langchain_core.documents import Document
 from .store_factory import VectorStoreFactory
 from .embedding_factory import EmbeddingFactory
-from ..config import (
+from config import (
     PGVECTOR_CONNECTION_STRING,
     EMBEDDING_MODEL,
     EMBEDDING_PROVIDER,

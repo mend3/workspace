@@ -1,4 +1,4 @@
-langchain
+langchain==0.1.10
 langchain-community
 langchain-huggingface
 langchain-core

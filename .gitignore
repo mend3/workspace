@@ -11,3 +11,4 @@ brain/
 .env
 *.env.*
 .k8s
+**/.venv/

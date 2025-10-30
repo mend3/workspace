@@ -1,7 +1,7 @@
 from .client_qdrant import QdrantStore
 from .client_pinecone import PineconeVectorStore
 from .client_pgvector import PgVectorVectorStore
-from ..config import PGVECTOR_CONNECTION_STRING, QDRANT_URL, PINECONE_API_KEY
+from config import PGVECTOR_CONNECTION_STRING, QDRANT_URL, PINECONE_API_KEY
 from typing import Literal
 
 

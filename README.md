@@ -314,6 +314,7 @@ This contains lots of documents, link, files and templates.
 - [./brain/ai-agents-ottomator](https://github.com/coleam00/ottomator-agents.git)
 - [./brain/ai-prompts-models](https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools.git)
 - [./brain/.ebooks](https://github.com/sandeep10rana/DevOps.git)
+- [./brain/sentence-transformers](https://github.com/UKPLab/sentence-transformers.git)
 
 ### Third Party Repositories
 
@@ -324,7 +325,6 @@ This contains lots of documents, link, files and templates.
 - [./vendors/mcp-qdrant](https://github.com/qdrant/mcp-server-qdrant.git)
 - [./vendors/mcp-servers](https://github.com/modelcontextprotocol/servers.git)
 - [./vendors/mcp-supabase](https://github.com/supabase-community/supabase-mcp.git)
-- [./vendors/sentence-transformers](https://github.com/UKPLab/sentence-transformers.git)
 - [./vendors/supabase](https://github.com/supabase/supabase)
 - [compose-viz/compose-viz](https://github.com/compose-viz/compose-viz)
   - Tool to generate graph for docker-compose services

@@ -6,11 +6,11 @@ from typing import List
 from datetime import date
 from langchain_core.documents import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from ..lib.file import UTF8FileHandler, FileHandler
-from ..lib.dir import OsScandirDirectoryScanner, DirectoryScanner
-from ..lib.logger import logger
-from ..lib.utils import sha256_hash, clean_text
-from ..vector_store.store_handler import VectorStoreHandler
+from lib.file import UTF8FileHandler, FileHandler
+from lib.dir import OsScandirDirectoryScanner, DirectoryScanner
+from lib.logger import logger
+from lib.utils import sha256_hash, clean_text
+from vector_store.store_handler import VectorStoreHandler
 
 extensions = tuple(
     [

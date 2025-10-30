@@ -46,8 +46,8 @@ services:
     container_name: ai-context
     working_dir: /app
     build:
-      context: .
-      dockerfile: .docker/python3/Dockerfile
+      context: ./shared/python
+      dockerfile: Dockerfile
       args:
         - VECTOR_TOOL=vector_generator
     entrypoint: /bin/sh
@@ -56,8 +56,7 @@ services:
       - >
         set -e;
         sleep 3;
-        pip install onnxruntime-gpu --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/ &&
-        python -m shared.python.generators.vector_from_files --root . --store qdrant --collection workspace_embedding --ignore-dirs "vendors,dist,build,.artifacts,tmp,__pycache__,node_modules,*_ignore,.cache" --ignore-files "package-lock.json,yarn.lock,pnpm-lock.yaml"
+        python -m generators.vector_from_files --root /brain --store qdrant --collection workspace_embedding --ignore-dirs "vendors,dist,build,.artifacts,tmp,__pycache__,node_modules,*_ignore,.cache" --ignore-files "package-lock.json,yarn.lock,pnpm-lock.yaml,.env"
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - PYTHONDONTWRITEBYTECODE=1
@@ -73,7 +72,7 @@ services:
         max-size: '10m'
         max-file: '3'
     volumes:
-      - .:/app
+      - ./brain:/brain:ro
     depends_on:
       qdrant:
         condition: service_healthy

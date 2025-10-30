@@ -13,6 +13,8 @@ services:
     command: /bin/sh -c "npx -y playwright@1.52.0 run-server --port 3000 --host 0.0.0.0"
     expose:
       - 3000
+    ports:
+      - 9000:3000
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.playwright.rule=Host(`playwright.workspace.com`)"

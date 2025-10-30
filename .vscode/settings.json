@@ -8,7 +8,9 @@
     "**/dist": true,
     "**/.next": true,
     "**/.git": true,
-    "**/node_modules/": true
+    "**/node_modules/": true,
+    "**/.venv/": true,
+    "**/venv/": true
   },
   "files.exclude": {
     "**/.husky": true,
@@ -16,7 +18,9 @@
     "**/.yarn": true,
     "**/.next": true,
     "**/.git": true,
-    "**/node_modules/": true
+    "**/node_modules/": true,
+    "**/.venv/": true,
+    "**/venv/": true
   },
   "files.watcherExclude": {
     "**/.husky": true,
@@ -26,7 +30,9 @@
     "**/build": true,
     "**/dist": true,
     "**/__tests__": true,
-    "**/node_modules/": true
+    "**/node_modules/": true,
+    "**/.venv/": true,
+    "**/venv/": true
   },
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,

@@ -16,7 +16,7 @@ define compose_graph
 endef
 
 define compose_up
-	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --renew-anon-volumes --remove-orphans -V -d --force-recreate --build traefik $(2)
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) up --renew-anon-volumes --remove-orphans -V -d --force-recreate traefik $(2)
 endef
 
 define compose_down
