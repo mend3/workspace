@@ -19,9 +19,9 @@ x-n8n: &service-n8n
     - N8N_DEFAULT_USER_EMAIL=${N8N_DEFAULT_USER_EMAIL}
     - N8N_DEFAULT_USER_PASSWORD=${N8N_DEFAULT_USER_PASSWORD}
     - N8N_BASIC_AUTH_ACTIVE=false
-    - N8N_HOST=n8n.workspace.com
+    - N8N_HOST=localhost:5678
     - N8N_PORT=5678
-    - WEBHOOK_URL=${N8N_HOSTNAME:+http://}${N8N_HOSTNAME:-http://n8n.workspace.com}
+    - WEBHOOK_URL=${N8N_HOSTNAME:+http://}${N8N_HOSTNAME:-http://localhost:5678}
     - N8N_RUNNERS_ENABLED=true
     - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
   labels:
@@ -32,6 +32,12 @@ x-n8n: &service-n8n
     - 'traefik.http.routers.n8n.tls=false'
     - 'traefik.http.services.n8n.loadbalancer.server.port=5678'
   depends_on:
+    ollama:
+      condition: service_started
+    qdrant:
+      condition: service_started
+    pgvector:
+      condition: service_healthy
     postgres:
       condition: service_healthy
     redis:
@@ -62,9 +68,6 @@ services:
       - n8n_storage:/home/node/.n8n
       - ../.docker/n8n/backup:/backup
       - ../.docker/n8n/shared:/data/shared
-    depends_on:
-      n8n-migrations:
-        condition: service_completed_successfully
 
   clickhouse:
     image: clickhouse/clickhouse-server

@@ -2,8 +2,6 @@ x-ollama: &service-ollama
   image: ollama/ollama:latest
   container_name: ollama
   restart: unless-stopped
-  ports:
-    - 11434:11434
   expose:
     - 11434/tcp
   environment:
@@ -28,10 +26,16 @@ services:
   ollama-cpu:
     profiles: ["cpu"]
     <<: *service-ollama
+    depends_on:
+      ollama-pull-cpu:
+        condition: service_completed_successfully
 
   ollama:
     profiles: ["nvidia"]
     <<: *service-ollama
+    depends_on:
+      ollama-pull-nvidia:
+        condition: service_completed_successfully
     deploy:
       resources:
         reservations:
@@ -43,6 +47,9 @@ services:
   ollama-amd:
     profiles: ["amd"]
     <<: *service-ollama
+    depends_on:
+      ollama-pull-amd:
+        condition: service_completed_successfully
     image: ollama/ollama:rocm
     devices:
       - "/dev/kfd"
