@@ -1,4 +1,23 @@
 services:
+  neo4j:
+    image: neo4j:5.26.0
+    expose:
+      - 7474 # HTTP
+      - 7687 # Bolt
+    environment:
+      - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASSWORD}
+      - NEO4J_server_memory_heap_initial__size=512m
+      - NEO4J_server_memory_heap_max__size=1G
+      - NEO4J_server_memory_pagecache_size=512m
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    healthcheck:
+      test: ["CMD", "wget", "-O", "/dev/null", "http://localhost:7474"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
   mcp-crawl4ai-rag:
     build:
       context: mcp-crawl4ai-rag
@@ -22,6 +41,8 @@ services:
       HOST: 0.0.0.0
       PORT: 8000
     depends_on:
+      neo4j:
+        condition: service_healthy
       kong:
         condition: service_started
   mcp-qdrant:
@@ -80,31 +101,11 @@ services:
       - 8000
     ports:
       - 8010:8000
-  neo4j:
-    image: neo4j:5.26.0
-    ports:
-      - "7474:7474" # HTTP
-      - "7687:7687" # Bolt
-    environment:
-      - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASSWORD}
-      - NEO4J_server_memory_heap_initial__size=512m
-      - NEO4J_server_memory_heap_max__size=1G
-      - NEO4J_server_memory_pagecache_size=512m
-    volumes:
-      - neo4j_data:/data
-      - neo4j_logs:/logs
-    healthcheck:
-      test: ["CMD", "wget", "-O", "/dev/null", "http://localhost:7474"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  mcp-graphiti-neo4j:
-    image: zepai/knowledge-graph-mcp:latest
+  mcp-graphiti:
+    image: zepai/knowledge-graph-mcp:standalone
     build:
       context: graphiti/mcp_server
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile.standalone
     env_file:
       - path: .env
         required: false # Makes the file optional. Default value is 'true'
@@ -114,18 +115,23 @@ services:
       graphiti:
         condition: service_healthy
     environment:
-      - PORT=8000
-      - DATABASE_TYPE=neo4j
+      # Database configuration
       - NEO4J_URI=bolt://neo4j:7687
-      - NEO4J_USER=${NEO4J_USER}
+      - NEO4J_USER=neo4j
       - NEO4J_PASSWORD=${NEO4J_PASSWORD}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - MODEL_NAME=gpt-4.1-mini
-      - PATH=/root/.local/bin:${PATH}
+      - NEO4J_DATABASE=neo4j
+      # Application configuration
+      - GRAPHITI_GROUP_ID=${GRAPHITI_GROUP_ID:-workspace}
       - SEMAPHORE_LIMIT=${SEMAPHORE_LIMIT:-10}
+      - CONFIG_PATH=/app/mcp/config/config.yaml
+      - PATH=/root/.local/bin:${PATH}
+      - OPENAI_API_KEY=ollama
+      - MODEL_NAME=llama3.2:latest
+    volumes:
+      - ./graphiti/mcp_server/config/config-docker-neo4j.yaml:/app/mcp/config/config.yaml:ro
     ports:
       - "8011:8000" # Expose the MCP server via HTTP for SSE transport
-    command: ["uv", "run", "graphiti_mcp_server.py", "--transport", "sse"]
+    command: ["uv", "run", "main.py"]
 
 
 volumes:
