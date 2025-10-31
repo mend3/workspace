@@ -1,0 +1,19 @@
+# Requirements for ingest_to_graphiti.py
+# Python 3.10 or higher required
+
+# Graphiti knowledge graph framework
+graphiti-core>=0.18.8
+
+# Optional: If you want to use FalkorDB instead of Neo4j
+# graphiti-core[falkordb]>=0.18.8
+
+# Optional: If you want to use Kuzu instead of Neo4j
+# graphiti-core[kuzu]>=0.18.8
+
+# Note: graphiti-core already includes:
+# - python-dotenv>=1.0.1 (for .env file support)
+# - neo4j>=5.26.0 (Neo4j driver)
+# - openai>=1.91.0 (for LLM operations)
+# - pydantic>=2.11.5 (for data validation)
+# - and other required dependencies
+

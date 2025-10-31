@@ -33,9 +33,8 @@ services:
   ollama:
     profiles: ["nvidia"]
     <<: *service-ollama
-    depends_on:
-      ollama-pull-nvidia:
-        condition: service_completed_successfully
+    ports:
+      - 11434:11434
     deploy:
       resources:
         reservations:

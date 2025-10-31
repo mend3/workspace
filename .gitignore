@@ -12,3 +12,4 @@ brain/
 *.env.*
 .k8s
 **/.venv/
+**/__pycache__
