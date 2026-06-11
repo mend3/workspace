@@ -6,6 +6,10 @@ tls:
       keyFile: /certs/workspace.com.key
       stores:
         - default
+    - certFile: /certs/extalia.com.crt
+      keyFile: /certs/extalia.com.key
+      stores:
+        - default
   options:
     default:
       minVersion: VersionTLS12

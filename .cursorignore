@@ -31,4 +31,3 @@ yarn.lock
 *.env
 *.env.*
 .ignore/
-vendors/

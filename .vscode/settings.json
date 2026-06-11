@@ -19,8 +19,6 @@
     "**/.next": true,
     "**/.git": true,
     "**/node_modules/": true,
-    "**/.venv/": true,
-    "**/venv/": true
   },
   "files.watcherExclude": {
     "**/.husky": true,
@@ -32,7 +30,8 @@
     "**/__tests__": true,
     "**/node_modules/": true,
     "**/.venv/": true,
-    "**/venv/": true
+    "**/venv/": true,
+    "**/__pycache__/": true
   },
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,

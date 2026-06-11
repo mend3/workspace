@@ -113,7 +113,7 @@ For local LLM inference:
 | Usage           | Model Name                                                   |
 | --------------- | ------------------------------------------------------------ |
 | Embedding (n8n) | `all-minilm:l6-v2`, `sentence-transformers/all-MiniLM-L6-v2` |
-| General Chat    | `qwen2.5:7b-instruct-q4_K_M`, `gemma:7b`                     |
+| General Chat    | `qwen2.5:14b`, `gemma:7b`                     |
 | Code Assistants | `deepseek-code:6.7b`                                         |
 
 ---

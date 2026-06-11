@@ -202,7 +202,7 @@ async def main():
 
     # Ollama configuration
     ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
-    ollama_llm_model = os.getenv("OLLAMA_LLM_MODEL", "qwen2.5:7b-instruct-q4_K_M")
+    ollama_llm_model = os.getenv("OLLAMA_LLM_MODEL", "qwen2.5:14b")
     ollama_embedding_model = os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
     ollama_embedding_dim = int(os.getenv("OLLAMA_EMBEDDING_DIM", "768"))
 
@@ -239,7 +239,7 @@ async def main():
         logger.info(f"  Base URL: {ollama_base_url}")
         llm_config = LLMConfig(
             api_key="ollama",  # Placeholder - Ollama doesn't require a real API key
-            model=ollama_llm_model,  # e.g., "qwen2.5:7b-instruct-q4_K_M"
+            model=ollama_llm_model,  # e.g., "qwen2.5:14b"
             small_model=ollama_llm_model,  # Use same model for small operations
             base_url=ollama_base_url,  # Ollama's OpenAI-compatible endpoint
         )

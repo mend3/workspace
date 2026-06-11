@@ -1,6 +1,8 @@
 include:
   - vendors/ollama.compose.yml
+  - vendors/mcp.compose.yml
   - vendors/docker-compose.yml
+  - browser/docker-compose.yml
   - shared/homelab.compose.yml
   - shared/mcp/docker-compose.yml
   - shared/monitor.compose.yml
@@ -9,6 +11,7 @@ services:
   traefik:
     image: traefik
     container_name: traefik
+    networks: [default, workspace]
     command:
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
@@ -28,7 +31,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - .docker/traefik/config.yaml:/etc/traefik/traefik.yaml:ro
-      - .docker/traefik/tls.yaml:/etc/traefik/tls.yaml:ro
+      - .docker/traefik/tls.yml:/etc/traefik/tls.yml:ro
       - .docker/traefik/certs:/certs:ro
     labels:
       traefik.enable: true
@@ -104,6 +107,7 @@ services:
   postgres:
     image: postgres:${POSTGRES_VERSION:-latest}
     restart: unless-stopped
+    networks: [default, workspace]
     user: postgres
     environment:
       TZ: America/Sao_Paulo
@@ -125,6 +129,7 @@ services:
   redis:
     platform: linux/amd64
     image: redislabs/rejson:2.0.6
+    networks: [default, workspace]
     command: redis-server --loadmodule /usr/lib/redis/modules/rejson.so --loadmodule /usr/lib/redis/modules/redisearch.so --appendonly yes --maxclients 10000 --timeout 0 --tcp-keepalive 300 --save
     environment:
       - TZ=America/Sao_Paulo
@@ -223,4 +228,16 @@ volumes:
   redis_data:
   pgvector_data:
   qdrant_data:
+
+# Modelo híbrido de rede:
+#  - default  : rede interna do mend3 (mend3_default) — serviços só-do-orquestrador
+#               (mysql, mongo, n8n, supabase, observability, MCP, homelab...).
+#  - workspace: rede compartilhada (ingress único + bancos globais). O mend3 é
+#               dono; datahouse/extalia anexam como external. Só entram nela:
+#               traefik (ingress) + postgres + redis (bancos disponíveis a todos).
+#               mysql NÃO entra (extalia tem o seu próprio, evita colisão de DNS).
+networks:
+  default: {}
+  workspace:
+    name: workspace
 

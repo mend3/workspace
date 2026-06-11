@@ -6,9 +6,31 @@ CONTAINER_RUNTIME ?= docker
 PROFILE ?= nvidia
 TARGET ?= "*" ## Target (service name) for docker compose
 
-# Compose file groups
-COMMON_FILES = -f docker-compose.yml \
-  -f browser/docker-compose.yml
+# Positional CLI syntax:  make <command> <service-name>... [profile]
+# The first goal is the command verb; everything after it is positional —
+# bare service name(s) become TARGET, and a hardware-profile word
+# (nvidia/cpu/amd) becomes PROFILE. `ollama` is profile-gated and `precis`
+# hard-depends on it, so a profile is mandatory; default is nvidia.
+#   make up                       -> all services,        profile=nvidia (default)
+#   make up traefik               -> TARGET=traefik,       profile=nvidia
+#   make up traefik cpu           -> TARGET=traefik,       profile=cpu
+#   make up mcp-qdrant qdrant     -> TARGET="mcp-qdrant qdrant"
+#   make build PROFILE=amd        -> explicit var still works (overrides word)
+# NOTE: `make up --profile nvidia` is NOT valid — GNU make rejects `--profile`
+# as an unknown flag. Pass the profile as a bare word or via PROFILE=.
+HW_PROFILES = nvidia cpu amd
+POSITIONAL = $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+ifneq ($(filter $(HW_PROFILES),$(POSITIONAL)),)
+PROFILE := $(filter $(HW_PROFILES),$(POSITIONAL))
+endif
+ifneq ($(filter-out $(HW_PROFILES),$(POSITIONAL)),)
+TARGET := $(filter-out $(HW_PROFILES),$(POSITIONAL))
+endif
+
+.DEFAULT_GOAL := help
+
+# Compose file groups (browser/* is pulled in via include: in docker-compose.yml)
+COMMON_FILES = -f docker-compose.yml
 
 define compose_graph
 	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) $(1) config > compose.yaml && \
@@ -91,3 +113,10 @@ minikube-down:  ## Drops minikube cluster
 .PHONY: dashboard
 dashboard:  ## Open minikube dashboard (k8s)
 	minikube dashboard
+
+# Swallow positional words (service names + profile) as no-op goals so make
+# doesn't try to build them as real targets. They're already consumed above
+# into TARGET / PROFILE. Defined last so the default goal stays `help`.
+.PHONY: $(POSITIONAL)
+$(POSITIONAL):
+	@:
