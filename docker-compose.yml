@@ -1,7 +1,7 @@
 include:
   - vendors/ollama.compose.yml
-  - vendors/mcp.compose.yml
   - vendors/docker-compose.yml
+  - vendors/mcp.compose.yml
   - browser/docker-compose.yml
   - shared/homelab.compose.yml
   - shared/mcp/docker-compose.yml
@@ -87,10 +87,14 @@ services:
               count: 1
               capabilities: [gpu]
 
+  # mysql unificado no mend3 (banco global compartilhado, igual postgres/redis).
+  # Dados migrados do extalia (todos os bancos: extalia/firefly/wordpress/nProtect/
+  # phpbb/L2...). Consumido por todos via DNS `mysql` na rede workspace.
   mysql:
     restart: unless-stopped
     image: mysql/mysql-server:${MYSQL_VERSION}
     command: ['--default-authentication-plugin', 'mysql_native_password']
+    networks: [default, workspace]
     pid: host
     expose:
       - 3306
@@ -167,6 +171,7 @@ services:
       start_period: 5s
   pgvector:
     image: pgvector/pgvector:pg17
+    networks: [default, workspace]
     environment:
       TZ: America/Sao_Paulo
       PGUSER: ${PGVECTOR_USER}
@@ -188,6 +193,7 @@ services:
   qdrant:
     image: qdrant/qdrant
     container_name: qdrant
+    networks: [default, workspace]
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - QDRANT__GPU__INDEXING=true

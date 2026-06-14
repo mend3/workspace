@@ -19,13 +19,30 @@ TARGET ?= "*" ## Target (service name) for docker compose
 # NOTE: `make up --profile nvidia` is NOT valid — GNU make rejects `--profile`
 # as an unknown flag. Pass the profile as a bare word or via PROFILE=.
 HW_PROFILES = nvidia cpu amd
+# Produtos = stacks irmãos que rodam DENTRO da infra do mend3 (ver alvo `product`)
+PRODUCTS = datahouse extalia e7 lumi hub
 POSITIONAL = $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 ifneq ($(filter $(HW_PROFILES),$(POSITIONAL)),)
 PROFILE := $(filter $(HW_PROFILES),$(POSITIONAL))
 endif
-ifneq ($(filter-out $(HW_PROFILES),$(POSITIONAL)),)
-TARGET := $(filter-out $(HW_PROFILES),$(POSITIONAL))
+ifneq ($(filter-out $(HW_PROFILES) $(PRODUCTS),$(POSITIONAL)),)
+TARGET := $(filter-out $(HW_PROFILES) $(PRODUCTS),$(POSITIONAL))
 endif
+
+# Mapa produto -> diretório + profiles padrão (usados pelo alvo `product`).
+# Profiles extras podem ser passados posicionalmente (ex.: make product extalia prod).
+PRODUCT = $(filter $(PRODUCTS),$(MAKECMDGOALS))
+PRODUCT_PROFILES = $(foreach p,$(filter-out product $(PRODUCTS) $(HW_PROFILES),$(MAKECMDGOALS)),--profile $(p))
+dir_datahouse = ../datahouse
+dir_extalia   = ../extalia
+dir_e7        = ../e7-companion
+dir_lumi      = ../lumi
+dir_hub       = ../hub
+defprof_datahouse =
+defprof_extalia   = --profile dev
+defprof_e7        =
+defprof_lumi      = --profile app --profile infra
+defprof_hub       =
 
 .DEFAULT_GOAL := help
 
@@ -67,8 +84,15 @@ clean: ## Clean cache folders
 	sudo rm -rf .cache && mkdir -p .cache
 
 .PHONY: mcp
-mcp: ## Starts MCP servers
-	$(call compose_up,$(COMMON_FILES),mcp-*)
+mcp: ## Sobe os servidores MCP do shared/mcp (profile mcp)
+	$(ENV_SOURCE) $(CONTAINER_RUNTIME) compose -p ${NAMESPACE} --profile $(PROFILE) --profile mcp $(COMMON_FILES) \
+		up -d --build --remove-orphans $$(grep -hoE '^  mcp-[a-z0-9-]+:' shared/mcp/docker-compose.yml vendors/mcp.compose.yml | tr -d ' :')
+
+.PHONY: product
+product: ## Sobe um produto na infra: make product <datahouse|extalia|e7|lumi> [profiles...]
+	@docker network inspect workspace >/dev/null 2>&1 || { echo ">> rede 'workspace' ausente — rode 'make up nvidia' no mend3 primeiro"; exit 1; }
+	@test -n "$(PRODUCT)" || { echo "uso: make product <$(PRODUCTS)> [profiles extras]"; exit 1; }
+	cd $(dir_$(PRODUCT)) && $(CONTAINER_RUNTIME) compose $(if $(strip $(PRODUCT_PROFILES)),$(PRODUCT_PROFILES),$(defprof_$(PRODUCT))) up -d --build --remove-orphans
 
 .PHONY: ai-context
 ai-context: ## Starts the workspace context generation

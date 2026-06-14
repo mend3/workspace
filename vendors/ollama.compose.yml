@@ -2,6 +2,9 @@ x-ollama: &service-ollama
   image: ollama/ollama:latest
   container_name: ollama
   restart: unless-stopped
+  # Na workspace: ollama global, consumido por todos (e7/lumi/homelab) via DNS
+  # `ollama:11434`. container_name fixo dá o alias estável entre os profiles.
+  networks: [default, workspace]
   expose:
     - 11434/tcp
   environment:
@@ -21,7 +24,7 @@ x-init-ollama: &init-ollama
   entrypoint: /bin/sh
   command:
     - "-c"
-    - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:7b-instruct-q4_K_M; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text; OLLAMA_HOST=ollama:11434 ollama pull gemma:7b"
+    - "sleep 3; OLLAMA_HOST=ollama:11434 ollama pull qwen2.5:14b; OLLAMA_HOST=ollama:11434 ollama pull nomic-embed-text"
 
 services:
   ollama-cpu:

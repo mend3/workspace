@@ -1,6 +1,5 @@
 include:
   - supabase/docker/docker-compose.yml
-  - mcp.compose.yml
 
 x-n8n: &service-n8n
   image: n8nio/n8n:latest
@@ -106,6 +105,7 @@ services:
     <<: *service-n8n
     container_name: n8n
     restart: unless-stopped
+    networks: [default, workspace]
     ports:
       - 5678:5678
     expose:
@@ -118,6 +118,7 @@ services:
   clickhouse:
     image: clickhouse/clickhouse-server
     restart: always
+    networks: [default, workspace]
     user: '101:101'
     expose:
       - 8123
@@ -140,6 +141,7 @@ services:
   minio:
     image: minio/minio
     restart: always
+    networks: [default, workspace]
     entrypoint: sh
     # create the 'langfuse' bucket before starting the service
     command: -c 'mkdir -p /data/langfuse && minio server --address ":9000" --console-address ":9001" /data'
