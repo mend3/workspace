@@ -1,0 +1,17 @@
+{
+  "name": "media-lens-sync",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Processamento assincrono por filas (BullMQ/Redis) do precis -> hub Media Lens: producer (sync + enfileira) e workers (analise LLM via ollama, enriquecimento, KPI).",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/index.mjs"
+  },
+  "dependencies": {
+    "bullmq": "^5.34.0",
+    "ioredis": "^5.4.1"
+  }
+}
